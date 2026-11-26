@@ -1,0 +1,46 @@
+[
+  {
+    "model": "api:deepseek-flash",
+    "num_ok": 87,
+    "num_problems": 100,
+    "base_mem": 1.3,
+    "final_mem": 0.83,
+    "mem_red": 36.3,
+    "base_time": 0.066,
+    "final_time": 0.0479,
+    "time_red": 27.5
+  },
+  {
+    "model": "api:deepseek-v4-pro",
+    "num_ok": 80,
+    "num_problems": 100,
+    "base_mem": 1.13,
+    "final_mem": 0.75,
+    "mem_red": 33.7,
+    "base_time": 0.0589,
+    "final_time": 0.0448,
+    "time_red": 23.9
+  },
+  {
+    "model": "api:glm-4.6",
+    "num_ok": 82,
+    "num_problems": 100,
+    "base_mem": 1.32,
+    "final_mem": 0.97,
+    "mem_red": 26.0,
+    "base_time": 0.0649,
+    "final_time": 0.0531,
+    "time_red": 18.3
+  },
+  {
+    "model": "api:qwen3-coder-flash",
+    "num_ok": 79,
+    "num_problems": 100,
+    "base_mem": 1.29,
+    "final_mem": 0.97,
+    "mem_red": 24.5,
+    "base_time": 0.0652,
+    "final_time": 0.0551,
+    "time_red": 15.6
+  }
+]
