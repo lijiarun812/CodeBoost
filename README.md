@@ -33,19 +33,32 @@
 ```
 CodeBoost/
 ├── README.md               # 本文件：项目总览
-├── requirements.txt        # 依赖
-├── effilearner/            # EffiLearner 路线：简化复现代码
+├── requirements.txt        # 依赖（复现 + 上游源码）
+├── LICENSE
+├── src/                    # 原版 EffiLearner 源码（上游复现基线）
+│   ├── EffiLearner.py / gpt_EffiLearner.py
+│   ├── gpt_generation.py / open_llm_generation.py
+│   └── code_efficiency_calculator.py / ...
+├── prompts.py              # 原版提示词
+├── scripts/run_code.sh     # 原版运行脚本
+├── effilearner/            # 我们的简化复现 + 优化入口
 │   ├── effi_repro.py
-│   └── README.md           # 复现说明（环境/参数/结果）
+│   └── README.md
 ├── perfcodegen/            # PerfCodeGen 路线（待建设）
 ├── eval/                   # 效率评测脚本（待建设）
-├── results/
-│   └── repro/              # 复现结果 JSON（各模型 + comparison）
+├── datasets/               # 数据集（不入库，本地放置）
+├── results/repro/          # 复现结果 JSON（各模型 + comparison）
 └── docs/
     ├── 分工与贡献说明.md
     ├── 优化计划.md         # 下一步优化任务与分工
-    └── 实验记录.md         # 实验配置与结果记录
+    ├── 实验记录.md         # 实验配置与结果记录
+    └── 上游README.md       # 原版仓库 README（留档）
 ```
+
+### 原版源码 vs 简化复现
+
+- `src/` + `prompts.py` + `scripts/`：EffiLearner **上游原版实现**（复现基线，保留以便对照与二次开发）。
+- `effilearner/effi_repro.py`：我们重写的**轻量复现 + 优化入口**（纯 Python + psutil，跨平台，支持任意模型）。
 
 ## 快速开始
 
@@ -69,7 +82,7 @@ py effilearner/effi_repro.py --num 100 --epochs 3
 # 或用厂商预设一键切换：--provider deepseek --model deepseek-flash（--list-providers 查看全部）
 ```
 
-> **数据集**：`datasets/dataset.json`（EffiBench，约 87MB）体积较大，未纳入版本库。
+> **数据集**：`datasets/dataset.json`（EffiBench，约 83MB）体积较大，未纳入版本库。
 > 运行前请自备并放到 `datasets/dataset.json`，或用 `--dataset <路径>` 指定。
 > 详细参数见 `effilearner/README.md`。
 

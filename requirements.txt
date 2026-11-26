@@ -1,2 +1,11 @@
+# 我们的简化复现 / 优化（effilearner/effi_repro.py）
 requests>=2.28
 psutil>=5.9
+
+# 原版 EffiLearner 源码（src/，上游复现基线）
+line_profiler
+memory_profiler
+transformers
+datasets
+numpy
+torch
