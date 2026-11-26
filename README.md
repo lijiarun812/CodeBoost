@@ -1,4 +1,4 @@
-# CodeBoost
+﻿# CodeBoost
 
 > 探究大模型生成代码的运行效率提升：**复现 EffiLearner**，并借鉴 **PerfCodeGen** 做进一步优化。
 
@@ -66,6 +66,7 @@ $env:EFFI_API_KEY="sk-..."
 $env:EFFI_API_BASE="https://api.deepseek.com/v1"
 $env:EFFI_MODEL="deepseek-flash"
 py effilearner/effi_repro.py --num 100 --epochs 3
+# 或用厂商预设一键切换：--provider deepseek --model deepseek-flash（--list-providers 查看全部）
 ```
 
 > **数据集**：`datasets/dataset.json`（EffiBench，约 87MB）体积较大，未纳入版本库。
@@ -87,3 +88,4 @@ py effilearner/effi_repro.py --num 100 --epochs 3
 ## 下一步
 
 优化任务、负责人与依赖关系见 [`docs/优化计划.md`](docs/优化计划.md)。
+

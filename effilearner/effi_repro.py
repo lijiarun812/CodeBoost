@@ -15,11 +15,13 @@
     # 1) 离线验证测量管线（不需要任何 Key）
     py repro/effi_repro.py --mock --num 3
 
-    # 2) 接真实模型（先设置下面三个环境变量，或改用 --api-key/--api-base/--model）
-    #    EFFI_API_KEY   = sk-xxx
-    #    EFFI_API_BASE  = https://api.deepseek.com/v1   （或其他 OpenAI 兼容地址）
-    #    EFFI_MODEL     = deepseek-chat
-    py repro/effi_repro.py --num 20 --epochs 3
+    # 2) 接真实模型（任意 OpenAI 兼容接口）
+    #    a) 内置厂商预设（自动填 base_url 与 thinking 兼容性）
+    py repro/effi_repro.py --provider deepseek --model deepseek-flash --num 20 --epochs 3
+    py repro/effi_repro.py --list-providers        # 查看全部预设
+    #    b) 自定义任意模型（--api-base + --model + --api-key，或环境变量）
+    #       EFFI_API_KEY / EFFI_API_BASE / EFFI_MODEL
+    py repro/effi_repro.py --api-base https://xxx/v1 --model some-model --num 20 --epochs 3
 """
 
 import argparse
@@ -246,15 +248,40 @@ def overhead_text(m):
 
 
 # ---------------------------------------------------------------------------
+# 厂商预设（任意 OpenAI 兼容接口都可接入；thinking=是否支持 thinking 字段）
+# ---------------------------------------------------------------------------
+PROVIDERS = {
+    "deepseek":    {"base": "https://api.deepseek.com/v1",                       "model": "deepseek-chat",  "thinking": True},
+    "dashscope":   {"base": "https://dashscope.aliyuncs.com/compatible-mode/v1", "model": "qwen3-coder-flash", "thinking": True},
+    "zhipu":       {"base": "https://open.bigmodel.cn/api/paas/v4",              "model": "glm-4.6",        "thinking": True},
+    "moonshot":    {"base": "https://api.moonshot.cn/v1",                        "model": "",               "thinking": False},
+    "openai":      {"base": "https://api.openai.com/v1",                         "model": "gpt-4o-mini",    "thinking": False},
+    "siliconflow": {"base": "https://api.siliconflow.cn/v1",                     "model": "Qwen/Qwen2.5-Coder-32B-Instruct", "thinking": False},
+    "openrouter":  {"base": "https://openrouter.ai/api/v1",                      "model": "",               "thinking": False},
+    "ollama":      {"base": "http://localhost:11434/v1",                         "model": "",               "thinking": False},
+}
+
+
+def _host_supports_thinking(api_base):
+    """未指定厂商时，按地址自动判断是否需要发送 thinking 字段。"""
+    b = (api_base or "").lower()
+    return any(k in b for k in ("deepseek", "bigmodel", "dashscope"))
+
+
+# ---------------------------------------------------------------------------
 # OpenAI 兼容 API 调用（requests，无 openai SDK 依赖）
 # ---------------------------------------------------------------------------
 class LLMClient:
-    def __init__(self, api_base, api_key, model, max_tokens=8192, thinking="disabled"):
+    def __init__(self, api_base, api_key, model, max_tokens=8192, thinking="disabled",
+                 send_thinking=True, extra_headers=None):
         self.url = api_base.rstrip("/") + "/chat/completions"
         self.key = api_key
         self.model = model
         self.max_tokens = max_tokens
         self.thinking = thinking
+        self.send_thinking = send_thinking
+        self.extra_headers = extra_headers or {}
+        self.max_tokens_key = "max_tokens"
 
     def chat(self, prompt, system=None, temperature=0.2):
         import requests
@@ -263,26 +290,40 @@ class LLMClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {"model": self.model, "messages": messages,
-                   "temperature": temperature,
-                   "thinking": {"type": self.thinking}}  # disabled=关闭推理，快且省
+        payload = {"model": self.model, "messages": messages, "temperature": temperature}
+        if self.send_thinking:
+            payload["thinking"] = {"type": self.thinking}  # 仅对支持的厂商发送，避免 400
 
         budget = self.max_tokens
         content = ""
         for attempt in range(6):
-            payload["max_tokens"] = budget
+            if self.max_tokens_key != "max_tokens":
+                payload.pop("max_tokens", None)
+            payload[self.max_tokens_key] = budget
+            headers = {"Authorization": "Bearer " + self.key,
+                       "Content-Type": "application/json"}
+            headers.update(self.extra_headers)
             try:
-                resp = requests.post(
-                    self.url,
-                    headers={"Authorization": "Bearer " + self.key,
-                             "Content-Type": "application/json"},
-                    json=payload,
-                    timeout=300,
-                )
+                resp = requests.post(self.url, headers=headers, json=payload, timeout=300)
                 if resp.status_code != 200:
                     if resp.status_code in (429, 500, 502, 503, 504):
                         time.sleep(min(2 ** attempt, 8))
                         continue
+                    # 400 兼容：部分接口不支持 max_tokens / temperature / thinking 字段
+                    if resp.status_code == 400:
+                        low = (resp.text or "").lower()
+                        changed = False
+                        if "max_tokens" in low and self.max_tokens_key == "max_tokens":
+                            self.max_tokens_key = "max_completion_tokens"
+                            changed = True
+                        if "temperature" in low and "temperature" in payload:
+                            payload.pop("temperature", None)
+                            changed = True
+                        if "thinking" in low and "thinking" in payload:
+                            payload.pop("thinking", None)
+                            changed = True
+                        if changed:
+                            continue
                     raise RuntimeError("HTTP %d: %s" % (resp.status_code, resp.text[:300]))
                 data = resp.json()  # 响应体在此才真正读取，连接 reset 也可能发生在这里
             except requests.exceptions.RequestException:
@@ -292,7 +333,11 @@ class LLMClient:
                 time.sleep(min(2 ** attempt, 8))
                 continue
             choice = data["choices"][0]
-            content = choice.get("message", {}).get("content") or ""
+            msg = choice.get("message", {}) or {}
+            content = msg.get("content")
+            if isinstance(content, list):  # 兼容多段 content 的接口
+                content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+            content = content or ""
             if content.strip():
                 return content
             # 正文为空多半是 reasoning 吃满预算被截断，翻倍重试
@@ -334,11 +379,14 @@ def run(args):
     if not args.mock:
         if not (args.api_base and args.api_key and args.model):
             print("[BLOCKED] 缺少 API 配置，请设置以下任一方式后重试：")
+            print("  内置厂商: --provider deepseek|dashscope|zhipu|moonshot|openai|siliconflow|openrouter|ollama")
             print("  环境变量: EFFI_API_BASE / EFFI_API_KEY / EFFI_MODEL")
-            print("  或参数  : --api-base --api-key --model")
+            print("  或参数  : --api-base --api-key --model（任意 OpenAI 兼容接口）")
+            print("  查看全部预设: py repro/effi_repro.py --list-providers")
             print("  想先验证测量管线可用: py repro/effi_repro.py --mock --num 3")
             return
-        client = LLMClient(args.api_base, args.api_key, args.model, args.max_tokens, args.thinking)
+        client = LLMClient(args.api_base, args.api_key, args.model, args.max_tokens, args.thinking,
+                           send_thinking=getattr(args, "send_thinking_field", False))
 
     print("=" * 70)
     print("EffiLearner 简化复现  |  %d 题  |  epochs=%d  |  %s"
@@ -520,11 +568,39 @@ def main():
     p.add_argument("--api-base", default=os.getenv("EFFI_API_BASE") or os.getenv("OPENAI_API_BASE"))
     p.add_argument("--api-key", default=os.getenv("EFFI_API_KEY") or os.getenv("OPENAI_API_KEY"))
     p.add_argument("--model", default=os.getenv("EFFI_MODEL") or os.getenv("OPENAI_MODEL"))
+    p.add_argument("--provider", choices=sorted(PROVIDERS.keys()),
+                   help="内置厂商预设(自动填 base/model 与 thinking 兼容性)；其他模型用 --api-base/--model")
+    p.add_argument("--list-providers", action="store_true", help="列出内置厂商预设后退出")
     p.add_argument("--max-tokens", type=int, default=4096, help="单次生成 token 预算")
     p.add_argument("--thinking", choices=["enabled", "disabled"], default="disabled",
-                   help="是否开启推理模式(默认 disabled，快且省)")
+                   help="thinking 字段取值(仅在发送该字段时生效)")
+    p.add_argument("--send-thinking", dest="send_thinking", choices=["auto", "yes", "no"], default="auto",
+                   help="是否发送 thinking 字段(auto=按厂商自动判断，避免不支持的接口报 400)")
     p.add_argument("--compare", action="store_true", help="汇总多个模型的结果做对比")
     args = p.parse_args()
+    if args.list_providers:
+        print("可用厂商预设：")
+        for k in sorted(PROVIDERS):
+            v = PROVIDERS[k]
+            print("  %-12s base=%s  model=%s  thinking=%s"
+                  % (k, v["base"], v["model"] or "<需指定 --model>", v["thinking"]))
+        print("\n自定义模型：--api-base <URL> --model <名称> --api-key <KEY>（任意 OpenAI 兼容接口）")
+        return
+    # 解析厂商预设 + thinking 字段兼容性
+    preset = PROVIDERS[args.provider] if args.provider else None
+    if preset:
+        if not args.api_base:
+            args.api_base = preset["base"]
+        if not args.model:
+            args.model = preset["model"]
+    if args.send_thinking == "yes":
+        args.send_thinking_field = True
+    elif args.send_thinking == "no":
+        args.send_thinking_field = False
+    elif preset:
+        args.send_thinking_field = preset["thinking"]
+    else:
+        args.send_thinking_field = _host_supports_thinking(args.api_base)
     if args.compare:
         compare(args)
     else:
