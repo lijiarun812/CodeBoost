@@ -1,0 +1,686 @@
+[
+ {
+  "run_id": "20261127-172710-HumanEval_31",
+  "task_id": "HumanEval/31",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:10",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 13.3311,
+   "mean_trimmed_ms": 13.3311,
+   "iqr": 1.0585,
+   "cv": 0.0416,
+   "raw_ms": [
+    13.5193,
+    13.5192,
+    13.5294,
+    12.4504,
+    13.4872,
+    13.3925,
+    13.9698,
+    13.9927,
+    13.8945,
+    12.5614,
+    12.5128,
+    12.7455
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 13.3311,
+     "iqr": 1.0585,
+     "cv": 0.0416,
+     "reps": 14
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0013,
+   "peak_rss_mb": 19.805
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172717-HumanEval_55",
+  "task_id": "HumanEval/55",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:17",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.077,
+   "mean_trimmed_ms": 0.077,
+   "iqr": 0.0029,
+   "cv": 0.0307,
+   "raw_ms": [
+    0.0777,
+    0.0764,
+    0.0826,
+    0.0786,
+    0.078,
+    0.0734,
+    0.079,
+    0.0783,
+    0.076,
+    0.0754,
+    0.0743,
+    0.0757
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.077,
+     "iqr": 0.0029,
+     "cv": 0.0307,
+     "reps": 2764
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0016,
+   "peak_rss_mb": 19.641
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172725-HumanEval_59",
+  "task_id": "HumanEval/59",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:25",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 13.0678,
+   "mean_trimmed_ms": 13.0678,
+   "iqr": 0.5374,
+   "cv": 0.0278,
+   "raw_ms": [
+    13.1975,
+    12.8916,
+    13.3081,
+    12.8034,
+    12.8081,
+    12.8722,
+    13.6236,
+    12.9369,
+    13.0809,
+    13.447,
+    13.6065,
+    12.3322
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 13.0678,
+     "iqr": 0.5374,
+     "cv": 0.0278,
+     "reps": 20
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0017,
+   "peak_rss_mb": 19.691
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172733-HumanEval_60",
+  "task_id": "HumanEval/60",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:33",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0094,
+   "mean_trimmed_ms": 0.0094,
+   "iqr": 0.0004,
+   "cv": 0.044,
+   "raw_ms": [
+    0.0095,
+    0.0094,
+    0.01,
+    0.0091,
+    0.0086,
+    0.0097,
+    0.0103,
+    0.0093,
+    0.0093,
+    0.0096,
+    0.0093,
+    0.0092
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.0094,
+     "iqr": 0.0004,
+     "cv": 0.044,
+     "reps": 7297
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0014,
+   "peak_rss_mb": 19.645
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172739-HumanEval_63",
+  "task_id": "HumanEval/63",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:39",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.4296,
+   "mean_trimmed_ms": 0.4296,
+   "iqr": 0.0184,
+   "cv": 0.03,
+   "raw_ms": [
+    0.4179,
+    0.4476,
+    0.4281,
+    0.434,
+    0.4406,
+    0.4155,
+    0.4096,
+    0.43,
+    0.4253,
+    0.4376,
+    0.4558,
+    0.4235
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.4296,
+     "iqr": 0.0184,
+     "cv": 0.03,
+     "reps": 508
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0016,
+   "peak_rss_mb": 19.68
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172748-HumanEval_96",
+  "task_id": "HumanEval/96",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:48",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.3497,
+   "mean_trimmed_ms": 0.3497,
+   "iqr": 0.0212,
+   "cv": 0.0389,
+   "raw_ms": [
+    0.3456,
+    0.3402,
+    0.3573,
+    0.3392,
+    0.3378,
+    0.3615,
+    0.3252,
+    0.3408,
+    0.3706,
+    0.3529,
+    0.3706,
+    0.3602
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.3497,
+     "iqr": 0.0212,
+     "cv": 0.0389,
+     "reps": 710
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0018,
+   "peak_rss_mb": 19.848
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172756-HumanEval_123",
+  "task_id": "HumanEval/123",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:27:56",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0404,
+   "mean_trimmed_ms": 0.0404,
+   "iqr": 0.0045,
+   "cv": 0.0646,
+   "raw_ms": [
+    0.0392,
+    0.0412,
+    0.0425,
+    0.0382,
+    0.0428,
+    0.0427,
+    0.0432,
+    0.0391,
+    0.035,
+    0.0369,
+    0.038,
+    0.042
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.0404,
+     "iqr": 0.0045,
+     "cv": 0.0646,
+     "reps": 3663
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0016,
+   "peak_rss_mb": 19.691
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172802-HumanEval_130",
+  "task_id": "HumanEval/130",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:28:02",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0447,
+   "mean_trimmed_ms": 0.0447,
+   "iqr": 0.0027,
+   "cv": 0.0297,
+   "raw_ms": [
+    0.0461,
+    0.0443,
+    0.0425,
+    0.0435,
+    0.0459,
+    0.0429,
+    0.0454,
+    0.0462,
+    0.0462,
+    0.043,
+    0.0444,
+    0.0454
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.0447,
+     "iqr": 0.0027,
+     "cv": 0.0297,
+     "reps": 4297
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0015,
+   "peak_rss_mb": 19.957
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172810-HumanEval_139",
+  "task_id": "HumanEval/139",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:28:10",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0123,
+   "mean_trimmed_ms": 0.0123,
+   "iqr": 0.0009,
+   "cv": 0.0596,
+   "raw_ms": [
+    0.0136,
+    0.0126,
+    0.0119,
+    0.0128,
+    0.0121,
+    0.012,
+    0.0121,
+    0.0128,
+    0.0138,
+    0.0124,
+    0.0112,
+    0.0116
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.0123,
+     "iqr": 0.0009,
+     "cv": 0.0596,
+     "reps": 8366
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0019,
+   "peak_rss_mb": 19.699
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172816-HumanEval_147",
+  "task_id": "HumanEval/147",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:28:16",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 362.044,
+   "mean_trimmed_ms": 362.044,
+   "iqr": 6.9263,
+   "cv": 0.0122,
+   "raw_ms": [
+    360.4154,
+    354.9302,
+    364.3031,
+    368.5303,
+    355.5736,
+    368.3235,
+    364.7243,
+    360.5441,
+    366.405,
+    362.6835,
+    358.2954,
+    358.9813
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 362.044,
+     "iqr": 6.9263,
+     "cv": 0.0122,
+     "reps": 5
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 3.6863,
+   "peak_rss_mb": 29.723
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172844-HumanEval_40",
+  "task_id": "HumanEval/40",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:28:44",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.1125,
+   "mean_trimmed_ms": 0.1125,
+   "iqr": 0.0087,
+   "cv": 0.0493,
+   "raw_ms": [
+    0.1118,
+    0.1019,
+    0.1063,
+    0.1139,
+    0.1172,
+    0.1119,
+    0.1223,
+    0.1093,
+    0.1142,
+    0.116,
+    0.1171,
+    0.1054
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.1125,
+     "iqr": 0.0087,
+     "cv": 0.0493,
+     "reps": 1642
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0018,
+   "peak_rss_mb": 19.738
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-172852-HumanEval_120",
+  "task_id": "HumanEval/120",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T17:28:52",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "ba9df05",
+   "protocol_version": "v1"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0225,
+   "mean_trimmed_ms": 0.0225,
+   "iqr": 0.001,
+   "cv": 0.0252,
+   "raw_ms": [
+    0.0231,
+    0.0223,
+    0.0225,
+    0.0215,
+    0.0217,
+    0.0226,
+    0.0233,
+    0.0221,
+    0.0228,
+    0.023,
+    0.0217,
+    0.0228
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "median_ms": 0.0225,
+     "iqr": 0.001,
+     "cv": 0.0252,
+     "reps": 6104
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0019,
+   "peak_rss_mb": 19.875
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "v1",
+  "code_source": "canonical"
+ }
+]
