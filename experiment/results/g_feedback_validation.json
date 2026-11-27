@@ -1,0 +1,1019 @@
+{
+  "51": {
+    "problem_idx": 51,
+    "group": "main",
+    "timing_collection_s": 2.3798,
+    "total_ns": 261635700,
+    "total_range_fraction": 0.007,
+    "slowest": {
+      "index": 72,
+      "median_ns": 20867300,
+      "test": "assert solution.solveNQueens(9) == [['Q........', '..Q......', '.....Q...', '.......Q.', '.Q.......', '...Q.....', '........Q', '......Q..', '....Q....'], ['Q........', '..Q......', '......Q..', '.Q.......', '.......Q.', '....Q....', '........Q', '...Q.....', '.....Q...'], ['Q........', '..Q......', '.......Q.', '.....Q...', '........Q', '.Q.......', '....Q....', '......Q..', '...Q.....'], ['Q........', '...Q.....', '.Q.......', '.......Q.', '.....Q...', '........Q', '..Q......', '....Q....', '."
+    },
+    "profile_collection_s": 1.0452,
+    "profile": {
+      "lines": [
+        {
+          "line": 6,
+          "source": "for q_row in range(row):",
+          "hits": 251402,
+          "profile_ns": 83754000
+        },
+        {
+          "line": 7,
+          "source": "if board[q_row][col] == 'Q':",
+          "hits": 243009,
+          "profile_ns": 79196400
+        },
+        {
+          "line": 9,
+          "source": "if col - (row - q_row) >= 0 and board[q_row][col - (row - q_row)] == 'Q':",
+          "hits": 209070,
+          "profile_ns": 69799000
+        },
+        {
+          "line": 11,
+          "source": "if col + (row - q_row) < n and board[q_row][col + (row - q_row)] == 'Q':",
+          "hits": 194047,
+          "profile_ns": 66629300
+        },
+        {
+          "line": 20,
+          "source": "if is_valid(board, row, col, n):",
+          "hits": 72378,
+          "profile_ns": 26030700
+        }
+      ],
+      "profile_wall_ns": 426814600,
+      "profiled_test_index": 72
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      6,
+      6
+    ],
+    "usable": true
+  },
+  "1289": {
+    "problem_idx": 1289,
+    "group": "short_control",
+    "timing_collection_s": 0.1986,
+    "total_ns": 1287000,
+    "total_range_fraction": 0.016,
+    "slowest": {
+      "index": 67,
+      "median_ns": 44100,
+      "test": "assert solution.minFallingPathSum([[92, 93, 97, 92, 66, -52, 71, 76, -60, 7], [0, 18, -43, -21, 88, -25, -36, -23, 86, 68], [-29, -71, 19, -90, 25, -24, 95, 51, -57, -36], [-55, 91, -9, 63, 51, 38, 58, -47, -67, 61], [25, 38, 91, 89, -74, -86, 60, 97, 76, 13], [63, 5, 31, 81, -57, -36, 41, -33, -72, 13], [-1, -66, 31, 59, -45, -53, 51, -41, -31, 2], [-69, 19, 95, 22, -25, -45, -33, -95, 78, 96], [-20, -74, -35, 67, -46, -86, -35, 1, -95, -13], [-27, 48, 52, 5, 28, -57, 82, -39, 69, -55]]) == -73"
+    },
+    "profile_collection_s": 0.0876,
+    "profile": {
+      "lines": [
+        {
+          "line": 9,
+          "source": "choices = [grid[i-1][k] for k in range(n) if k != j]",
+          "hits": 990,
+          "profile_ns": 395100
+        },
+        {
+          "line": 10,
+          "source": "grid[i][j] += min(choices)",
+          "hits": 90,
+          "profile_ns": 47300
+        },
+        {
+          "line": 8,
+          "source": "for j in range(n):",
+          "hits": 99,
+          "profile_ns": 35800
+        },
+        {
+          "line": 7,
+          "source": "for i in range(1, n):",
+          "hits": 10,
+          "profile_ns": 5000
+        },
+        {
+          "line": 5,
+          "source": "n = len(grid)",
+          "hits": 1,
+          "profile_ns": 2400
+        }
+      ],
+      "profile_wall_ns": 547400,
+      "profiled_test_index": 67
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      9,
+      9
+    ],
+    "usable": true
+  },
+  "2087": {
+    "problem_idx": 2087,
+    "group": "short_control",
+    "timing_collection_s": 0.1699,
+    "total_ns": 1856700,
+    "total_range_fraction": 0.138,
+    "error": "no slow test appeared in all three timing runs",
+    "usable": false
+  },
+  "1649": {
+    "problem_idx": 1649,
+    "group": "main",
+    "timing_collection_s": 0.1655,
+    "total_ns": 5184800,
+    "total_range_fraction": 2.873,
+    "error": "no slow test appeared in all three timing runs",
+    "usable": false
+  },
+  "1395": {
+    "problem_idx": 1395,
+    "group": "main",
+    "timing_collection_s": 4.7112,
+    "total_ns": 1165103500,
+    "total_range_fraction": 0.016,
+    "slowest": {
+      "index": 67,
+      "median_ns": 31164300,
+      "test": "assert solution.numTeams([73458, 25784, 25518, 12672, 88588, 16829, 7895, 60019, 50758, 51585, 28523, 16837, 31123, 14066, 40286, 9712, 39698, 27053, 41668, 46358, 66547, 64445, 77551, 89605, 86660, 22657, 36141, 43653, 16549, 72955, 91539, 99055, 26454, 74596, 94653, 87376, 98627, 31009, 25878, 17894, 30556, 43494, 29291, 48870, 14410, 42177, 94149, 85070, 38381, 79141, 90579, 48376, 65362, 10501, 2710, 38307, 99330, 66259, 78249, 4993, 61137, 18043, 34277, 21633, 76619, 70461, 71646, 87029, 45"
+    },
+    "profile_collection_s": 2.3426,
+    "profile": {
+      "lines": [
+        {
+          "line": 19,
+          "source": "if rating[k] < rating[i]:",
+          "hits": 486591,
+          "profile_ns": 156955500
+        },
+        {
+          "line": 13,
+          "source": "if rating[j] < rating[i]:",
+          "hits": 486591,
+          "profile_ns": 155077400
+        },
+        {
+          "line": 18,
+          "source": "for k in range(i+1, n):",
+          "hits": 487578,
+          "profile_ns": 153115600
+        },
+        {
+          "line": 12,
+          "source": "for j in range(i):",
+          "hits": 487578,
+          "profile_ns": 153011100
+        },
+        {
+          "line": 21,
+          "source": "elif rating[k] > rating[i]:",
+          "hits": 248247,
+          "profile_ns": 78314300
+        }
+      ],
+      "profile_wall_ns": 1076740200,
+      "profiled_test_index": 67
+    },
+    "top_line_stable": false,
+    "profile_runs_top_lines": [
+      19,
+      13
+    ],
+    "usable": false
+  },
+  "2527": {
+    "problem_idx": 2527,
+    "group": "short_control",
+    "timing_collection_s": 0.1507,
+    "total_ns": 1446900,
+    "total_range_fraction": 0.121,
+    "slowest": {
+      "index": 5,
+      "median_ns": 43700,
+      "test": "assert solution.xorBeauty([867778971, 233501632, 645898105, 691075817, 144582524, 847135115, 177624883, 478251189, 777919364, 393992810]) == 617525076"
+    },
+    "profile_collection_s": 0.0778,
+    "profile": {
+      "lines": [
+        {
+          "line": 11,
+          "source": "xor_beauty ^= ((nums[i] | nums[j]) & nums[k])",
+          "hits": 1000,
+          "profile_ns": 375600
+        },
+        {
+          "line": 10,
+          "source": "for k in range(n):",
+          "hits": 1100,
+          "profile_ns": 359500
+        },
+        {
+          "line": 9,
+          "source": "for j in range(n):",
+          "hits": 110,
+          "profile_ns": 37000
+        },
+        {
+          "line": 8,
+          "source": "for i in range(n):",
+          "hits": 11,
+          "profile_ns": 4100
+        },
+        {
+          "line": 5,
+          "source": "xor_beauty = 0",
+          "hits": 1,
+          "profile_ns": 2400
+        }
+      ],
+      "profile_wall_ns": 829800,
+      "profiled_test_index": 5
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      11,
+      11
+    ],
+    "usable": true
+  },
+  "52": {
+    "problem_idx": 52,
+    "group": "main",
+    "timing_collection_s": 1.3119,
+    "total_ns": 395054300,
+    "total_range_fraction": 0.036,
+    "slowest": {
+      "index": 57,
+      "median_ns": 30561800,
+      "test": "assert solution.totalNQueens(9) == 352"
+    },
+    "profile_collection_s": 1.0826,
+    "profile": {
+      "lines": [
+        {
+          "line": 4,
+          "source": "return all(col != y and abs(row - x) != abs(col - y) for x, y in queens)",
+          "hits": 502804,
+          "profile_ns": 293950500
+        },
+        {
+          "line": 11,
+          "source": "if is_not_under_attack(row, col, queens):",
+          "hits": 72378,
+          "profile_ns": 27739100
+        },
+        {
+          "line": 10,
+          "source": "for col in range(n):",
+          "hits": 80420,
+          "profile_ns": 22742400
+        },
+        {
+          "line": 3,
+          "source": "def is_not_under_attack(row, col, queens):",
+          "hits": 1,
+          "profile_ns": 19865600
+        },
+        {
+          "line": 13,
+          "source": "count += backtrack(row + 1, queens)",
+          "hits": 8393,
+          "profile_ns": 3343200
+        }
+      ],
+      "profile_wall_ns": 503120900,
+      "profiled_test_index": 57
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      4,
+      4
+    ],
+    "usable": true
+  },
+  "2522": {
+    "problem_idx": 2522,
+    "group": "short_control",
+    "timing_collection_s": 0.1391,
+    "total_ns": 3086800,
+    "total_range_fraction": 0.104,
+    "slowest": {
+      "index": 78,
+      "median_ns": 172900,
+      "test": "assert solution.minimumPartition('3737775837', 384773691) == 2"
+    },
+    "profile_collection_s": 0.0793,
+    "profile": {
+      "lines": [
+        {
+          "line": 13,
+          "source": "for i in range(start, len(s)):",
+          "hits": 1533,
+          "profile_ns": 463800
+        },
+        {
+          "line": 14,
+          "source": "number = number * 10 + int(s[i])",
+          "hits": 1023,
+          "profile_ns": 375200
+        },
+        {
+          "line": 16,
+          "source": "count = min(count, 1 + dfs(s, k, i + 1))",
+          "hits": 1021,
+          "profile_ns": 373700
+        },
+        {
+          "line": 7,
+          "source": "if start == len(s):",
+          "hits": 1022,
+          "profile_ns": 330700
+        },
+        {
+          "line": 15,
+          "source": "if number <= k:",
+          "hits": 1023,
+          "profile_ns": 317100
+        }
+      ],
+      "profile_wall_ns": 3014600,
+      "profiled_test_index": 78
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      13,
+      13
+    ],
+    "usable": true
+  },
+  "1387": {
+    "problem_idx": 1387,
+    "group": "main",
+    "timing_collection_s": 0.4578,
+    "total_ns": 109470500,
+    "total_range_fraction": 0.011,
+    "slowest": {
+      "index": 41,
+      "median_ns": 2482000,
+      "test": "assert solution.getKth(108, 949, 419) == 747"
+    },
+    "profile_collection_s": 0.214,
+    "profile": {
+      "lines": [
+        {
+          "line": 6,
+          "source": "if x % 2 == 0:",
+          "hits": 52927,
+          "profile_ns": 17063700
+        },
+        {
+          "line": 5,
+          "source": "while x != 1:",
+          "hits": 53769,
+          "profile_ns": 16579200
+        },
+        {
+          "line": 10,
+          "source": "steps += 1",
+          "hits": 52927,
+          "profile_ns": 16108300
+        },
+        {
+          "line": 7,
+          "source": "x = x  // 2",
+          "hits": 35404,
+          "profile_ns": 11363300
+        },
+        {
+          "line": 9,
+          "source": "x = 3 * x + 1",
+          "hits": 17523,
+          "profile_ns": 5834400
+        }
+      ],
+      "profile_wall_ns": 69158200,
+      "profiled_test_index": 41
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      6,
+      6
+    ],
+    "usable": true
+  },
+  "1539": {
+    "problem_idx": 1539,
+    "group": "short_control",
+    "timing_collection_s": 0.1452,
+    "total_ns": 2335600,
+    "total_range_fraction": 0.021,
+    "slowest": {
+      "index": 36,
+      "median_ns": 47400,
+      "test": "assert solution.findKthPositive([165, 167, 720, 787, 936], 1000) == 1005"
+    },
+    "profile_collection_s": 0.0825,
+    "profile": {
+      "lines": [
+        {
+          "line": 7,
+          "source": "if index < len(arr) and num == arr[index]:",
+          "hits": 1005,
+          "profile_ns": 338100
+        },
+        {
+          "line": 6,
+          "source": "while missing_count < k:",
+          "hits": 1005,
+          "profile_ns": 325700
+        },
+        {
+          "line": 11,
+          "source": "if missing_count == k:",
+          "hits": 1000,
+          "profile_ns": 324100
+        },
+        {
+          "line": 13,
+          "source": "num += 1",
+          "hits": 1004,
+          "profile_ns": 319600
+        },
+        {
+          "line": 10,
+          "source": "missing_count += 1",
+          "hits": 1000,
+          "profile_ns": 318100
+        }
+      ],
+      "profile_wall_ns": 1682700,
+      "profiled_test_index": 36
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      7,
+      7
+    ],
+    "usable": true
+  },
+  "241": {
+    "problem_idx": 241,
+    "group": "main",
+    "timing_collection_s": 6.8611,
+    "total_ns": 341197800,
+    "total_range_fraction": 0.005,
+    "slowest": {
+      "index": 5,
+      "median_ns": 18219100,
+      "test": "assert solution.diffWaysToCompute(\"5+2+6*1-4+5-1+1*2-0*8\") == [-23, 61, -23, 61, 61, -17, 151, -23, -17, 103, 103, 151, 103, 151, -47, -131, -47, -131, -131, -47, -299, -71, -491, -23, -17, -47, -47, -71, -107, -107, -59, -107, -59, -299, -299, -299, -491, -107, -59, -299, -299, -491, -23, 61, -23, 61, 61, -17, 151, -23, -17, 103, 103, 151, 103, 151, -47, -131, -47, -131, -131, -47, -131, -47, -131, -131, -71, -659, -95, -851, -71, -659, -95, -851, -95, -851, -23, -17, -47, -47, -71, -23, -17, -"
+    },
+    "profile_collection_s": 1.7011,
+    "profile": {
+      "lines": [
+        {
+          "line": 6,
+          "source": "for i in range(len(expression)):",
+          "hits": 177146,
+          "profile_ns": 62798200
+        },
+        {
+          "line": 11,
+          "source": "for right in right_part:",
+          "hits": 150362,
+          "profile_ns": 51136500
+        },
+        {
+          "line": 7,
+          "source": "if expression[i] == '+' or expression[i] == '-' or expression[i] == '*':",
+          "hits": 118097,
+          "profile_ns": 42133500
+        },
+        {
+          "line": 12,
+          "source": "if expression[i] == '+':",
+          "hits": 92718,
+          "profile_ns": 30443200
+        },
+        {
+          "line": 10,
+          "source": "for left in left_part:",
+          "hits": 87168,
+          "profile_ns": 27392900
+        }
+      ],
+      "profile_wall_ns": 404317000,
+      "profiled_test_index": 5
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      6,
+      6
+    ],
+    "usable": true
+  },
+  "2813": {
+    "problem_idx": 2813,
+    "group": "main",
+    "timing_collection_s": 0.2018,
+    "total_ns": 10859600,
+    "total_range_fraction": 0.017,
+    "slowest": {
+      "index": 70,
+      "median_ns": 562900,
+      "test": "assert solution.findMaximumElegance([[910683511, 76], [796646597, 19], [776346363, 21], [621982888, 55], [491883394, 24], [362538607, 94], [319030164, 59], [223284516, 68], [166500474, 74], [33432177, 26]], 6) == 3960081396"
+    },
+    "profile_collection_s": 0.0979,
+    "profile": {
+      "lines": [
+        {
+          "line": 10,
+          "source": "selected_items = [items[j] for j in range(n) if (i & (1 << j))]",
+          "hits": 11264,
+          "profile_ns": 4242300
+        },
+        {
+          "line": 12,
+          "source": "total_profit = sum(item[0] for item in selected_items)",
+          "hits": 1680,
+          "profile_ns": 897400
+        },
+        {
+          "line": 13,
+          "source": "distinct_categories = len(set(item[1] for item in selected_items))",
+          "hits": 1680,
+          "profile_ns": 888300
+        },
+        {
+          "line": 11,
+          "source": "if len(selected_items) == k:",
+          "hits": 1024,
+          "profile_ns": 342700
+        },
+        {
+          "line": 9,
+          "source": "for i in range(1 << n):",
+          "hits": 1025,
+          "profile_ns": 328800
+        }
+      ],
+      "profile_wall_ns": 7796200,
+      "profiled_test_index": 70
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      10,
+      10
+    ],
+    "usable": true
+  },
+  "903": {
+    "problem_idx": 903,
+    "group": "main",
+    "timing_collection_s": 3.2592,
+    "total_ns": 1039175600,
+    "total_range_fraction": 0.011,
+    "slowest": {
+      "index": 9,
+      "median_ns": 47225100,
+      "test": "assert solution.numPermsDISequence('DDDIIIDDIIIIDDIDIDIDIDDDIIDDDIDDIIDDDDDDIDDDIDDDIIIIDDDDDDDIIIIIIIDIDIDIDDDIIIDIDDIIIIIDDIIDIDIIDIIIDIDDDIIIIIIIDDDDIDIIDIDDIIIIDIIIDDDIDIIIDDDIIIIIIIDIIIDIDIDDDDIDDIDIDDDDDDIIIIIDIDIIDIIIDIIIDIIDIIDI') == 688396850"
+    },
+    "profile_collection_s": 2.4959,
+    "profile": {
+      "lines": [
+        {
+          "line": 11,
+          "source": "dp[j][i] = sum(dp[j - 1][k] for k in range(i)) % MOD",
+          "hits": 806793,
+          "profile_ns": 457811600
+        },
+        {
+          "line": 13,
+          "source": "dp[j][i] = sum(dp[j - 1][k] for k in range(i, j)) % MOD",
+          "hits": 587207,
+          "profile_ns": 334887200
+        },
+        {
+          "line": 10,
+          "source": "if s[j - 1] == 'I':",
+          "hits": 20300,
+          "profile_ns": 7520400
+        },
+        {
+          "line": 9,
+          "source": "for i in range(j + 1):",
+          "hits": 20500,
+          "profile_ns": 5692600
+        },
+        {
+          "line": 5,
+          "source": "dp = [[0] * (n + 1) for _ in range(n + 1)]",
+          "hits": 202,
+          "profile_ns": 170900
+        }
+      ],
+      "profile_wall_ns": 1212587200,
+      "profiled_test_index": 9
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      11,
+      11
+    ],
+    "usable": true
+  },
+  "465": {
+    "problem_idx": 465,
+    "group": "main",
+    "timing_collection_s": 0.5505,
+    "total_ns": 131733800,
+    "total_range_fraction": 0.006,
+    "slowest": {
+      "index": 34,
+      "median_ns": 26455500,
+      "test": "assert solution.minTransfers([[0, 10, 22], [11, 1, 7], [6, 10, 93], [3, 11, 47], [0, 4, 94], [9, 7, 44], [2, 3, 95], [8, 9, 81], [1, 8, 30]]) == 9"
+    },
+    "profile_collection_s": 0.9979,
+    "profile": {
+      "lines": [
+        {
+          "line": 26,
+          "source": "for i in range(start_index + 1, len(debt_list)):",
+          "hits": 220643,
+          "profile_ns": 79650400
+        },
+        {
+          "line": 27,
+          "source": "if debt_list[i] * debt_list[start_index] < 0:",
+          "hits": 147308,
+          "profile_ns": 52518400
+        },
+        {
+          "line": 19,
+          "source": "while start_index < len(debt_list) and debt_list[start_index] == 0:",
+          "hits": 133643,
+          "profile_ns": 45948300
+        },
+        {
+          "line": 29,
+          "source": "min_trans = min(min_trans, 1 + self.dfs(start_index + 1, debt_list))",
+          "hits": 103464,
+          "profile_ns": 37901900
+        },
+        {
+          "line": 28,
+          "source": "debt_list[i] += debt_list[start_index]",
+          "hits": 103464,
+          "profile_ns": 36791600
+        }
+      ],
+      "profile_wall_ns": 448443700,
+      "profiled_test_index": 34
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      26,
+      26
+    ],
+    "usable": true
+  },
+  "1608": {
+    "problem_idx": 1608,
+    "group": "main",
+    "timing_collection_s": 0.2539,
+    "total_ns": 9899400,
+    "total_range_fraction": 0.022,
+    "slowest": {
+      "index": 48,
+      "median_ns": 211400,
+      "test": "assert solution.specialArray([1, 2, 12, 58, 68, 75, 79, 107, 116, 130, 140, 144, 145, 154, 165, 167, 179, 184, 199, 207, 223, 234, 240, 297, 301, 312, 316, 322, 331, 344, 355, 356, 363, 367, 377, 389, 401, 404, 432, 433, 444, 470, 501, 502, 516, 518, 523, 556, 565, 570, 590, 594, 602, 604, 626, 629, 633, 651, 656, 662, 667, 671, 672, 676, 681, 714, 719, 726, 736, 742, 743, 744, 757, 762, 764, 784, 785, 793, 794, 799, 813, 828, 836, 855, 860, 864, 870, 876, 881, 913, 929, 936, 938, 947, 955, 963,"
+    },
+    "profile_collection_s": 0.1049,
+    "profile": {
+      "lines": [
+        {
+          "line": 8,
+          "source": "count = sum(num >= x for num in nums)",
+          "hits": 9486,
+          "profile_ns": 5237000
+        },
+        {
+          "line": 7,
+          "source": "for x in range(1, len(nums) + 1):",
+          "hits": 93,
+          "profile_ns": 34200
+        },
+        {
+          "line": 9,
+          "source": "if count == x:",
+          "hits": 93,
+          "profile_ns": 26600
+        },
+        {
+          "line": 5,
+          "source": "nums.sort(reverse=True)",
+          "hits": 1,
+          "profile_ns": 3900
+        },
+        {
+          "line": 4,
+          "source": "def specialArray(self, nums: List[int]) -> int:",
+          "hits": 0,
+          "profile_ns": 1400
+        }
+      ],
+      "profile_wall_ns": 8117400,
+      "profiled_test_index": 48
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      8,
+      8
+    ],
+    "usable": true
+  },
+  "2552": {
+    "problem_idx": 2552,
+    "group": "main",
+    "timing_collection_s": 8.2314,
+    "total_ns": 2675450300,
+    "total_range_fraction": 0.006,
+    "slowest": {
+      "index": 54,
+      "median_ns": 118238100,
+      "test": "assert solution.countQuadruplets([30, 643, 627, 105, 288, 211, 89, 449, 923, 604, 507, 274, 16, 808, 15, 287, 108, 502, 238, 859, 790, 74, 714, 853, 23, 936, 36, 715, 755, 664, 717, 501, 675, 827, 782, 751, 700, 232, 149, 959, 640, 527, 444, 337, 246, 961, 585, 610, 646, 845, 384, 18, 324, 946, 983, 761, 459, 85, 817, 63, 766, 668, 111, 842, 485, 615, 581, 107, 504, 997, 889, 103, 772, 189, 234, 494, 80, 877, 296, 203, 420, 736, 310, 78, 710, 270, 1, 114, 754, 721, 377, 465, 266, 691, 904, 933, "
+    },
+    "profile_collection_s": 5.3631,
+    "profile": {
+      "lines": [
+        {
+          "line": 11,
+          "source": "if nums[i] < nums[k] < nums[j] < nums[l]:",
+          "hits": 3764376,
+          "profile_ns": 1294635400
+        },
+        {
+          "line": 10,
+          "source": "for l in range(k + 1, n):",
+          "hits": 3916472,
+          "profile_ns": 1224389600
+        },
+        {
+          "line": 12,
+          "source": "count += 1",
+          "hits": 192073,
+          "profile_ns": 61221800
+        },
+        {
+          "line": 9,
+          "source": "for k in range(j + 1, n - 1):",
+          "hits": 156752,
+          "profile_ns": 48523000
+        },
+        {
+          "line": 8,
+          "source": "for j in range(i + 1, n - 2):",
+          "hits": 4752,
+          "profile_ns": 1490200
+        }
+      ],
+      "profile_wall_ns": 2630380200,
+      "profiled_test_index": 54
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      11,
+      11
+    ],
+    "usable": true
+  },
+  "2376": {
+    "problem_idx": 2376,
+    "group": "main",
+    "timing_collection_s": 0.1551,
+    "total_ns": 8794300,
+    "total_range_fraction": 0.038,
+    "slowest": {
+      "index": 77,
+      "median_ns": 174800,
+      "test": "assert solution.countSpecialNumbers(1000) == 738"
+    },
+    "profile_collection_s": 0.0861,
+    "profile": {
+      "lines": [
+        {
+          "line": 5,
+          "source": "for digit in str(num):",
+          "hits": 3540,
+          "profile_ns": 1212400
+        },
+        {
+          "line": 6,
+          "source": "if digit in seen:",
+          "hits": 2802,
+          "profile_ns": 890300
+        },
+        {
+          "line": 8,
+          "source": "seen.add(digit)",
+          "hits": 2540,
+          "profile_ns": 826500
+        },
+        {
+          "line": 13,
+          "source": "if is_special(i):",
+          "hits": 1000,
+          "profile_ns": 382500
+        },
+        {
+          "line": 4,
+          "source": "seen = set()",
+          "hits": 1000,
+          "profile_ns": 357800
+        }
+      ],
+      "profile_wall_ns": 5103100,
+      "profiled_test_index": 77
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      5,
+      5
+    ],
+    "usable": true
+  },
+  "494": {
+    "problem_idx": 494,
+    "group": "main",
+    "timing_collection_s": 1.6022,
+    "total_ns": 438927500,
+    "total_range_fraction": 0.031,
+    "slowest": {
+      "index": 81,
+      "median_ns": 20946500,
+      "test": "assert solution.findTargetSumWays([973, 953, 246, 993, 890, 71, 355, 658, 70, 798, 824, 813, 325, 157, 504, 146, 534, 914, 912, 334, 210], -228) == 538"
+    },
+    "profile_collection_s": 0.6767,
+    "profile": {
+      "lines": [
+        {
+          "line": 11,
+          "source": "if (index, target) in memo:",
+          "hits": 106805,
+          "profile_ns": 55108100
+        },
+        {
+          "line": 6,
+          "source": "if index == len(nums):",
+          "hits": 126359,
+          "profile_ns": 45385200
+        },
+        {
+          "line": 5,
+          "source": "def backtrack(index, target):",
+          "hits": 1,
+          "profile_ns": 37242700
+        },
+        {
+          "line": 18,
+          "source": "return memo[(index, target)]",
+          "hits": 63179,
+          "profile_ns": 26517600
+        },
+        {
+          "line": 14,
+          "source": "count1 = backtrack(index + 1, target - nums[index])",
+          "hits": 63179,
+          "profile_ns": 26313400
+        }
+      ],
+      "profile_wall_ns": 301853600,
+      "profiled_test_index": 81
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      11,
+      11
+    ],
+    "usable": true
+  },
+  "401": {
+    "problem_idx": 401,
+    "group": "main",
+    "timing_collection_s": 0.3314,
+    "total_ns": 20480600,
+    "total_range_fraction": 0.005,
+    "error": "no slow test appeared in all three timing runs",
+    "usable": false
+  },
+  "2596": {
+    "problem_idx": 2596,
+    "group": "short_control",
+    "timing_collection_s": 0.1884,
+    "total_ns": 2616300,
+    "total_range_fraction": 0.032,
+    "slowest": {
+      "index": 39,
+      "median_ns": 76300,
+      "test": "assert solution.checkValidGrid([[14, 15, 16, 17, 18, 19, 20], [7, 8, 9, 10, 11, 12, 13], [21, 22, 23, 24, 25, 26, 27], [28, 29, 30, 31, 32, 33, 34], [42, 43, 44, 45, 46, 47, 48], [35, 36, 37, 38, 39, 40, 41], [0, 1, 2, 3, 4, 5, 6]]) == False"
+    },
+    "profile_collection_s": 0.0831,
+    "profile": {
+      "lines": [
+        {
+          "line": 11,
+          "source": "return 0 <= row < n and 0 <= col < n and grid[row][col] not in visited",
+          "hits": 691,
+          "profile_ns": 281200
+        },
+        {
+          "line": 10,
+          "source": "def is_valid_move(row, col):",
+          "hits": 1,
+          "profile_ns": 173100
+        },
+        {
+          "line": 24,
+          "source": "if is_valid_move(new_row, new_col) and (next_row, next_col) == (-1, -1):",
+          "hits": 368,
+          "profile_ns": 124400
+        },
+        {
+          "line": 23,
+          "source": "new_row, new_col = row + dr, col + dc",
+          "hits": 368,
+          "profile_ns": 111800
+        },
+        {
+          "line": 22,
+          "source": "for dr, dc in directions:",
+          "hits": 414,
+          "profile_ns": 107900
+        }
+      ],
+      "profile_wall_ns": 1257100,
+      "profiled_test_index": 39
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      11,
+      11
+    ],
+    "usable": true
+  },
+  "959": {
+    "problem_idx": 959,
+    "group": "main",
+    "timing_collection_s": 0.2602,
+    "total_ns": 13220100,
+    "total_range_fraction": 0.063,
+    "slowest": {
+      "index": 83,
+      "median_ns": 362000,
+      "test": "assert solution.regionsBySlashes([['\\\\', '\\\\', '/', ' ', '\\\\', '\\\\', ' ', '\\\\', '/', ' '], [' ', '/', ' ', '/', ' ', '/', '/', '\\\\', '\\\\', '\\\\'], [' ', ' ', ' ', ' ', ' ', ' ', ' ', '/', '\\\\', ' '], [' ', '/', '/', '/', ' ', ' ', '\\\\', ' ', ' ', ' '], ['\\\\', '/', '\\\\', '\\\\', '/', ' ', ' ', ' ', ' ', '/'], ['/', ' ', ' ', '\\\\', '/', '\\\\', '/', ' ', '\\\\', '\\\\'], ['\\\\', '/', ' ', '\\\\', '\\\\', '\\\\', '/', '/', '\\\\', ' '], ['/', '/', '\\\\', '/', ' ', '/', '\\\\', ' ', ' ', '\\\\'], [' ', '\\\\', '/', '/', '/'"
+    },
+    "profile_collection_s": 0.1001,
+    "profile": {
+      "lines": [
+        {
+          "line": 17,
+          "source": "if i < 0 or i >= n * 3 or j < 0 or j >= n * 3 or graph[i][j] == 1:",
+          "hits": 2877,
+          "profile_ns": 1180800
+        },
+        {
+          "line": 16,
+          "source": "def dfs(i, j):",
+          "hits": 1,
+          "profile_ns": 817300
+        },
+        {
+          "line": 18,
+          "source": "return",
+          "hits": 2160,
+          "profile_ns": 735300
+        },
+        {
+          "line": 28,
+          "source": "if graph[i][j] == 0:",
+          "hits": 900,
+          "profile_ns": 290800
+        },
+        {
+          "line": 27,
+          "source": "for j in range(n * 3):",
+          "hits": 930,
+          "profile_ns": 284100
+        }
+      ],
+      "profile_wall_ns": 5545300,
+      "profiled_test_index": 83
+    },
+    "top_line_stable": true,
+    "profile_runs_top_lines": [
+      17,
+      17
+    ],
+    "usable": true
+  }
+}

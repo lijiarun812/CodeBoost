@@ -1,0 +1,918 @@
+[
+  {
+    "problem_idx": 1467,
+    "task_name": "Probability of a Two Boxes Having The Same Number of Distinct Balls",
+    "repeats": 1,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        246.125,
+        244.54,
+        247.994
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        6.274,
+        6.211,
+        6.38
+      ],
+      "error": null,
+      "speedup": 39.229
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        203.747,
+        198.728,
+        207.108
+      ],
+      "error": null,
+      "speedup": 1.208
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        96.227,
+        96.596,
+        102.554
+      ],
+      "error": null,
+      "speedup": 2.548
+    }
+  },
+  {
+    "problem_idx": 2518,
+    "task_name": "Number of Great Partitions",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        158.848,
+        161.668,
+        164.487
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "total_ms": [],
+      "error": "TypeError: pow expected 2 arguments, got 3",
+      "speedup": null
+    },
+    "perfcodegen": {
+      "correct": false,
+      "total_ms": [],
+      "error": "TypeError: pow expected 2 arguments, got 3",
+      "speedup": null
+    },
+    "ours": {
+      "correct": false,
+      "total_ms": [],
+      "error": "TypeError: pow expected 2 arguments, got 3",
+      "speedup": null
+    }
+  },
+  {
+    "problem_idx": 1055,
+    "task_name": "Shortest Way to Form String",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        45.465,
+        46.956,
+        48.397
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        71.31,
+        70.532,
+        71.758
+      ],
+      "error": null,
+      "speedup": 0.658
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        25.678,
+        24.384,
+        24.723
+      ],
+      "error": null,
+      "speedup": 1.899
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        27.277,
+        29.166,
+        27.728
+      ],
+      "error": null,
+      "speedup": 1.693
+    }
+  },
+  {
+    "problem_idx": 860,
+    "task_name": "Lemonade Change",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        32.827,
+        30.739,
+        31.626
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        33.964,
+        31.69,
+        32.081
+      ],
+      "error": null,
+      "speedup": 0.986
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        30.102,
+        29.628,
+        31.174
+      ],
+      "error": null,
+      "speedup": 1.051
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        30.978,
+        29.48,
+        31.933
+      ],
+      "error": null,
+      "speedup": 1.021
+    }
+  },
+  {
+    "problem_idx": 51,
+    "task_name": "N",
+    "repeats": 2,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        156.25,
+        162.218,
+        157.161
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        41.402,
+        41.97,
+        41.251
+      ],
+      "error": null,
+      "speedup": 3.796
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        41.972,
+        42.876,
+        42.303
+      ],
+      "error": null,
+      "speedup": 3.715
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        42.556,
+        42.274,
+        43.615
+      ],
+      "error": null,
+      "speedup": 3.693
+    }
+  },
+  {
+    "problem_idx": 1631,
+    "task_name": "Path With Minimum Effort",
+    "repeats": 79,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        173.95,
+        173.793,
+        174.003
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.minimumEffortPath([[856097, 770219, 602723], [580297, 984886, 902035], [127873, 248664, 7045], [133142, 251334, 497742], [688127, 610526, 667109], [298325, 358735, 250705], [520658, 420640, 955645]]) == 535005",
+      "speedup": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        126.179,
+        126.782,
+        125.639
+      ],
+      "error": null,
+      "speedup": 1.379
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        130.46,
+        130.963,
+        136.323
+      ],
+      "error": null,
+      "speedup": 1.328
+    }
+  },
+  {
+    "problem_idx": 2537,
+    "task_name": "Count the Number of Good Subarrays",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        49.072,
+        48.104,
+        47.848
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        33.426,
+        34.803,
+        34.475
+      ],
+      "error": null,
+      "speedup": 1.395
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        13.343,
+        13.447,
+        13.363
+      ],
+      "error": null,
+      "speedup": 3.6
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        47.203,
+        46.199,
+        47.736
+      ],
+      "error": null,
+      "speedup": 1.019
+    }
+  },
+  {
+    "problem_idx": 1234,
+    "task_name": "Replace the Substring for Balanced String",
+    "repeats": 65,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        200.997,
+        201.544,
+        191.613
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        51.148,
+        54.413,
+        51.506
+      ],
+      "error": null,
+      "speedup": 3.902
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        65.849,
+        63.245,
+        65.669
+      ],
+      "error": null,
+      "speedup": 3.061
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        55.079,
+        55.743,
+        54.092
+      ],
+      "error": null,
+      "speedup": 3.649
+    }
+  },
+  {
+    "problem_idx": 1353,
+    "task_name": "Maximum Number of Events That Can Be Attended",
+    "repeats": 125,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        178.06,
+        180.287,
+        178.466
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        186.255,
+        189.59,
+        187.374
+      ],
+      "error": null,
+      "speedup": 0.952
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        299.909,
+        297.184,
+        296.405
+      ],
+      "error": null,
+      "speedup": 0.601
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        137.06,
+        135.413,
+        136.514
+      ],
+      "error": null,
+      "speedup": 1.307
+    }
+  },
+  {
+    "problem_idx": 1330,
+    "task_name": "Reverse Subarray To Maximize Array Value",
+    "repeats": 427,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        160.26,
+        163.074,
+        162.603
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.maxValueAfterReverse([-5177, 95934, -82899, 40496, 53577, -48886, -7982, 4357, -28321, -99804]) == 813921",
+      "speedup": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        52.76,
+        52.851,
+        55.169
+      ],
+      "error": null,
+      "speedup": 3.077
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        67.405,
+        68.167,
+        69.34
+      ],
+      "error": null,
+      "speedup": 2.385
+    }
+  },
+  {
+    "problem_idx": 1567,
+    "task_name": "Maximum Length of Subarray With Positive Product",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        25.832,
+        25.523,
+        25.399
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        22.269,
+        22.23,
+        22.493
+      ],
+      "error": null,
+      "speedup": 1.146
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        22.692,
+        22.491,
+        22.489
+      ],
+      "error": null,
+      "speedup": 1.135
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        22.446,
+        21.69,
+        21.649
+      ],
+      "error": null,
+      "speedup": 1.177
+    }
+  },
+  {
+    "problem_idx": 2070,
+    "task_name": "Most Beautiful Item for Each Query",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        70.976,
+        69.219,
+        68.894
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "total_ms": [],
+      "error": "SyntaxError: invalid character '—' (U+2014) (<candidate>, line 4)",
+      "speedup": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        120.472,
+        113.111,
+        117.281
+      ],
+      "error": null,
+      "speedup": 0.59
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        90.15,
+        89.371,
+        86.387
+      ],
+      "error": null,
+      "speedup": 0.775
+    }
+  },
+  {
+    "problem_idx": 329,
+    "task_name": "Longest Increasing Path in a Matrix",
+    "repeats": 66,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        198.31,
+        198.045,
+        199.456
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        87.443,
+        91.801,
+        90.738
+      ],
+      "error": null,
+      "speedup": 2.186
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        89.46,
+        90.632,
+        88.687
+      ],
+      "error": null,
+      "speedup": 2.217
+    },
+    "ours": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.longestIncreasingPath([[75, 97, 95, 7, 25, 56, 5, 5], [96, 58, 16, 71, 91, 91, 38, 68], [33, 47, 84, 25, 98, 60, 31, 33], [7, 93, 87, 77, 9, 82, 54, 73], [97, 19, 13, 33, 25, 69, 41, 47]]) == 6",
+      "speedup": null
+    }
+  },
+  {
+    "problem_idx": 229,
+    "task_name": "Majority Element II",
+    "repeats": 6,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        311.983,
+        301.18,
+        307.447
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        176.601,
+        178.014,
+        178.528
+      ],
+      "error": null,
+      "speedup": 1.727
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        205.339,
+        202.283,
+        197.627
+      ],
+      "error": null,
+      "speedup": 1.52
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        203.872,
+        199.548,
+        201.452
+      ],
+      "error": null,
+      "speedup": 1.526
+    }
+  },
+  {
+    "problem_idx": 354,
+    "task_name": "Russian Doll Envelopes",
+    "repeats": 229,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        169.774,
+        173.387,
+        170.467
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.maxEnvelopes([[4, 2], [9, 100], [14, 86], [17, 86], [17, 75], [21, 43], [28, 41], [35, 44], [35, 6], [42, 14], [56, 74], [65, 58], [70, 6], [72, 37], [74, 33], [75, 56], [87, 84], [97, 43], [99, 12]]) == 6",
+      "speedup": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        239.157,
+        236.161,
+        239.707
+      ],
+      "error": null,
+      "speedup": 0.713
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        158.949,
+        158.95,
+        160.111
+      ],
+      "error": null,
+      "speedup": 1.072
+    }
+  },
+  {
+    "problem_idx": 809,
+    "task_name": "Expressive Words",
+    "repeats": 8,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        200.756,
+        195.773,
+        193.73
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        429.06,
+        423.409,
+        407.9
+      ],
+      "error": null,
+      "speedup": 0.462
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        2.09,
+        2.115,
+        2.071
+      ],
+      "error": null,
+      "speedup": 93.671
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        4.168,
+        4.001,
+        4.341
+      ],
+      "error": null,
+      "speedup": 46.97
+    }
+  },
+  {
+    "problem_idx": 1040,
+    "task_name": "Moving Stones Until Consecutive II",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        52.476,
+        52.649,
+        51.876
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        52.917,
+        50.926,
+        52.158
+      ],
+      "error": null,
+      "speedup": 1.006
+    },
+    "perfcodegen": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.numMovesStonesII([12, 37, 40, 44, 53, 63, 79, 92]) == [5, 61]",
+      "speedup": null
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        51.557,
+        51.338,
+        51.844
+      ],
+      "error": null,
+      "speedup": 1.018
+    }
+  },
+  {
+    "problem_idx": 743,
+    "task_name": "Network Delay Time",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        86.218,
+        86.614,
+        87.91
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        50.195,
+        50.286,
+        51.291
+      ],
+      "error": null,
+      "speedup": 1.722
+    },
+    "perfcodegen": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.networkDelayTime([[1, 1, 33]], 1, 1) == 0",
+      "speedup": null
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        57.851,
+        58.33,
+        58.74
+      ],
+      "error": null,
+      "speedup": 1.485
+    }
+  },
+  {
+    "problem_idx": 425,
+    "task_name": "Word Squares",
+    "repeats": 307,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        224.075,
+        220.123,
+        219.659
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "total_ms": [],
+      "error": "IndexError: list assignment index out of range",
+      "speedup": null
+    },
+    "perfcodegen": {
+      "correct": false,
+      "total_ms": [],
+      "error": "KeyError: 'e'",
+      "speedup": null
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        195.558,
+        195.652,
+        191.632
+      ],
+      "error": null,
+      "speedup": 1.126
+    }
+  },
+  {
+    "problem_idx": 1289,
+    "task_name": "Minimum Falling Path Sum II",
+    "repeats": 393,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        144.603,
+        143.391,
+        138.314
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        110.559,
+        109.066,
+        111.214
+      ],
+      "error": null,
+      "speedup": 1.297
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        108.325,
+        106.878,
+        101.866
+      ],
+      "error": null,
+      "speedup": 1.342
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        149.649,
+        150.197,
+        153.404
+      ],
+      "error": null,
+      "speedup": 0.955
+    }
+  },
+  {
+    "problem_idx": 738,
+    "task_name": "Monotone Increasing Digits",
+    "repeats": 500,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        58.724,
+        59.195,
+        58.802
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        59.59,
+        59.014,
+        59.848
+      ],
+      "error": null,
+      "speedup": 0.987
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        53.712,
+        55.115,
+        53.752
+      ],
+      "error": null,
+      "speedup": 1.094
+    },
+    "ours": {
+      "correct": true,
+      "total_ms": [
+        67.214,
+        64.494,
+        64.563
+      ],
+      "error": null,
+      "speedup": 0.911
+    }
+  },
+  {
+    "problem_idx": 2250,
+    "task_name": "Count Number of Rectangles Containing Each Point",
+    "repeats": 168,
+    "base": {
+      "correct": true,
+      "total_ms": [
+        161.591,
+        155.285,
+        156.328
+      ],
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "total_ms": [
+        223.613,
+        228.176,
+        240.914
+      ],
+      "error": null,
+      "speedup": 0.685
+    },
+    "perfcodegen": {
+      "correct": true,
+      "total_ms": [
+        128.613,
+        129.064,
+        128.338
+      ],
+      "error": null,
+      "speedup": 1.215
+    },
+    "ours": {
+      "correct": false,
+      "total_ms": [],
+      "error": "assert solution.countRectangles([[534939629, 97], [299600766, 19]], [[933719375, 83], [638372472, 11], [307032781, 19], [941793296, 29], [520457016, 42]]) == [0, 0, 1, 0, 1]",
+      "speedup": null
+    }
+  }
+]

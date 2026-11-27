@@ -1,0 +1,1430 @@
+{
+  "HumanEval/31": {
+    "task_id": "HumanEval/31",
+    "entry_point": "is_prime",
+    "base_raw": "```python\ndef is_prime(n):\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 101 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10007 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 99999989, a large prime near 1e8 (large)",
+        "median_ms": 0.122,
+        "runs_ms": [
+          0.122,
+          0.122,
+          0.121
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 10,
+        "func": "is_prime",
+        "hits": 1666,
+        "total_ms": 0.39
+      },
+      {
+        "lineno": 12,
+        "func": "is_prime",
+        "hits": 1666,
+        "total_ms": 0.332
+      },
+      {
+        "lineno": 9,
+        "func": "is_prime",
+        "hits": 1667,
+        "total_ms": 0.312
+      },
+      {
+        "lineno": 2,
+        "func": "is_prime",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 13,
+        "func": "is_prime",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 4,
+        "func": "is_prime",
+        "hits": 1,
+        "total_ms": 0.0
+      },
+      {
+        "lineno": 6,
+        "func": "is_prime",
+        "hits": 1,
+        "total_ms": 0.0
+      },
+      {
+        "lineno": 8,
+        "func": "is_prime",
+        "hits": 1,
+        "total_ms": 0.0
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef is_prime(n):\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 101 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.003,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10007 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 99999989, a large prime near 1e8 (large)",
+        "median_ms": 0.112,
+        "runs_ms": [
+          0.112,
+          0.112,
+          0.112
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef is_prime(n):\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 101 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10007 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 99999989, a large prime near 1e8 (large)",
+        "median_ms": 0.114,
+        "runs_ms": [
+          0.12,
+          0.114,
+          0.11
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef is_prime(n):\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n    return True\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 101 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10007 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 99999989, a large prime near 1e8 (large)",
+        "median_ms": 0.112,
+        "runs_ms": [
+          0.112,
+          0.124,
+          0.109
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/55": {
+    "task_id": "HumanEval/55",
+    "entry_point": "fib",
+    "base_raw": "```python\ndef fib(n: int) -> int:\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 10 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 25 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.0,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 35, naive recursion is already slow here (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 5,
+        "func": "fib",
+        "hits": 35,
+        "total_ms": 0.007
+      },
+      {
+        "lineno": 6,
+        "func": "fib",
+        "hits": 34,
+        "total_ms": 0.007
+      },
+      {
+        "lineno": 2,
+        "func": "fib",
+        "hits": 1,
+        "total_ms": 0.002
+      },
+      {
+        "lineno": 4,
+        "func": "fib",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 7,
+        "func": "fib",
+        "hits": 1,
+        "total_ms": 0.001
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef fib(n: int) -> int:\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 10 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 25 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 35, naive recursion is already slow here (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef fib(n: int) -> int:\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 10 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 25 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 35, naive recursion is already slow here (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef fib(n: int) -> int:\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 10 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.003,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 25 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 35, naive recursion is already slow here (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/59": {
+    "task_id": "HumanEval/59",
+    "entry_point": "largest_prime_factor",
+    "base_raw": "```python\ndef largest_prime_factor(n: int) -> int:\n    \"\"\"Return the largest prime factor of n. Assume n > 1 and is not a prime.\"\"\"\n    factor = 2\n    while factor * factor <= n:\n        if n % factor:\n            factor += 1\n        else:\n            n //= factor\n    return n\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 13195 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.003,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 600851475143, the Project Euler #3 number (medium)",
+        "median_ms": 0.081,
+        "runs_ms": [
+          0.082,
+          0.081,
+          0.081
+        ]
+      },
+      {
+        "desc": "n = 1000000007, a large prime (large)",
+        "median_ms": 1.524,
+        "runs_ms": [
+          1.54,
+          1.523,
+          1.524
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 4,
+        "func": "largest_prime_factor",
+        "hits": 31622,
+        "total_ms": 8.912
+      },
+      {
+        "lineno": 6,
+        "func": "largest_prime_factor",
+        "hits": 31621,
+        "total_ms": 7.464
+      },
+      {
+        "lineno": 5,
+        "func": "largest_prime_factor",
+        "hits": 31621,
+        "total_ms": 7.426
+      },
+      {
+        "lineno": 3,
+        "func": "largest_prime_factor",
+        "hits": 1,
+        "total_ms": 0.002
+      },
+      {
+        "lineno": 9,
+        "func": "largest_prime_factor",
+        "hits": 1,
+        "total_ms": 0.002
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef largest_prime_factor(n: int) -> int:\n    \"\"\"Return the largest prime factor of n. Assume n > 1 and is not a prime.\"\"\"\n    factor = 2\n    while factor * factor <= n:\n        if n % factor:\n            factor += 1\n        else:\n            n //= factor\n    return n\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 13195 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 600851475143, the Project Euler #3 number (medium)",
+        "median_ms": 0.068,
+        "runs_ms": [
+          0.069,
+          0.068,
+          0.068
+        ]
+      },
+      {
+        "desc": "n = 1000000007, a large prime (large)",
+        "median_ms": 1.307,
+        "runs_ms": [
+          1.271,
+          1.307,
+          1.312
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef largest_prime_factor(n: int) -> int:\n    \"\"\"Return the largest prime factor of n. Assume n > 1 and is not a prime.\"\"\"\n    factor = 2\n    while factor * factor <= n:\n        if n % factor:\n            factor += 1\n        else:\n            n //= factor\n    return n\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 13195 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 600851475143, the Project Euler #3 number (medium)",
+        "median_ms": 0.069,
+        "runs_ms": [
+          0.069,
+          0.069,
+          0.068
+        ]
+      },
+      {
+        "desc": "n = 1000000007, a large prime (large)",
+        "median_ms": 1.273,
+        "runs_ms": [
+          1.284,
+          1.273,
+          1.272
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef largest_prime_factor(n: int) -> int:\n    \"\"\"Return the largest prime factor of n. Assume n > 1 and is not a prime.\"\"\"\n    factor = 2\n    while factor * factor <= n:\n        if n % factor:\n            factor += 1\n        else:\n            n //= factor\n    return n\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 13195 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.003,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 600851475143, the Project Euler #3 number (medium)",
+        "median_ms": 0.072,
+        "runs_ms": [
+          0.073,
+          0.072,
+          0.072
+        ]
+      },
+      {
+        "desc": "n = 1000000007, a large prime (large)",
+        "median_ms": 1.346,
+        "runs_ms": [
+          1.34,
+          1.346,
+          1.354
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/60": {
+    "task_id": "HumanEval/60",
+    "entry_point": "sum_to_n",
+    "base_raw": "```python\ndef sum_to_n(n: int) -> int:\n    return n * (n + 1) // 2\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.002,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^7 (large)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 2,
+        "func": "sum_to_n",
+        "hits": 1,
+        "total_ms": 0.003
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef sum_to_n(n: int) -> int:\n    return n * (n + 1) // 2\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.002,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^7 (large)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef sum_to_n(n: int) -> int:\n    return n * (n + 1) // 2\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^7 (large)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef sum_to_n(n: int) -> int:\n    return n * (n + 1) // 2\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.002,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 10^7 (large)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/63": {
+    "task_id": "HumanEval/63",
+    "entry_point": "fibfib",
+    "base_raw": "```python\ndef fibfib(n: int) -> int:\n    if n == 0 or n == 1:\n        return 0\n    elif n == 2:\n        return 1\n    else:\n        a, b, c = 0, 0, 1\n        for _ in range(3, n + 1):\n            a, b, c = b, c, a + b + c\n        return c\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 8 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 15 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 20, naive recursion is exponential (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 8,
+        "func": "fibfib",
+        "hits": 19,
+        "total_ms": 0.005
+      },
+      {
+        "lineno": 9,
+        "func": "fibfib",
+        "hits": 18,
+        "total_ms": 0.004
+      },
+      {
+        "lineno": 2,
+        "func": "fibfib",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 7,
+        "func": "fibfib",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 10,
+        "func": "fibfib",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 4,
+        "func": "fibfib",
+        "hits": 1,
+        "total_ms": 0.0
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef fibfib(n: int) -> int:\n    if n == 0 or n == 1:\n        return 0\n    elif n == 2:\n        return 1\n    else:\n        a, b, c = 0, 0, 1\n        for _ in range(3, n + 1):\n            a, b, c = b, c, a + b + c\n        return c\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 8 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 15 (medium)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.001,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 20, naive recursion is exponential (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef fibfib(n: int) -> int:\n    if n == 0 or n == 1:\n        return 0\n    elif n == 2:\n        return 1\n    a, b, c = 0, 0, 1\n    for _ in range(3, n + 1):\n        a, b, c = b, c, a + b + c\n    return c\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 8 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 15 (medium)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 20, naive recursion is exponential (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef fibfib(n: int) -> int:\n    if n == 0 or n == 1:\n        return 0\n    elif n == 2:\n        return 1\n    else:\n        a, b, c = 0, 0, 1\n        for _ in range(3, n + 1):\n            a, b, c = b, c, a + b + c\n        return c\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 8 (small)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.002,
+          0.001,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 15 (medium)",
+        "median_ms": 0.0,
+        "runs_ms": [
+          0.001,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "desc": "n = 20, naive recursion is exponential (large)",
+        "median_ms": 0.001,
+        "runs_ms": [
+          0.0,
+          0.001,
+          0.001
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/96": {
+    "task_id": "HumanEval/96",
+    "entry_point": "count_up_to",
+    "base_raw": "```python\ndef count_up_to(n):\n    def is_prime(num):\n        if num <= 1:\n            return False\n        for i in range(2, int(num**0.5) + 1):\n            if num % i == 0:\n                return False\n        return True\n\n    return [num for num in range(2, n) if is_prime(num)]\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.02,
+        "runs_ms": [
+          0.022,
+          0.02,
+          0.02
+        ]
+      },
+      {
+        "desc": "n = 10^4 (medium)",
+        "median_ms": 3.947,
+        "runs_ms": [
+          3.947,
+          4.088,
+          3.834
+        ]
+      },
+      {
+        "desc": "n = 10^5 (large)",
+        "median_ms": 72.739,
+        "runs_ms": [
+          73.568,
+          72.059,
+          72.739
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 10,
+        "func": "count_up_to",
+        "hits": 1,
+        "total_ms": 942.236
+      },
+      {
+        "lineno": 2,
+        "func": "count_up_to",
+        "hits": 1,
+        "total_ms": 0.003
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef count_up_to(n):\n    def is_prime(num):\n        if num <= 1:\n            return False\n        for i in range(2, int(num**0.5) + 1):\n            if num % i == 0:\n                return False\n        return True\n\n    return [num for num in range(2, n) if is_prime(num)]\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.02,
+        "runs_ms": [
+          0.022,
+          0.02,
+          0.019
+        ]
+      },
+      {
+        "desc": "n = 10^4 (medium)",
+        "median_ms": 3.934,
+        "runs_ms": [
+          3.971,
+          3.934,
+          3.931
+        ]
+      },
+      {
+        "desc": "n = 10^5 (large)",
+        "median_ms": 70.436,
+        "runs_ms": [
+          70.977,
+          70.436,
+          67.932
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef count_up_to(n):\n    def is_prime(num):\n        if num <= 1:\n            return False\n        for i in range(2, int(num**0.5) + 1):\n            if num % i == 0:\n                return False\n        return True\n\n    return [num for num in range(2, n) if is_prime(num)]\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.04,
+        "runs_ms": [
+          0.065,
+          0.025,
+          0.04
+        ]
+      },
+      {
+        "desc": "n = 10^4 (medium)",
+        "median_ms": 4.494,
+        "runs_ms": [
+          4.447,
+          4.583,
+          4.494
+        ]
+      },
+      {
+        "desc": "n = 10^5 (large)",
+        "median_ms": 72.609,
+        "runs_ms": [
+          75.814,
+          72.609,
+          71.004
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef count_up_to(n):\n    def is_prime(num):\n        if num <= 1:\n            return False\n        for i in range(2, int(num**0.5) + 1):\n            if num % i == 0:\n                return False\n        return True\n\n    return [num for num in range(2, n) if is_prime(num)]\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 100 (small)",
+        "median_ms": 0.022,
+        "runs_ms": [
+          0.024,
+          0.022,
+          0.022
+        ]
+      },
+      {
+        "desc": "n = 10^4 (medium)",
+        "median_ms": 4.301,
+        "runs_ms": [
+          4.32,
+          4.301,
+          4.199
+        ]
+      },
+      {
+        "desc": "n = 10^5 (large)",
+        "median_ms": 77.582,
+        "runs_ms": [
+          78.186,
+          77.582,
+          76.327
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/123": {
+    "task_id": "HumanEval/123",
+    "entry_point": "get_odd_collatz",
+    "base_raw": "```python\ndef get_odd_collatz(n):\n    def collatz_sequence(num):\n        sequence = []\n        while num != 1:\n            sequence.append(num)\n            if num % 2 == 0:\n                num = num // 2\n            else:\n                num = 3 * num + 1\n        sequence.append(1)\n        return sequence\n\n    odd_numbers = [num for num in collatz_sequence(n) if num % 2 != 0]\n    return sorted(odd_numbers)\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 14 (small)",
+        "median_ms": 0.003,
+        "runs_ms": [
+          0.005,
+          0.003,
+          0.002
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.017,
+        "runs_ms": [
+          0.019,
+          0.017,
+          0.016
+        ]
+      },
+      {
+        "desc": "n = 999999, a long Collatz chain (large)",
+        "median_ms": 0.028,
+        "runs_ms": [
+          0.03,
+          0.028,
+          0.028
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 13,
+        "func": "get_odd_collatz",
+        "hits": 1,
+        "total_ms": 0.229
+      },
+      {
+        "lineno": 14,
+        "func": "get_odd_collatz",
+        "hits": 1,
+        "total_ms": 0.009
+      },
+      {
+        "lineno": 2,
+        "func": "get_odd_collatz",
+        "hits": 1,
+        "total_ms": 0.003
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef get_odd_collatz(n):\n    def collatz_sequence(num):\n        sequence = []\n        while num != 1:\n            if num % 2 != 0:\n                sequence.append(num)\n            num = 3 * num + 1 if num % 2 else num // 2\n        sequence.append(1)\n        return sequence\n\n    odd_numbers = [num for num in collatz_sequence(n) if num % 2 != 0]\n    return sorted(odd_numbers)\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "n = 14 (small)",
+        "median_ms": 0.002,
+        "runs_ms": [
+          0.004,
+          0.002,
+          0.002
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.014,
+        "runs_ms": [
+          0.015,
+          0.014,
+          0.013
+        ]
+      },
+      {
+        "desc": "n = 999999, a long Collatz chain (large)",
+        "median_ms": 0.024,
+        "runs_ms": [
+          0.025,
+          0.024,
+          0.024
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef get_odd_collatz(n):\n    odd_numbers = []\n    while n != 1:\n        if n % 2 != 0:\n            odd_numbers.append(n)\n        n = 3 * n + 1 if n % 2 else n // 2\n    odd_numbers.append(1)\n    return sorted(odd_numbers)\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "n = 14 (small)",
+        "median_ms": 0.002,
+        "runs_ms": [
+          0.003,
+          0.002,
+          0.001
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.011,
+        "runs_ms": [
+          0.012,
+          0.011,
+          0.01
+        ]
+      },
+      {
+        "desc": "n = 999999, a long Collatz chain (large)",
+        "median_ms": 0.019,
+        "runs_ms": [
+          0.02,
+          0.019,
+          0.018
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef get_odd_collatz(n):\n    def collatz_sequence(num):\n        sequence = []\n        while num != 1:\n            sequence.append(num)\n            if num % 2 == 0:\n                num = num // 2\n            else:\n                num = 3 * num + 1\n        sequence.append(1)\n        return sequence\n\n    odd_numbers = [num for num in collatz_sequence(n) if num % 2 != 0]\n    return sorted(odd_numbers)\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "n = 14 (small)",
+        "median_ms": 0.002,
+        "runs_ms": [
+          0.004,
+          0.002,
+          0.002
+        ]
+      },
+      {
+        "desc": "n = 10^6 (medium)",
+        "median_ms": 0.016,
+        "runs_ms": [
+          0.018,
+          0.016,
+          0.015
+        ]
+      },
+      {
+        "desc": "n = 999999, a long Collatz chain (large)",
+        "median_ms": 0.027,
+        "runs_ms": [
+          0.03,
+          0.027,
+          0.026
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/130": {
+    "task_id": "HumanEval/130",
+    "entry_point": "tri",
+    "base_raw": "```python\ndef tri(n):\n    if n == 0:\n        return [1]\n    elif n == 1:\n        return [1, 3]\n    elif n == 2:\n        return [1, 3, 2]\n    else:\n        result = [1, 3, 2]\n        for i in range(3, n + 1):\n            if i % 2 == 0:\n                result.append(1 + i / 2)\n            else:\n                result.append(result[i - 1] + result[i - 2] + result[i + 1])\n        return result\n```",
+    "base_correct": false,
+    "base_check_err": "check() raised IndexError: list index out of range",
+    "done": true
+  },
+  "HumanEval/139": {
+    "task_id": "HumanEval/139",
+    "entry_point": "special_factorial",
+    "base_raw": "```python\ndef special_factorial(n):\n    result = 1\n    for i in range(1, n + 1):\n        result *= i * factorial(i - 1)\n    return result\n```",
+    "base_correct": false,
+    "base_check_err": "check() raised NameError: name 'factorial' is not defined",
+    "done": true
+  },
+  "HumanEval/147": {
+    "task_id": "HumanEval/147",
+    "entry_point": "get_max_triples",
+    "base_raw": "```python\ndef get_max_triples(n):\n    a = [i * i - i + 1 for i in range(1, n + 1)]\n    count = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            for k in range(j + 1, n):\n                if (a[i] + a[j] + a[k]) % 3 == 0:\n                    count += 1\n    return count\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "n = 10 (small)",
+        "median_ms": 0.01,
+        "runs_ms": [
+          0.013,
+          0.01,
+          0.009
+        ]
+      },
+      {
+        "desc": "n = 200 (medium)",
+        "median_ms": 71.385,
+        "runs_ms": [
+          68.43,
+          71.385,
+          72.92
+        ]
+      },
+      {
+        "desc": "n = 500, naive O(n^3) triples loop (large)",
+        "median_ms": 1067.828,
+        "runs_ms": [
+          1067.828,
+          1067.052,
+          1074.077
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 7,
+        "func": "get_max_triples",
+        "hits": 20708500,
+        "total_ms": 5006.357
+      },
+      {
+        "lineno": 6,
+        "func": "get_max_triples",
+        "hits": 20833250,
+        "total_ms": 4206.275
+      },
+      {
+        "lineno": 8,
+        "func": "get_max_triples",
+        "hits": 6861361,
+        "total_ms": 1434.082
+      },
+      {
+        "lineno": 5,
+        "func": "get_max_triples",
+        "hits": 125250,
+        "total_ms": 25.663
+      },
+      {
+        "lineno": 4,
+        "func": "get_max_triples",
+        "hits": 501,
+        "total_ms": 0.106
+      },
+      {
+        "lineno": 2,
+        "func": "get_max_triples",
+        "hits": 1,
+        "total_ms": 0.032
+      },
+      {
+        "lineno": 9,
+        "func": "get_max_triples",
+        "hits": 1,
+        "total_ms": 0.002
+      },
+      {
+        "lineno": 3,
+        "func": "get_max_triples",
+        "hits": 1,
+        "total_ms": 0.0
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef get_max_triples(n):\n    a = [i * i - i + 1 for i in range(1, n + 1)]\n    count = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            remainder = (a[i] + a[j]) % 3\n            if remainder == 0:\n                count += n - j - 1\n            elif remainder == 1:\n                count += (n - j - 1) // 2\n            else:\n                count += (n - j - 2) // 2\n    return count\n```",
+    "vanilla_correct": false,
+    "vanilla_check_err": "check() failed: ",
+    "vanilla_times": [],
+    "perfcodegen_raw": "```python\ndef get_max_triples(n):\n    a = [i * i - i + 1 for i in range(1, n + 1)]\n    count = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            remainder = (a[i] + a[j]) % 3\n            if remainder == 0:\n                count += n - j - 1\n            elif remainder == 1:\n                count += (n - j - 1) // 2\n            else:\n                count += (n - j - 1) // 2\n    return count\n```",
+    "perfcodegen_correct": false,
+    "perfcodegen_check_err": "check() failed: ",
+    "perfcodegen_times": [],
+    "ours_raw": "```python\ndef get_max_triples(n):\n    a = [i * i - i + 1 for i in range(1, n + 1)]\n    count = 0\n    remainder_counts = [0, 0, 0]\n    for value in a:\n        remainder_counts[value % 3] += 1\n    \n    for i in range(3):\n        for j in range(i, 3):\n            k = (i + j) % 3\n            if i == j == k:\n                count += remainder_counts[i] * (remainder_counts[i] - 1) * (remainder_counts[i] - 2) // 6\n            elif i == j:\n                count += remainder_counts[i] * (remainder_counts[i] - 1) // 2 * remainder_counts[k]\n            elif j == k:\n                count += remainder_counts[j] * (remainder_counts[j] - 1) // 2 * remainder_counts[i]\n            else:\n                count += remainder_counts[i] * remainder_counts[j] * remainder_counts[k]\n    \n    return count\n```",
+    "ours_correct": false,
+    "ours_check_err": "check() failed: ",
+    "ours_times": [],
+    "done": true
+  },
+  "HumanEval/40": {
+    "task_id": "HumanEval/40",
+    "entry_point": "triples_sum_to_zero",
+    "base_raw": "```python\ndef triples_sum_to_zero(l: list):\n    n = len(l)\n    for i in range(n):\n        for j in range(i + 1, n):\n            for k in range(j + 1, n):\n                if l[i] + l[j] + l[k] == 0:\n                    return True\n    return False\n```",
+    "base_correct": true,
+    "base_check_err": null,
+    "base_times": [
+      {
+        "desc": "list of 30 random ints in [-50, 50] (small)",
+        "median_ms": 0.004,
+        "runs_ms": [
+          0.006,
+          0.004,
+          0.004
+        ]
+      },
+      {
+        "desc": "list of 300 random ints in [-500, 500] (medium)",
+        "median_ms": 0.115,
+        "runs_ms": [
+          0.115,
+          0.117,
+          0.114
+        ]
+      },
+      {
+        "desc": "list of 2000 random ints in [-5000, 5000] (large)",
+        "median_ms": 0.145,
+        "runs_ms": [
+          0.146,
+          0.135,
+          0.145
+        ]
+      }
+    ],
+    "base_profile": [
+      {
+        "lineno": 6,
+        "func": "triples_sum_to_zero",
+        "hits": 3375,
+        "total_ms": 0.785
+      },
+      {
+        "lineno": 5,
+        "func": "triples_sum_to_zero",
+        "hits": 3376,
+        "total_ms": 0.67
+      },
+      {
+        "lineno": 2,
+        "func": "triples_sum_to_zero",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 3,
+        "func": "triples_sum_to_zero",
+        "hits": 1,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 4,
+        "func": "triples_sum_to_zero",
+        "hits": 2,
+        "total_ms": 0.001
+      },
+      {
+        "lineno": 7,
+        "func": "triples_sum_to_zero",
+        "hits": 1,
+        "total_ms": 0.001
+      }
+    ],
+    "base_profile_err": null,
+    "vanilla_raw": "```python\ndef triples_sum_to_zero(l: list):\n    n = len(l)\n    l.sort()\n    for i in range(n - 2):\n        if i > 0 and l[i] == l[i - 1]:\n            continue\n        j, k = i + 1, n - 1\n        while j < k:\n            total = l[i] + l[j] + l[k]\n            if total == 0:\n                return True\n            elif total < 0:\n                j += 1\n            else:\n                k -= 1\n    return False\n```",
+    "vanilla_correct": true,
+    "vanilla_check_err": null,
+    "vanilla_times": [
+      {
+        "desc": "list of 30 random ints in [-50, 50] (small)",
+        "median_ms": 0.002,
+        "runs_ms": [
+          0.004,
+          0.002,
+          0.002
+        ]
+      },
+      {
+        "desc": "list of 300 random ints in [-500, 500] (medium)",
+        "median_ms": 0.012,
+        "runs_ms": [
+          0.129,
+          0.012,
+          0.011
+        ]
+      },
+      {
+        "desc": "list of 2000 random ints in [-5000, 5000] (large)",
+        "median_ms": 0.07,
+        "runs_ms": [
+          0.071,
+          0.07,
+          0.07
+        ]
+      }
+    ],
+    "perfcodegen_raw": "```python\ndef triples_sum_to_zero(l: list):\n    n = len(l)\n    l.sort()\n    for i in range(n):\n        j, k = i + 1, n - 1\n        while j < k:\n            total = l[i] + l[j] + l[k]\n            if total == 0:\n                return True\n            elif total < 0:\n                j += 1\n            else:\n                k -= 1\n    return False\n```",
+    "perfcodegen_correct": true,
+    "perfcodegen_check_err": null,
+    "perfcodegen_times": [
+      {
+        "desc": "list of 30 random ints in [-50, 50] (small)",
+        "median_ms": 0.002,
+        "runs_ms": [
+          0.003,
+          0.002,
+          0.001
+        ]
+      },
+      {
+        "desc": "list of 300 random ints in [-500, 500] (medium)",
+        "median_ms": 0.009,
+        "runs_ms": [
+          0.009,
+          0.009,
+          0.009
+        ]
+      },
+      {
+        "desc": "list of 2000 random ints in [-5000, 5000] (large)",
+        "median_ms": 0.061,
+        "runs_ms": [
+          0.061,
+          0.069,
+          0.059
+        ]
+      }
+    ],
+    "ours_raw": "```python\ndef triples_sum_to_zero(l: list):\n    n = len(l)\n    l.sort()\n    for i in range(n):\n        if i > 0 and l[i] == l[i - 1]:\n            continue\n        j, k = i + 1, n - 1\n        while j < k:\n            total = l[i] + l[j] + l[k]\n            if total == 0:\n                return True\n            elif total < 0:\n                j += 1\n            else:\n                k -= 1\n    return False\n```",
+    "ours_correct": true,
+    "ours_check_err": null,
+    "ours_times": [
+      {
+        "desc": "list of 30 random ints in [-50, 50] (small)",
+        "median_ms": 0.002,
+        "runs_ms": [
+          0.003,
+          0.002,
+          0.001
+        ]
+      },
+      {
+        "desc": "list of 300 random ints in [-500, 500] (medium)",
+        "median_ms": 0.009,
+        "runs_ms": [
+          0.009,
+          0.01,
+          0.009
+        ]
+      },
+      {
+        "desc": "list of 2000 random ints in [-5000, 5000] (large)",
+        "median_ms": 0.06,
+        "runs_ms": [
+          0.06,
+          0.06,
+          0.06
+        ]
+      }
+    ],
+    "done": true
+  },
+  "HumanEval/120": {
+    "task_id": "HumanEval/120",
+    "entry_point": "maximum",
+    "base_raw": "```python\ndef maximum(arr, k):\n    return sorted(arr, reverse=True)[:k]\n```",
+    "base_correct": false,
+    "base_check_err": "check() failed: ",
+    "done": true
+  }
+}

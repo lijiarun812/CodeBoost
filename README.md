@@ -1,13 +1,13 @@
 # CodeBoost
 
-> 探究大模型生成代码的运行效率提升：**复现 EffiLearner**，并借鉴 **PerfCodeGen** 做进一步优化。
+> 探究大模型生成代码的运行效率提升：以 **PerfCodeGen** 为主线，借鉴 **EffiLearner** 的细粒度开销反馈。
 
 ## 项目简介
 
 在保持功能正确的前提下，降低大模型生成代码的运行时间与内存占用。
-项目以 **EffiLearner** 为主线完成简化复现（把时间/内存剖析结果反馈给模型做自迭代优化），
-并引入 **PerfCodeGen** 的执行反馈思路（用失败单测修正正确性、用最耗时单测改进性能）与
-**EffiBench** 的效率指标来补强评测。
+项目以 **PerfCodeGen** 为研究主线：先用失败测试修正正确性，再用最耗时测试的执行反馈改进性能。
+**EffiLearner** 的时间/内存剖析反馈作为增强反馈与消融路线；主实验题目优先从具备有效测试的
+EffiBench 题目中筛选。筛题和评测规则见 [`experiment/PROTOCOL.md`](experiment/PROTOCOL.md)。
 
 ## 参考论文
 
@@ -17,7 +17,10 @@
 
 ## 当前进展
 
-已完成 EffiLearner 的简化复现，在 4 个模型上跑通「100 题 × 3 轮自我优化」：
+G0～G3 递进反馈实验已完成：G0 无反馈、G1 程序总耗时、G2 追加最慢测试、G3 再追加热点源码与执行次数。17 题、每组两次生成的结果见 [`experiment/results/g_report.md`](experiment/results/g_report.md)；各阶段预期和实测见同目录的 `g_stage1_feedback.md` 至 `g_stage4_findings.md`。当前结果未显示反馈越细效果越好，研究问题改为分析不同反馈颗粒度的收益与成本。复现入口与结果索引见 [`experiment/SETUP.md`](experiment/SETUP.md)。本轮只测执行时间，未得到可靠的内存比较。
+
+
+已有 EffiLearner 简化复现，在 4 个模型上跑通「100 题 × 3 轮自我优化」。另有 12 题 HumanEval 反馈粒度预实验；其中不少题目过于简单，不能据此判断增强反馈的效果。
 
 | 模型 | 成功执行 | 时间下降 | 内存下降（可测口径） |
 |---|---|---|---|
