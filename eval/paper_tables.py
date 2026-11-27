@@ -30,6 +30,8 @@ PAPER = {
 }
 MU_RESOLVABLE_MB = 5.0
 TM_RESOLVABLE_MB = 0.05
+# PerfCodeGen §4：%Opt 的门槛是「比 ground truth 至少快 10%」，不是「更快即可」
+OPT_MIN_SPEEDUP = 1.10
 
 
 def _gmean(xs):
@@ -48,7 +50,8 @@ def analyze(path: Path) -> dict:
         bt, ft = r["baseline"]["exec_time"], r["final"]["exec_time"]
         if bt and ft:
             ratios.append(bt / ft)
-            if ft < bt:
+            # PerfCodeGen §4 定义：%Opt = 比 ground truth 至少快 10% 的题占比
+            if bt / ft >= OPT_MIN_SPEEDUP:
                 opt += 1
         if r.get("time_reduction_pct") is not None:
             ets.append(r["time_reduction_pct"])
@@ -120,7 +123,7 @@ def md(rows, cv_hint=None):
     w("")
     w("- `%Correct（原始）` 的分母含「标准解自己跑不通」的题，会系统性偏低；"
       "`剔除不可执行` 才是模型能力的真实反映。")
-    w("- `%Opt` 沿用论文定义：**优化后比 ground truth 更快**的题占比，分母是跑通的题。")
+    w("- `%Opt` 沿用 PerfCodeGen §4 定义：**比 ground truth 至少快 10%** 的题占比，分母是跑通的题（早期版本误写成「更快即可」，已修正）。")
     w("- `Speedup` 是 `base_time / final_time` 的几何平均。\n")
 
     w("## 表 2  按论文列（ET / MU / TMU）对照\n")
