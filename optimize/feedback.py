@@ -14,6 +14,7 @@ import math
 
 from eval import harness
 from eval.hotlines import hotspots
+from eval.space import space_status
 
 from optimize.line_timing import profile_case
 from optimize.profiler import context_regions, scopes_at
@@ -94,6 +95,72 @@ def _timing_source_error(timing: dict, code: str) -> str | None:
     return None
 
 
+def _program_space_feedback(task: dict, result: dict,
+                            rss_baseline_mb: float | None) -> tuple[str, dict]:
+    """Render only program-level peaks from a paired official harness Result."""
+    meta = {"source": "eval.harness.measure_task Result", "status": "unavailable"}
+    if not isinstance(result, dict) or result.get("status") != "ok":
+        meta["reason"] = "result_status_not_ok"
+        return "程序级空间证据不可用：正式测量状态不是 ok。", meta
+    if result.get("task_id") != task.get("task_id"):
+        meta["reason"] = "task_id_mismatch"
+        return "程序级空间证据不可用：题目配对不一致。", meta
+    time = result.get("time")
+    tiers = time.get("tiers") if isinstance(time, dict) else None
+    final = tiers[-1] if isinstance(tiers, list) and tiers else None
+    if (not isinstance(final, dict) or final.get("status") != "ok"
+            or not isinstance(final.get("tier"), str) or not final["tier"]
+            or not isinstance(final.get("args_hash"), str) or not final["args_hash"]):
+        meta["reason"] = "frozen_tier_unavailable"
+        return "程序级空间证据不可用：冻结输入档信息缺失。", meta
+    inputs = task.get("inputs")
+    if (not isinstance(inputs, list) or not any(
+            isinstance(item, dict) and item.get("tier") == final["tier"]
+            and item.get("args_hash") == final["args_hash"] for item in inputs)):
+        meta["reason"] = "frozen_tier_mismatch"
+        return "程序级空间证据不可用：冻结输入档与题库不一致。", meta
+    mem = result.get("mem")
+    if not isinstance(mem, dict):
+        meta["reason"] = "memory_block_missing"
+        return "程序级空间证据不可用：正式测量缺少内存字段。", meta
+    tm, rss = mem.get("peak_tracemalloc_mb"), mem.get("peak_rss_mb")
+    for value in (tm, rss):
+        if value is not None and (isinstance(value, bool)
+                                  or not isinstance(value, (int, float))
+                                  or not math.isfinite(value) or value < 0):
+            meta["reason"] = "invalid_peak_value"
+            return "程序级空间证据不可用：峰值数值无效。", meta
+    states = space_status(mem, rss_baseline_mb)
+    meta.update({"status": "ok", "tier": final["tier"],
+                 "args_hash": final["args_hash"], "n": final.get("n"),
+                 "gen": final.get("gen"), "rss_baseline_mb": rss_baseline_mb,
+                 "peak_tm_status": states["peak_tm_status"],
+                 "rss_status": states["rss_status"]})
+    if tm is None:
+        tm_text = "缺值（本次独立内存测量未取得峰值，不能判断空间收益）"
+    elif states["peak_tm_status"] == "below_floor":
+        tm_text = f"{tm:.4f} MB（低于 0.05 MB 分辨下限，不能量化改善幅度）"
+    else:
+        tm_text = f"{tm:.4f} MB（可测）"
+    if rss is None:
+        rss_text = "缺值（未取得进程驻留峰值，RSS 门禁不可判）"
+    else:
+        rss_meaning = {
+            "gated": "可分辨，资源门禁可用",
+            "indistinguishable": "与空载基线差异不足或基线缺失，门禁跳过",
+        }[states["rss_status"]]
+        rss_text = f"{rss:.3f} MB（{states['rss_status']}：{rss_meaning}）"
+    lines = [
+        "程序级空间证据（来自 eval.harness.measure_task 的独立内存测量；单位 MB；不是逐行内存归因）：",
+        f"冻结输入档：{final['tier']}，args_hash={final['args_hash']}，n={final.get('n')}，gen={final.get('gen')}",
+        f"peak_tracemalloc_mb：{tm_text}；Python 分配峰值，状态={states['peak_tm_status']}。",
+        f"peak_rss_mb：{rss_text}；进程驻留占用峰值，仅作资源报告／门禁，不作为空间改善奖励。",
+    ]
+    if rss_baseline_mb is None:
+        lines.append("RSS 空载基线未提供；无法判断门禁可分辨性。")
+    return "\n".join(lines), meta
+
+
 def build_feedback(
     method: str,
     task: dict,
@@ -103,6 +170,8 @@ def build_feedback(
     diagnostic: dict | None = None,
     hot: dict | None = None,
     line_timing: dict | None = None,
+    space_result: dict | None = None,
+    rss_baseline_mb: float | None = None,
     line_timeout_s: float = 10.0,
     radius: int = 8,
     max_chars: int = 4800,
@@ -127,6 +196,11 @@ def build_feedback(
         raise ValueError("radius must be nonnegative")
     if not math.isfinite(line_timeout_s) or not 0 < line_timeout_s <= _MAX_DIAGNOSTIC_TIMEOUT_S:
         raise ValueError("line_timeout_s must be positive and at most 60 seconds")
+    if rss_baseline_mb is not None and (
+            isinstance(rss_baseline_mb, bool)
+            or not isinstance(rss_baseline_mb, (int, float))
+            or not math.isfinite(rss_baseline_mb) or rss_baseline_mb <= 0):
+        raise ValueError("rss_baseline_mb must be a positive finite MB value")
     description = task.get("description")
     if not isinstance(description, str) or not description.strip():
         raise ValueError("Task.description is required (full problem description)")
@@ -134,7 +208,7 @@ def build_feedback(
             "case_mode": None, "case_count": None, "slow_ms": None,
             "diagnostic_timeout_s": None,
             "diagnostic_timeout_cap_s": _MAX_DIAGNOSTIC_TIMEOUT_S,
-            "hotspot_mode": None,
+            "hotspot_mode": None, "space": None,
             "line_timing": None, "truncated": False}
     feedback = _NO_FEEDBACK
 
@@ -362,8 +436,23 @@ def build_feedback(
                                         f"Case execution time: {slow['ms']:.4f} ms.")
 
     effective = meta["effective"]
-    # schema v1.1 has no f4_line_hits method. Full F4 also still lacks space
-    # feedback. Keep both out of formal Results until the group fixes a policy.
+    if arm == "f4":
+        if effective in ("f4", "f4_line_hits") and space_result is not None:
+            space_text, space_meta = _program_space_feedback(
+                task, space_result, rss_baseline_mb)
+            meta["space"] = space_meta
+            if len(feedback) + len(space_text) + 2 <= max_chars:
+                feedback += "\n\n" + space_text
+            else:
+                meta["reasons"].append("space_feedback_omitted_by_length_limit")
+                meta["space"]["status"] = "omitted_by_length_limit"
+        elif effective in ("f4", "f4_line_hits"):
+            meta["space"] = {"status": "unavailable", "reason": "official_space_result_missing"}
+        else:
+            meta["space"] = {"status": "omitted_after_feedback_downgrade"}
+    # schema v1.1 has no f4_line_hits method. Program-level peaks are now
+    # available, but the group's complete-F4 acceptance scope remains pending.
+    # Keep both prototypes out of formal Results.
     mapping_pending = (arm == "f4" and effective in ("f4", "f4_line_hits"))
     if effective == arm:
         degrade_reason = None
