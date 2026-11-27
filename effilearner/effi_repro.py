@@ -530,9 +530,13 @@ PROVIDERS = {
 
 
 def _host_supports_thinking(api_base):
-    """未指定厂商时，按地址自动判断是否需要发送 thinking 字段。"""
+    """未指定厂商时，按地址自动判断是否需要发送 thinking 字段。
+
+    注意：阿里云 MaaS（maas.aliyuncs.com）不带 thinking 会返回 200 + 空 content，
+    这里把 aliyuncs.com 整体纳入，避免白名单漏网关。
+    """
     b = (api_base or "").lower()
-    return any(k in b for k in ("deepseek", "bigmodel", "dashscope"))
+    return any(k in b for k in ("deepseek", "bigmodel", "dashscope", "aliyuncs.com"))
 
 
 # ---------------------------------------------------------------------------
@@ -710,9 +714,10 @@ def run(args):
                             "error_type": classify_error(probe.get("error"))})
             continue
 
-        profile = args.profile in ("always", "baseline")
+        # 判据测量一律关闭剖析：settrace 会把耗时虚高约 2.8 倍，
+        # 若基线不剖析、候选剖析，判据会系统性拒绝所有候选（A 实测 bug 1）
         base_m = measure(base_code, test_block, reps, args.max_time, workdir,
-                         profile_lines=profile)
+                         profile_lines=False)
         if not base_m.get("ok"):
             print("   baseline 不可执行，跳过: %s" % base_m.get("error"))
             results.append({"problem_idx": pid, "task_name": name,
@@ -735,7 +740,6 @@ def run(args):
             last_exec_time = base_time
             for ep in range(1, args.epochs + 1):
                 source_lines = current_code.splitlines()
-                profile_now = args.profile in ("always", "on_epoch")
                 try:
                     raw = client.chat(
                         optimization_prompt(
@@ -750,7 +754,7 @@ def run(args):
                     break
                 cand_code = extract_code(raw)
                 cand_m = measure(cand_code, test_block, reps, args.max_time, workdir,
-                                 profile_lines=profile_now,
+                                 profile_lines=False,
                                  last_exec_time=last_exec_time)
                 if not cand_m.get("ok"):
                     print("   epoch %d: 保持   (%s)" % (ep, cand_m.get("error")))
@@ -777,6 +781,14 @@ def run(args):
                     last_exec_time = cand_m["exec_time"]
                     print("   epoch %d: 采纳  %s  time=%.4fs  peak=%.1f MB"
                           % (ep, detail, cand_m["exec_time"], cand_m["peak_mb"]))
+                    # 行级剖析单独跑一趟，只供下一轮反馈诊断用；数字一律丢弃，
+                    # 绝不回写 current_m 的耗时/内存（否则又是剖析污染判据）
+                    if args.profile != "off":
+                        pm = measure(cand_code, test_block, min(reps, 2000),
+                                     args.max_time, workdir, profile_lines=True,
+                                     last_exec_time=last_exec_time)
+                        if pm.get("ok") and pm.get("line_profile"):
+                            current_m["line_profile"] = pm["line_profile"]
                 else:
                     print("   epoch %d: 保持   (%s)" % (ep, "判据未改善: " + detail))
                 if args.new_metrics_scope == "all":
@@ -922,8 +934,9 @@ def main():
     p.add_argument("--max-time", type=int, default=30,
                    help="单次执行超时(秒)，同时作为自适应超时的下界(不再用 180s 卡死)")
     p.add_argument("--mock", action="store_true", help="用 canonical_solution 当初始代码且不调 LLM")
-    p.add_argument("--profile", choices=["off", "on_epoch", "baseline", "always"], default="on_epoch",
-                   help="逐行剖析: off=关闭; baseline=仅首轮; on_epoch=每轮优化(给模型热点反馈); always=全开")
+    p.add_argument("--profile", choices=["off", "on_epoch", "baseline", "always"], default="off",
+                   help="逐行剖析（仅用于反馈诊断，独立一趟，不参与判据）: off=关闭(默认); "
+                        "on_epoch=每轮采纳后剖析一次; baseline=首轮剖析; always=全开")
     p.add_argument("--hot-window", type=int, default=5,
                    help="热点周围源码上下文窗口大小(±N 行，老师要求反馈上下文而非单行)")
     p.add_argument("--score-wt", type=float, default=0.5, help="综合评分中时间权重")
