@@ -27,6 +27,7 @@ results/golden/golden_<timestamp>.json      # 12 题体检表
 | `dataset` | enum | ✅ | B | 见上表 |
 | `kind` | enum | ✅ | B | `humaneval`（调 `check(candidate)`）/ `test_block`（自包含测试块，EffiBench 用） |
 | `entry_point` | string | ✅ | B | HumanEval 是函数名；EffiBench 是 `solution` |
+| `description` | string | ✅ | **B（题库）** | 题面描述，供反馈提示词使用；EffiBench 取 `markdown_description`，runner 原样透传，不自行解析原始数据 |
 | `task_name` | string | ⬜ | B | 人类可读名，仅展示用 |
 | `code` | string | ✅ | B | 初始/标准代码，可直接 `exec` |
 | `test` | string | ✅ | B | 可直接 `exec` 的正确性测试块（native 档） |
@@ -88,7 +89,9 @@ results/golden/golden_<timestamp>.json      # 12 题体检表
 
 | 字段 | 归属 | 说明 |
 |---|---|---|
-| `method` | 全员 | `base` / `effi`（**复现主线**：EffiLearner 三数字反馈 + 多轮）/ `vanilla`(F0) / `f1`(总耗时) / `f2`(最慢用例，PerfCodeGen 对照档) / `f3`(仅热点行) / `ours`(F4 热点区域) |
+| `method` | 全员 | **实际生效**的方法（= effective_method）：`base` / `effi`（复现主线）/ `vanilla`(F0) / `f1`(总耗时) / `f2`(最慢用例，PerfCodeGen 对照档) / `f3`(仅热点行) / `ours`(F4 热点区域) |
+| `requested_method` | 调用方 | 请求的方法；与 `method` 不等即表示发生降级 |
+| `degrade_reason` | 调用方 | 降级原因枚举：`null` / `budget_exceeded`（token 预算不足）/ `no_hotspot`（拿不到行级数据）/ `unsupported_kind`（题型不支持）/ `fallback_f2`（反馈降为最慢用例）；汇总时 `degrade_reason != null` 的样本单列，不参与方法比较 |
 | `manifest` | A 生成，调用方填模型 | **缺一项不进汇总** |
 | `status` | A | 五类，判定顺序见 §4 |
 | `time` | A | 主口径 `mean_trimmed_ms`；`median_ms` 为**真中位数**（辅口径，不进表格比较）；`raw_ms` 必留 |
@@ -171,6 +174,7 @@ v0（组长）→ v1（合并 A 实测字段）→ 冻结打 tag `schema-v1`。
 |---|---|
 | v0 | 初稿：字段表、method 枚举、status 顺序、字段归属 |
 | v1 | 采纳实测字段：`kind` / `time.tiers`（升档尝试）/ `downgraded` / `code_source` / `started_at`；`run_id` 改为实际格式；删除 v0 的“median 与 mean 同值兼容”表述（已修真中位数）；协议号统一 `proto-2026.11` |
+| v1.1 | 补 `Task.description`（题库提供，runner 透传）；补 `Result.requested_method` / `degrade_reason`，明确 `method` 为实际生效值。**不升 `protocol_version`**：两者都不参与测量且不改变计时口径，无需重跑 golden；但汇总脚本必须读这三个字段 |
 | 待定 | 进程内 E=12（省 10× 启动开销），需先做「进程内 vs 跨进程 CI 宽度」对照再定 |
 
 ## 七、诊断与临时脚本（v1 补充，2026-11-27）
