@@ -32,6 +32,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import textwrap
 import threading
 import time
 import hashlib
@@ -114,6 +115,7 @@ CODE = __CODE__
 TEST = __TEST__
 KIND = __KIND__
 ENTRY = __ENTRY__
+CASES = __CASES__
 REPS = __REPS__
 MODE = __MODE__
 MAX_MEM = __MAX_MEM__
@@ -145,6 +147,36 @@ def main():
         return
 
     ns = dict(g)
+
+    if MODE == "cases":
+        # 逐用例诊断：与主口径**同一条计时路径**（不开 tracemalloc、包函数调用），
+        # 只是把整块拆成一条条用例分别计时。用于“最慢用例/热点区域”的反馈构造。
+        fns = []
+        hb(stage="check", mode="cases")
+        try:
+            if KIND == "humaneval":
+                ns["candidate"] = ns.get(ENTRY) or g.get(ENTRY)
+            for i, src in enumerate(CASES):
+                w = "def _case_%d():\n" % i + "\n".join(
+                    ("    " + ln) if ln.strip() else ln for ln in src.splitlines())
+                exec(compile(w, "<case%d>" % i, "exec"), ns)
+                fns.append(ns["_case_%d" % i])
+            for f in fns:
+                f()
+        except Exception as e:
+            emit({"ok": False, "status": "incorrect",
+                  "error": "%s: %s" % (type(e).__name__, str(e)[:300])})
+            return
+        out = []
+        for i, f in enumerate(fns):
+            t0 = time.perf_counter()
+            for _ in range(REPS):
+                f()
+            out.append((time.perf_counter() - t0) / REPS * 1000.0)
+            hb(stage="case", done=i + 1, of=len(fns))
+        emit({"ok": True, "mode": "cases", "reps": REPS, "cases_ms": out,
+              "total_ms": sum(out)})
+        return
 
     if KIND == "humaneval":
         hb(stage="check")
@@ -296,7 +328,7 @@ def manifest(model="", model_version="", temperature=0.2, seed=42, dataset_path=
 # ---------------------------------------------------------------------------
 # 子进程执行 + 心跳看门狗
 # ---------------------------------------------------------------------------
-def _build_child(code, test, kind, reps, max_mem, entry="solution", mode="time"):
+def _build_child(code, test, kind, reps, max_mem, entry="solution", mode="time", cases=None):
     if kind == "test_block":  # EffiBench：补上官方那套 import 前缀
         code = PREAMBLE + "\n" + code
     return (_CHILD
@@ -305,6 +337,7 @@ def _build_child(code, test, kind, reps, max_mem, entry="solution", mode="time")
             .replace("__KIND__", repr(kind))
             .replace("__ENTRY__", repr(entry))
             .replace("__MODE__", repr(mode))
+            .replace("__CASES__", repr(cases or []))
             .replace("__REPS__", str(int(reps)))
             .replace("__MAX_MEM__", repr(float(max_mem))))
 
@@ -318,16 +351,38 @@ class _Run(object):
         self.killed = False
 
 
-def run_child(program, stale_s=STALE_S, budget_s=60.0, workdir=None):
-    """跑一个子进程，返回 _Run（含 result / status / error / killed）。"""
-    wd = Path(workdir).resolve() if workdir else Path(tempfile.gettempdir())
-    wd.mkdir(parents=True, exist_ok=True)
-    path = (wd / ("hb_%d_%d.py" % (os.getpid(), int(time.time() * 1e6)))).resolve()
+_SCRIPT_PREFIX = "hb_"
+
+
+def _purge_scripts(script_dir, max_age_s=3600):
+    """清理遗留的临时脚本（沙箱会把删除重定向到回收站，攒多了很脏）。"""
     try:
-        path.write_text(program, encoding="utf-8")
+        now = time.time()
+        for p in Path(script_dir).glob(_SCRIPT_PREFIX + "*.py"):
+            try:
+                if now - p.stat().st_mtime > max_age_s:
+                    p.unlink()
+            except OSError:
+                pass
     except OSError:
-        path = Path(tempfile.gettempdir()) / path.name
-        path.write_text(program, encoding="utf-8")
+        pass
+
+
+def run_child(program, stale_s=STALE_S, budget_s=60.0, workdir=None):
+    """跑一个子进程，返回 _Run（含 result / status / error / killed）。
+
+    脚本**一律写系统 temp**（绝对路径），workdir 只作为子进程 cwd：
+    这样 workdir 是相对路径也不会找不到脚本，也不会把 results/ 塞满临时文件。
+    """
+    script_dir = Path(tempfile.gettempdir()).resolve()
+    wd = Path(workdir).resolve() if workdir else script_dir
+    try:
+        wd.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        wd = script_dir
+    _purge_scripts(script_dir)
+    path = script_dir / ("%s%d_%d.py" % (_SCRIPT_PREFIX, os.getpid(), int(time.time() * 1e6)))
+    path.write_text(program, encoding="utf-8")
 
     run = _Run()
     proc = subprocess.Popen([sys.executable, str(path)], stdout=subprocess.PIPE,
@@ -558,6 +613,102 @@ def load_tasks(dataset, path, ids=None, limit=None):
 # ---------------------------------------------------------------------------
 # 对外主接口
 # ---------------------------------------------------------------------------
+_CHECK_DEF = re.compile(r"^(\s*)def\s+check\s*\(")
+
+
+def split_cases(test_code):
+    """把 `def check(candidate)` 拆成一条条 assert（拆不动就整块当一条）。
+
+    与旧 eval/measure.py 的切分规则一致，但**计时路径改用 harness 自己的**，
+    避免“反馈用旧尺子、报告用新尺子”。
+    """
+    lines = (test_code or "").splitlines()
+    start, indent = None, 0
+    for i, ln in enumerate(lines):
+        m = _CHECK_DEF.match(ln)
+        if m:
+            start, indent = i, len(m.group(1))
+            break
+    if start is None:
+        body = textwrap.dedent(test_code or "").strip()
+        return ([body], "block") if body else ([], "block")
+    body, body_indent = [], None
+    for ln in lines[start + 1:]:
+        if not ln.strip():
+            continue
+        cur = len(ln) - len(ln.lstrip())
+        if cur <= indent:
+            break
+        body_indent = cur if body_indent is None else body_indent
+        body.append(ln)
+    cases, cur_case, has_other = [], [], False
+    for ln in body:
+        s = ln.strip()
+        if not s or s.startswith("#"):
+            continue
+        at_top = (len(ln) - len(ln.lstrip())) == body_indent
+        if at_top and s.startswith("assert"):
+            if cur_case:
+                cases.append(cur_case)
+            cur_case = [ln]
+        elif at_top:
+            has_other = True
+            cur_case.append(ln)
+        else:
+            cur_case.append(ln)
+    if cur_case:
+        cases.append(cur_case)
+    if has_other or not cases:
+        block = textwrap.dedent("\n".join(body)).strip()
+        return ([block], "block") if block else ([], "block")
+    return ([textwrap.dedent("\n".join(c)).strip() for c in cases], "split")
+
+
+def measure_cases(code, test, kind="assert", entry="solution", case_reps=5,
+                  target_case_s=0.25, max_mem=DEFAULT_MAX_MEM_MB, workdir=None,
+                  stale_s=STALE_S):
+    """逐用例计时（同一把尺子）：返回每条的 ms、最慢用例与源码。
+
+    计时路径与 measure_code 完全一致：子进程隔离、不开 tracemalloc、包函数调用。
+    """
+    cases, mode = split_cases(test)
+    if not cases:
+        return {"status": "incorrect", "error": "no_cases", "mode": mode}
+
+    def _run(reps):
+        return run_child(_build_child(code, test, kind, reps, max_mem, entry, "cases", cases),
+                         stale_s=stale_s, budget_s=max(30.0, 20.0 * reps * 0.001),
+                         workdir=workdir)
+
+    run = _run(case_reps)
+    if run.result is None or not run.result.get("ok"):
+        err = (run.result or {}).get("error") or run.error or "cases_failed"
+        return {"status": run.status or (run.result or {}).get("status") or "incorrect",
+                "error": err, "mode": mode}
+    ms = list(run.result.get("cases_ms") or [])
+    reps = run.result.get("reps") or case_reps
+    fastest = min(ms) if ms else 0.0
+    if fastest and fastest < 1.0:  # 太小的用例再放大一轮，保证排序可信
+        slow = max(ms) / 1000.0
+        reps2 = max(1, min(MAX_REPS, int(target_case_s / slow))) if slow > 0 else case_reps
+        if reps2 > case_reps * 2:
+            run2 = _run(reps2)
+            if run2.result and run2.result.get("ok"):
+                run, ms, reps = run2, list(run2.result.get("cases_ms") or []), reps2
+    items = [{"idx": i, "ms": round(float(v), 4), "src": cases[i][:300]}
+             for i, v in enumerate(ms)]
+    items.sort(key=lambda x: -x["ms"])
+    best = items[0] if items else {"idx": None, "ms": 0.0}
+    return {
+        "status": "ok",
+        "mode": mode,
+        "reps": reps,
+        "cases": items,
+        "total_ms": round(sum(ms), 4),
+        "slowest": {"idx": best["idx"], "ms": best["ms"],
+                    "src": cases[best["idx"]] if best["idx"] is not None else ""},
+    }
+
 def measure_task(task, code=None, method="base", dataset_path=None,
                  tier_plan=None, min_ms=2.0, model="", model_version="",
                  temperature=0.2, seed=42, **kw):
@@ -719,6 +870,33 @@ def selftest():
     assert 0.7 <= ratio_used <= 1.3, "计时口径被污染：harness/timed=%.2f" % ratio_used
     print("  ok: 计时走的是无插桩路径")
 
+    print("== 回归3：逐用例诊断与整块计时同口径 ==")
+    hv = load_tasks("humaneval", ROOT / "datasets" / "sample_humaneval_20.json", ids=["31"])[0]
+    mc = measure_cases(hv["code"], hv["test"], kind="humaneval",
+                       entry=hv["entry_point"], case_reps=200)
+    assert mc["status"] == "ok", mc
+    whole = measure_code(hv["code"], hv["test"], kind="humaneval",
+                         entry=hv["entry_point"], e_reps=3)
+    ratio = mc["total_ms"] / whole["median_ms"]
+    print("  逐用例合计=%.4fms  整块=%.4fms  比值=%.2f  最慢=%s"
+          % (mc["total_ms"], whole["median_ms"], ratio,
+             (mc["slowest"]["src"] or "")[:40]))
+    assert 0.7 <= ratio <= 1.4, "逐用例与整块口径不一致: %.2f" % ratio
+    assert "13441" in mc["slowest"]["src"], mc["slowest"]
+
+    print("== 回归4：相对 workdir 可用，且脚本不落在 workdir ==")
+    cwd0 = os.getcwd()
+    try:
+        os.chdir(str(ROOT))
+        rel = "results/_tmp_relcheck"
+        r = measure_code(alloc_code, alloc_test, e_reps=2, target_batch_s=0.05, workdir=rel)
+        assert r["status"] == "ok", r
+        leftovers = list((ROOT / rel).glob("hb_*.py"))
+        assert not leftovers, "临时脚本不该落在 workdir: %s" % leftovers[:3]
+    finally:
+        os.chdir(cwd0)
+    print("  ok: 相对 workdir 正常，workdir 内无残留脚本")
+
     print("\nALL SELFTESTS PASSED")
     return 0
 
@@ -796,6 +974,9 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+
 
 
 

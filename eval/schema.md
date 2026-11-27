@@ -172,3 +172,17 @@ v0（组长）→ v1（合并 A 实测字段）→ 冻结打 tag `schema-v1`。
 | v0 | 初稿：字段表、method 枚举、status 顺序、字段归属 |
 | v1 | 采纳实测字段：`kind` / `time.tiers`（升档尝试）/ `downgraded` / `code_source` / `started_at`；`run_id` 改为实际格式；删除 v0 的“median 与 mean 同值兼容”表述（已修真中位数）；协议号统一 `proto-2026.11` |
 | 待定 | 进程内 E=12（省 10× 启动开销），需先做「进程内 vs 跨进程 CI 宽度」对照再定 |
+
+## 七、诊断与临时脚本（v1 补充，2026-11-27）
+
+1. **诊断也必须用同一把尺子**：最慢用例、per-case 表、热点行都属于“喂给模型的证据”，
+   它们决定模型改哪里。因此禁止用 `eval/measure.py`（旧尺子）产出诊断数字，
+   一律用 `harness.measure_cases()` —— 它与 `measure_code()` 共用同一条计时路径
+   （子进程隔离、不开 tracemalloc、包函数调用），只是把整块拆成一条条用例分别计时。
+   `eval/measure.py` 只保留给 `legacy_retest.py` 做新旧口径对照。
+2. **临时脚本落盘**：`run_child()` 的脚本一律写**系统 temp**（绝对路径），
+   `workdir` 只作为子进程 cwd。原因：沙箱会把删除重定向到回收站，
+   若脚本写进 `results/**`，一次单题冒烟就堆几十个文件。
+   回归用例：相对 workdir 可用 + workdir 内无 `hb_*.py` 残留。
+3. **内存字段命名**：复现线/优化线的结果里一律用 `peak_tracemalloc_mb` 与 `peak_rss_mb`，
+   不要再出现 `mem_mb_avg`（那是旧尺子的“平均常驻内存”，与堆峰值不是同一个量）。
