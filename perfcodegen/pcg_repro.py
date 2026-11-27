@@ -140,8 +140,8 @@ def time_instruction(strategy, task, code, cur, args, previous_measure=None):
                     "The peak Python heap allocation is: %s MB.\n"
                     "The peak process RSS is: %s MB.\n"
                     % ((cur.get("total_ms") or 0.0) / 1000.0,
-                       _fmt(cur.get("mem_mb_avg"), "%.3f"),
-                       _fmt(cur.get("peak_mb"), "%.1f")))
+                       _fmt(cur.get("peak_tracemalloc_mb"), "%.3f"),
+                       _fmt(cur.get("peak_rss_mb"), "%.1f")))
         return ((TEMPLATES["time_simple_instruction"][0]["instruction"]
                  .replace("[regular_requirement]", REGULAR_REQUIREMENT)
                  .replace("[trigger]", TRIGGER)) + "\n\nOverhead Analysis:\n" + overhead), "effi3num"
@@ -291,9 +291,8 @@ def _measure(code, task, args, runs=None):
         "raw_ms": m.get("raw_ms") or [],
         "reps": m.get("reps"),
         "downgraded": m.get("downgraded", False),
-        "mem_mbs": None,                        # 旧口径 MB*s 已废弃，保留键位防止下游 KeyError
-        "mem_mb_avg": mem.get("peak_tracemalloc_mb"),
-        "peak_mb": mem.get("peak_rss_mb"),
+        "peak_tracemalloc_mb": mem.get("peak_tracemalloc_mb"),  # Python 堆分配峰值
+        "peak_rss_mb": mem.get("peak_rss_mb"),                  # 进程驻留峰值
     }
 
 
@@ -308,14 +307,14 @@ def _accepted(cand, cur, min_gain=0.05):
     """Pareto 判据：时间至少快 min_gain，且（如果有内存数据）Python 堆峰值不劣化超过 5%。
 
     cand/cur 的时间与内存都来自 eval/harness：total_ms = mean_trimmed_ms，
-    mem_mb_avg = peak_tracemalloc_mb。
+    内存双口径 = peak_tracemalloc_mb（堆分配）/ peak_rss_mb（进程驻留）。
     """
     if not cand.get("ok") or not cand.get("total_ms"):
         return False, "wrong"
     if not cand["total_ms"] < cur["total_ms"] * (1.0 - min_gain):
         return False, "no_gain"
-    if cand.get("mem_mb_avg") and cur.get("mem_mb_avg"):
-        if cand["mem_mb_avg"] > cur["mem_mb_avg"] * 1.05:
+    if cand.get("peak_tracemalloc_mb") and cur.get("peak_tracemalloc_mb"):
+        if cand["peak_tracemalloc_mb"] > cur["peak_tracemalloc_mb"] * 1.05:
             return False, "mem_regression"
     return True, "ok"
 
@@ -465,8 +464,8 @@ def run_task(task, args, llm, out_path):
             "ms": final.get("total_ms"),
             "speedup": round(metrics.speedup(gt["total_ms"], final.get("total_ms")), 4),
             "opt": metrics.is_opt(gt["total_ms"], final.get("total_ms")),
-            "mem_mb_avg": final.get("mem_mb_avg"),
-            "peak_rss_mb": final.get("peak_mb"),
+            "peak_tracemalloc_mb": final.get("peak_tracemalloc_mb"),
+            "peak_rss_mb": final.get("peak_rss_mb"),
             "cv": final.get("cv"),
             "code": current_code,
         }
