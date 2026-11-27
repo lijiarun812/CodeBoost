@@ -1,0 +1,122 @@
+[
+ {
+  "model": "deepseek-flash",
+  "task": "EffiBench/3",
+  "task_name": "Longest Substring Without ",
+  "repeats": 20000,
+  "old_ms": 0.0024,
+  "new_ms": 0.004,
+  "ratio": 1.674,
+  "status": "ok"
+ },
+ {
+  "model": "deepseek-flash",
+  "task": "EffiBench/4",
+  "task_name": "Median of Two Sorted Array",
+  "repeats": 20000,
+  "old_ms": 0.0011,
+  "new_ms": 0.0022,
+  "ratio": 2.045,
+  "status": "ok"
+ },
+ {
+  "model": "deepseek-flash",
+  "task": "EffiBench/10",
+  "task_name": "Regular Expression Matchin",
+  "repeats": 20000,
+  "old_ms": 0.0026,
+  "new_ms": 0.0047,
+  "ratio": 1.785,
+  "status": "ok"
+ },
+ {
+  "model": "deepseek-v4-pro",
+  "task": "EffiBench/3",
+  "task_name": "Longest Substring Without ",
+  "repeats": 12038,
+  "old_ms": 0.0022,
+  "new_ms": 0.0039,
+  "ratio": 1.737,
+  "status": "ok"
+ },
+ {
+  "model": "deepseek-v4-pro",
+  "task": "EffiBench/4",
+  "task_name": "Median of Two Sorted Array",
+  "repeats": 20000,
+  "old_ms": 0.001,
+  "new_ms": 0.0017,
+  "ratio": 1.775,
+  "status": "ok"
+ },
+ {
+  "model": "deepseek-v4-pro",
+  "task": "EffiBench/10",
+  "task_name": "Regular Expression Matchin",
+  "repeats": 20000,
+  "old_ms": 0.003,
+  "new_ms": 0.0053,
+  "ratio": 1.793,
+  "status": "ok"
+ },
+ {
+  "model": "glm-4.6",
+  "task": "EffiBench/3",
+  "task_name": "Longest Substring Without ",
+  "repeats": 20000,
+  "old_ms": 0.0022,
+  "new_ms": 0.0039,
+  "ratio": 1.747,
+  "status": "ok"
+ },
+ {
+  "model": "glm-4.6",
+  "task": "EffiBench/4",
+  "task_name": "Median of Two Sorted Array",
+  "repeats": 20000,
+  "old_ms": 0.0014,
+  "new_ms": 0.0028,
+  "ratio": 2.037,
+  "status": "ok"
+ },
+ {
+  "model": "glm-4.6",
+  "task": "EffiBench/10",
+  "task_name": "Regular Expression Matchin",
+  "repeats": 20000,
+  "old_ms": 0.0028,
+  "new_ms": 0.0049,
+  "ratio": 1.723,
+  "status": "ok"
+ },
+ {
+  "model": "qwen3-coder-flash",
+  "task": "EffiBench/3",
+  "task_name": "Longest Substring Without ",
+  "repeats": 20000,
+  "old_ms": 0.0024,
+  "new_ms": 0.0043,
+  "ratio": 1.768,
+  "status": "ok"
+ },
+ {
+  "model": "qwen3-coder-flash",
+  "task": "EffiBench/4",
+  "task_name": "Median of Two Sorted Array",
+  "repeats": 20000,
+  "old_ms": 0.0011,
+  "new_ms": 0.0022,
+  "ratio": 1.979,
+  "status": "ok"
+ },
+ {
+  "model": "qwen3-coder-flash",
+  "task": "EffiBench/10",
+  "task_name": "Regular Expression Matchin",
+  "repeats": 20000,
+  "old_ms": 0.0028,
+  "new_ms": 0.0051,
+  "ratio": 1.846,
+  "status": "ok"
+ }
+]

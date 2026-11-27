@@ -1,0 +1,82 @@
+{
+ "task_id": "HumanEval/31",
+ "entry_point": "is_prime",
+ "model": "deepseek-flash",
+ "n_cases": 13,
+ "case_mode": "split",
+ "gt": {
+  "ok": true,
+  "case_mode": "split",
+  "n_cases": 13,
+  "repeats": 443,
+  "runs": 3,
+  "total_ms": 0.5424,
+  "runs_ms": [
+   0.6388,
+   0.6073,
+   0.5424
+  ],
+  "mad_ms": 0.0315,
+  "rel_mad": 0.0581,
+  "per_case_ms": [
+   0.0002,
+   0.0028,
+   0.0003,
+   0.534,
+   0.002,
+   0.0002,
+   0.0,
+   0.0002,
+   0.0005,
+   0.0005,
+   0.0002,
+   0.0003,
+   0.0007
+  ],
+  "slowest": {
+   "idx": 3,
+   "ms": 0.534,
+   "src": "assert candidate(13441) == True"
+  },
+  "mem_mbs": 0.0115,
+  "mem_mb_avg": 21.202,
+  "peak_mb": 18.875
+ },
+ "base": {
+  "samples": [
+   {
+    "correct": true,
+    "ms": 0.0048,
+    "error": null
+   }
+  ]
+ },
+ "correctness": [],
+ "time": [
+  {
+   "rd": 0,
+   "accepted": false,
+   "reason": "wrong",
+   "strategy": "feedback",
+   "evidence": "slowest",
+   "evidence_chars": 970,
+   "evidence_pack": "Good job! You generated the correct solution for the problem! Now let's step further and optimize the time performance of the solution.\nBased on the correctly generated solution, could you please refine it so that it consumes less time in the execution?\nPlease make sure your refined solution is functionally equivalent with the original solution and do not change the input-output format and the name of the major components.\nGive your solution as follows. Wrap it with ```python```.\n\nWe tested your optimized program and found that the following test case costs the most time in execution.\nassert candidate(13441) == True\n\nIt costs 0.002 ms per execution.\n\nCould you please refine your optimized program according to the test case below?\nPlease make sure your refined solution is functionally equiv",
+   "before_ms": 0.0042,
+   "after_ms": null,
+   "slowest": "assert candidate(13441) == True"
+  }
+ ],
+ "final": {
+  "correct": true,
+  "ms": 0.0036,
+  "speedup": 150.6667,
+  "opt": true,
+  "mem_mb_avg": 27.778,
+  "rel_mad": 0.0278,
+  "code": "def is_prime(n):\n    \"\"\"Return true if a given number is prime, and false otherwise.\"\"\"\n    if n <= 1:\n        return False\n    if n <= 3:\n        return True\n    if n % 2 == 0 or n % 3 == 0:\n        return False\n\n    i = 5\n    while i * i <= n:\n        if n % i == 0 or n % (i + 2) == 0:\n            return False\n        i += 6\n\n    return True\n"
+ },
+ "status": "ok",
+ "rel_mad": 0.0278,
+ "n_calls": 2,
+ "wall_s": 40.25
+}

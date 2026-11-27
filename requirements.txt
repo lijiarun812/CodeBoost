@@ -1,8 +1,10 @@
-# 我们的简化复现 / 优化（effilearner/effi_repro.py）
+# 核心复现（effilearner/effi_repro.py + perfcodegen/pcg_repro.py + eval/）
+# 说明：effi_repro.py 需要 requests；pcg_repro.py 与 eval/ 只用标准库。
+# psutil 是可选依赖：装了才会采集内存（不装照样能跑，只是 mem_* 字段为 null）。
 requests>=2.28
 psutil>=5.9
 
-# 原版 EffiLearner 源码（src/，上游复现基线）
+# 原版 EffiLearner 源码（src/，上游基线；只有要跑官方 profiler 流程时才需要）
 line_profiler
 memory_profiler
 transformers

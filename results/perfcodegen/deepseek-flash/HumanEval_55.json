@@ -1,0 +1,74 @@
+{
+ "task_id": "HumanEval/55",
+ "entry_point": "fib",
+ "model": "deepseek-flash",
+ "n_cases": 5,
+ "case_mode": "split",
+ "gt": {
+  "ok": true,
+  "case_mode": "split",
+  "n_cases": 5,
+  "repeats": 4116,
+  "runs": 3,
+  "total_ms": 0.0592,
+  "runs_ms": [
+   0.0748,
+   0.0673,
+   0.0592
+  ],
+  "mad_ms": 0.0075,
+  "rel_mad": 0.1267,
+  "per_case_ms": [
+   0.0123,
+   0.0,
+   0.0044,
+   0.0168,
+   0.0253
+  ],
+  "slowest": {
+   "idx": 4,
+   "ms": 0.0253,
+   "src": "assert candidate(12) == 144"
+  },
+  "mem_mbs": 0.0013,
+  "mem_mb_avg": 21.959,
+  "peak_mb": 19.082
+ },
+ "base": {
+  "samples": [
+   {
+    "correct": true,
+    "ms": 0.0014,
+    "error": null
+   }
+  ]
+ },
+ "correctness": [],
+ "time": [
+  {
+   "rd": 0,
+   "accepted": true,
+   "reason": "ok",
+   "strategy": "feedback",
+   "evidence": "slowest",
+   "evidence_chars": 965,
+   "evidence_pack": "Good job! You generated the correct solution for the problem! Now let's step further and optimize the time performance of the solution.\nBased on the correctly generated solution, could you please refine it so that it consumes less time in the execution?\nPlease make sure your refined solution is functionally equivalent with the original solution and do not change the input-output format and the name of the major components.\nGive your solution as follows. Wrap it with ```python```.\n\nWe tested your optimized program and found that the following test case costs the most time in execution.\nassert candidate(11) == 89\n\nIt costs 0.000 ms per execution.\n\nCould you please refine your optimized program according to the test case below?\nPlease make sure your refined solution is functionally equivalent",
+   "before_ms": 0.0016,
+   "after_ms": 0.0004,
+   "slowest": "assert candidate(11) == 89"
+  }
+ ],
+ "final": {
+  "correct": true,
+  "ms": 0.0005,
+  "speedup": 118.4,
+  "opt": true,
+  "mem_mb_avg": 0.0,
+  "rel_mad": 0.2,
+  "code": "_FIB_SMALL = (\n    0, 1, 1, 2, 3, 5, 8, 13, 21, 34,\n    55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765\n)\n\ndef fib(n: int):\n    \"\"\"Return n-th Fibonacci number.\n    >>> fib(10)\n    55\n    >>> fib(1)\n    1\n    >>> fib(8)\n    21\n    \"\"\"\n    if n < 0:\n        return n\n\n    if n < len(_FIB_SMALL):\n        return _FIB_SMALL[n]\n\n    a, b = 0, 1\n    for bit in bin(n)[2:]:\n        c = a * ((b << 1) - a)\n        d = a * a + b * b\n        if bit == '0':\n            a, b = c, d\n        else:\n            a, b = d, c + d\n\n    return a\n"
+ },
+ "status": "ok",
+ "rel_mad": 0.2,
+ "n_calls": 4,
+ "wall_s": 27.56
+}

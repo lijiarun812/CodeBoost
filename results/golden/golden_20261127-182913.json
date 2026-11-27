@@ -1,0 +1,734 @@
+[
+ {
+  "run_id": "20261127-182913-canonical-s42-10a23fa-HumanEval_31",
+  "task_id": "HumanEval/31",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:13",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.5753,
+   "mean_trimmed_ms": 0.5787,
+   "iqr": 0.0191,
+   "cv": 0.0327,
+   "raw_ms": [
+    0.61,
+    0.5654,
+    0.6233,
+    0.574,
+    0.5898,
+    0.5739,
+    0.5766,
+    0.5875,
+    0.5707,
+    0.5506,
+    0.5688,
+    0.5879
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.5753,
+     "iqr": 0.0191,
+     "cv": 0.0327,
+     "reps": 459,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0011,
+   "peak_rss_mb": 19.773
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182920-canonical-s42-10a23fa-HumanEval_55",
+  "task_id": "HumanEval/55",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:20",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0559,
+   "mean_trimmed_ms": 0.0557,
+   "iqr": 0.0024,
+   "cv": 0.04,
+   "raw_ms": [
+    0.0559,
+    0.0519,
+    0.0547,
+    0.0528,
+    0.056,
+    0.0555,
+    0.0568,
+    0.0541,
+    0.056,
+    0.0568,
+    0.0593,
+    0.0599
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0559,
+     "iqr": 0.0024,
+     "cv": 0.04,
+     "reps": 4497,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.609
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182926-canonical-s42-10a23fa-HumanEval_59",
+  "task_id": "HumanEval/59",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:26",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.6224,
+   "mean_trimmed_ms": 0.6203,
+   "iqr": 0.0268,
+   "cv": 0.0375,
+   "raw_ms": [
+    0.6123,
+    0.5885,
+    0.5988,
+    0.6129,
+    0.5742,
+    0.6359,
+    0.6289,
+    0.626,
+    0.6188,
+    0.629,
+    0.6391,
+    0.6649
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.6224,
+     "iqr": 0.0268,
+     "cv": 0.0375,
+     "reps": 415,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0013,
+   "peak_rss_mb": 19.543
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182932-canonical-s42-10a23fa-HumanEval_60",
+  "task_id": "HumanEval/60",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:32",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0014,
+   "mean_trimmed_ms": 0.0014,
+   "iqr": 0.0001,
+   "cv": 0.0582,
+   "raw_ms": [
+    0.0014,
+    0.0015,
+    0.0014,
+    0.0014,
+    0.0015,
+    0.0015,
+    0.0013,
+    0.0014,
+    0.0015,
+    0.0015,
+    0.0012,
+    0.0014
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0014,
+     "iqr": 0.0001,
+     "cv": 0.0582,
+     "reps": 59837,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.547
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182937-canonical-s42-10a23fa-HumanEval_63",
+  "task_id": "HumanEval/63",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:37",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.2939,
+   "mean_trimmed_ms": 0.2937,
+   "iqr": 0.016,
+   "cv": 0.0464,
+   "raw_ms": [
+    0.2686,
+    0.281,
+    0.2821,
+    0.2895,
+    0.2898,
+    0.3244,
+    0.297,
+    0.3073,
+    0.2962,
+    0.3018,
+    0.3017,
+    0.2916
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.2939,
+     "iqr": 0.016,
+     "cv": 0.0464,
+     "reps": 943,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.547
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182945-canonical-s42-10a23fa-HumanEval_96",
+  "task_id": "HumanEval/96",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:45",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0754,
+   "mean_trimmed_ms": 0.0759,
+   "iqr": 0.0052,
+   "cv": 0.0379,
+   "raw_ms": [
+    0.0775,
+    0.0762,
+    0.0735,
+    0.0745,
+    0.0738,
+    0.0722,
+    0.0733,
+    0.0737,
+    0.0793,
+    0.0791,
+    0.0786,
+    0.0815
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0754,
+     "iqr": 0.0052,
+     "cv": 0.0379,
+     "reps": 3780,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.781
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182952-canonical-s42-10a23fa-HumanEval_123",
+  "task_id": "HumanEval/123",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:52",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0075,
+   "mean_trimmed_ms": 0.0076,
+   "iqr": 0.0008,
+   "cv": 0.0646,
+   "raw_ms": [
+    0.0081,
+    0.0086,
+    0.0084,
+    0.0076,
+    0.0073,
+    0.0072,
+    0.0077,
+    0.0081,
+    0.0074,
+    0.0073,
+    0.0071,
+    0.0073
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0075,
+     "iqr": 0.0008,
+     "cv": 0.0646,
+     "reps": 22445,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.555
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-182958-canonical-s42-10a23fa-HumanEval_130",
+  "task_id": "HumanEval/130",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:29:58",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0086,
+   "mean_trimmed_ms": 0.0086,
+   "iqr": 0.0002,
+   "cv": 0.0232,
+   "raw_ms": [
+    0.0084,
+    0.0086,
+    0.0082,
+    0.0084,
+    0.009,
+    0.0086,
+    0.0085,
+    0.0087,
+    0.0086,
+    0.0086,
+    0.0087,
+    0.0089
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0086,
+     "iqr": 0.0002,
+     "cv": 0.0232,
+     "reps": 21222,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.773
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-183003-canonical-s42-10a23fa-HumanEval_139",
+  "task_id": "HumanEval/139",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:30:03",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0011,
+   "mean_trimmed_ms": 0.0011,
+   "iqr": 0.0001,
+   "cv": 0.0568,
+   "raw_ms": [
+    0.001,
+    0.0011,
+    0.0012,
+    0.001,
+    0.0011,
+    0.0012,
+    0.0011,
+    0.0011,
+    0.0011,
+    0.0011,
+    0.0011,
+    0.0013
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0011,
+     "iqr": 0.0001,
+     "cv": 0.0568,
+     "reps": 59382,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.555
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-183007-canonical-s42-10a23fa-HumanEval_147",
+  "task_id": "HumanEval/147",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:30:07",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 18.026,
+   "mean_trimmed_ms": 18.2211,
+   "iqr": 1.3441,
+   "cv": 0.0744,
+   "raw_ms": [
+    17.9538,
+    17.6375,
+    17.7894,
+    18.0983,
+    17.7537,
+    18.457,
+    19.1789,
+    18.9005,
+    17.4547,
+    17.2243,
+    21.752,
+    21.1369
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 18.026,
+     "iqr": 1.3441,
+     "cv": 0.0744,
+     "reps": 13,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 3.6854,
+   "peak_rss_mb": 29.598
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-183016-canonical-s42-10a23fa-HumanEval_40",
+  "task_id": "HumanEval/40",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:30:16",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0091,
+   "mean_trimmed_ms": 0.0092,
+   "iqr": 0.0007,
+   "cv": 0.0697,
+   "raw_ms": [
+    0.0092,
+    0.0096,
+    0.0104,
+    0.0096,
+    0.0087,
+    0.0108,
+    0.0086,
+    0.0091,
+    0.009,
+    0.009,
+    0.0088,
+    0.009
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0091,
+     "iqr": 0.0007,
+     "cv": 0.0697,
+     "reps": 11425,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.001,
+   "peak_rss_mb": 19.754
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ },
+ {
+  "run_id": "20261127-183021-canonical-s42-10a23fa-HumanEval_120",
+  "task_id": "HumanEval/120",
+  "dataset": "humaneval",
+  "method": "base",
+  "started_at": "2026-11-27T18:30:21",
+  "manifest": {
+   "model": "",
+   "model_version": "",
+   "temperature": 0.2,
+   "seed": 42,
+   "dataset_hash": "sha256:39ad7f3393c51d54",
+   "harness_commit": "10a23fa",
+   "protocol_version": "proto-2026.11"
+  },
+  "status": "ok",
+  "error": null,
+  "time": {
+   "median_ms": 0.0026,
+   "mean_trimmed_ms": 0.0026,
+   "iqr": 0.0001,
+   "cv": 0.055,
+   "raw_ms": [
+    0.0022,
+    0.0025,
+    0.0026,
+    0.0024,
+    0.0027,
+    0.0028,
+    0.0026,
+    0.0026,
+    0.0026,
+    0.0024,
+    0.0026,
+    0.0026
+   ],
+   "tiers": [
+    {
+     "tier": "t1",
+     "n": null,
+     "gen": "native",
+     "args_hash": null,
+     "status": "ok",
+     "median_ms": 0.0026,
+     "iqr": 0.0001,
+     "cv": 0.055,
+     "reps": 26686,
+     "downgraded": false
+    }
+   ]
+  },
+  "mem": {
+   "peak_tracemalloc_mb": 0.0013,
+   "peak_rss_mb": 19.867
+  },
+  "speedup": null,
+  "mem_ratio": null,
+  "downgraded": false,
+  "protocol_version": "proto-2026.11",
+  "code_source": "canonical"
+ }
+]
