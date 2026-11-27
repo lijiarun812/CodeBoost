@@ -88,7 +88,7 @@ results/golden/golden_<timestamp>.json      # 12 题体检表
 
 | 字段 | 归属 | 说明 |
 |---|---|---|
-| `method` | 全员 | `base` / `vanilla`(F0) / `f1`(总耗时) / `f2`(最慢用例, 论文等价) / `f3`(仅热点行) / `ours`(F4 热点区域) |
+| `method` | 全员 | `base` / `effi`（**复现主线**：EffiLearner 三数字反馈 + 多轮）/ `vanilla`(F0) / `f1`(总耗时) / `f2`(最慢用例，PerfCodeGen 对照档) / `f3`(仅热点行) / `ours`(F4 热点区域) |
 | `manifest` | A 生成，调用方填模型 | **缺一项不进汇总** |
 | `status` | A | 五类，判定顺序见 §4 |
 | `time` | A | 主口径 `mean_trimmed_ms`；`median_ms` 为**真中位数**（辅口径，不进表格比较）；`raw_ms` 必留 |
