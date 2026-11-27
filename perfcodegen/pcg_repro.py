@@ -41,7 +41,6 @@ for p in (str(ROOT), str(HERE)):
 
 from eval import metrics  # noqa: E402
 from eval.hotlines import hotspots, render as render_hotspots  # noqa: E402
-from eval.measure import measure as measure_diag  # noqa: E402  # 仅诊断（拆用例/最慢用例），不产出报告数字
 from eval import harness  # noqa: E402  # 唯一权威口径（proto-2026.11）
 from upstream.sanitize import sanitize  # noqa: E402
 
@@ -297,10 +296,24 @@ def _measure(code, task, args, runs=None):
 
 
 def _diag(task, code, args):
-    """诊断用：拆单个用例、定位最慢用例源码，只用于拼反馈，数字不进报告。"""
-    return measure_diag(code, task["test"], task["entry_point"], runs=1,
-                        target_time=args.target_time, max_repeats=args.max_repeats,
-                        max_time=args.max_time, workdir=args.workdir)
+    """诊断用：逐用例计时，与 harness 同一条计时路径（同一把尺子）。
+
+    只用于拼反馈，数字不进报告；逐用例合计与整块耗时略有差异（函数包装开销），
+    因此不能当总时间用，只能用于排序定位最慢用例。
+    """
+    r = harness.measure_cases(
+        code, task["test"], kind=task.get("kind", "humaneval"),
+        entry=task.get("entry_point", "solution"),
+        workdir=str(args.workdir) if args.workdir else None,
+        stale_s=max(10.0, args.max_time),
+    )
+    if r.get("status") != "ok":
+        return {"ok": False, "error": r.get("error"),
+                "per_case_ms": [], "total_ms": 0.0, "slowest": {}}
+    return {"ok": True,
+            "per_case_ms": [c.get("ms") for c in (r.get("cases") or [])],
+            "total_ms": r.get("total_ms") or 0.0,
+            "slowest": r.get("slowest") or {}}
 
 
 def _accepted(cand, cur, min_gain=0.05):
