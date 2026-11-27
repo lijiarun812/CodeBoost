@@ -49,8 +49,8 @@
 
 ### 3.2 12 题体检表（`results/golden/golden_20261127-174616.json`）
 
-- 12/12 `status=ok`，CV **1.4%–5.2%**；
-- 最大耗时 `HE/147 = 25.76 ms`（tracemalloc 3.69 MB / RSS 29.0 MB），是唯一有内存信号的题；
+- 12/12 `status=ok`，CV **2.3%–7.4%**；
+- 最大耗时 `HE/147 = 18.03 ms`（tracemalloc 3.69 MB / RSS 29.6 MB），是唯一有内存信号的题；
 - 其余 0.0015–0.76 ms，靠重复放大（最多 4 万次）压住噪声。
 
 ### 3.3 输入阶梯（`python eval/inputs.py --selftest`）
@@ -115,6 +115,36 @@ python eval\harness.py --dataset humaneval --tasks 31,40,55,59,60,63,96,120,123,
 两项都过、且 12 题 CV ≤ 10% 才能合并；不满足就是尺子被改坏。
 
 ---
+
+---
+
+## 七、组长 review 后的修复记录（commit 之后）
+
+> 组长在临时工作树里跑的是 `8f4c709`（tracemalloc 拆分**之前**的版本），所以看到 HE/31=9.388ms。
+> 该问题已在 `10a23fa` 修复，本轮再用 `eval/timing_check.py` 做了量化自证（14.71x → 计时路径已干净）。
+
+| # | 组长指出的问题 | 现状 |
+|---|---|---|
+| 1 | 计时时 tracemalloc 开着，时间虚高约 10 倍 | ✅ 已拆分：`mode=time`（关插桩，E=12）/ `mode=mem`（开插桩，只取峰值）。自证：直接计时 0.567ms、harness 0.521ms（0.92x），旧写法 8.345ms（**14.71x**） |
+| 2 | `median_ms` 与 `mean_trimmed_ms` 是同一个值 | ✅ `median_ms` 改为 `statistics.median(values)`（真中位数），主口径仍是去极值均值；`calibrate_task` 的 `baseline_ms` 改用 `mean_trimmed_ms` |
+| 3 | `MIN_REPS=5` + 固定 5s 预算 → 单次 >1s 的题必 timeout | ✅ `MIN_REPS=1`；预算改为 `max(10, 20 × reps × per_exec)`。回归用例：单次 2s 的任务 `status=ok`（median=2001ms, reps=1） |
+| 4 | `manifest()` 没传 model，恒为空串 | ✅ `measure_task(model=..., model_version=..., temperature=..., seed=...)` 写入 manifest；`run_id` 也含 model/seed/commit |
+| 5 | `run_id` 不含 model/seed/commit | ✅ 格式：`20261127-182913-canonical-s42-10a23fa-HumanEval_31` |
+| 6 | 只并发读 stdout，stderr 管道可能塞满 → 误判 timeout | ✅ 新增 stderr 读线程，进程结束再合并 |
+| 7 | `PROTOCOL_VERSION="v1"` 与 schema 的 `proto-2026.11` 不一致 | ✅ 已改为 `proto-2026.11` |
+| 8 | 单次测量起 12 个子进程，成本高（建议进程内 E=12） | ⏳ **未做**。跨进程批次能拿到“独立进程采样”，改进程内后要重新验证漂移；本项列为下一步（需要一次对照实验：进程内 vs 跨进程的 CI 宽度） |
+
+### 验收结论（按组长的标准）
+
+组长给的验收线是「HE/31 从 9.4ms 掉回 0.86ms ±20%」。注意 0.86 是他机器的**直接内联计时**值，
+本机同一测法为 **0.567ms**，所以按“相对本机直接计时”验收：
+
+| 指标 | 本机结果 | 判定 |
+|---|---|---|
+| 直接内联计时（基准） | 0.5671 ms | — |
+| harness time 档 | 0.5210 ms（0.92x） | ✅ 落在 ±20% |
+| harness 报出 median | 0.5020 ms（0.89x） | ✅ 落在 ±20% |
+| 旧写法（tracemalloc 在计时里） | 8.3448 ms（14.71x） | 证明原 bug 真实存在 |
 
 ## 六、一句话总结
 

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """统一测量 harness：全组唯一的“尺子”（对应 docs/优化计划.md 第 8.2 节）。
 
 设计要点（与中期旧尺子的差别）：
@@ -47,12 +47,12 @@ except Exception:  # noqa: BLE001
     except Exception:  # noqa: BLE001
         _inputs = None
 
-PROTOCOL_VERSION = "v1"
+PROTOCOL_VERSION = "proto-2026.11"
 E_REPS = 12
 TRIM = 2
 TARGET_BATCH_S = 0.25
 MAX_REPS = 200000
-MIN_REPS = 5
+MIN_REPS = 1
 HEARTBEAT_S = 5.0
 STALE_S = 30.0
 DEFAULT_MAX_MEM_MB = 2048.0
@@ -353,6 +353,20 @@ def run_child(program, stale_s=STALE_S, budget_s=60.0, workdir=None):
 
     reader = threading.Thread(target=_reader, daemon=True)
     reader.start()
+
+    stderr_buf = []
+
+    def _err_reader():
+        # stderr 必须**并发**读：被测代码一打印多，64KB 管道塞满，
+        # 子进程会阻塞在 write 上、心跳停发，于是被看门狗误判 timeout。
+        try:
+            for line in proc.stderr:
+                stderr_buf.append(line)
+        except Exception:  # noqa: BLE001
+            pass
+
+    err_thread = threading.Thread(target=_err_reader, daemon=True)
+    err_thread.start()
     t0 = time.time()
     while True:
         if proc.poll() is not None:
@@ -378,10 +392,8 @@ def run_child(program, stale_s=STALE_S, budget_s=60.0, workdir=None):
     except Exception:  # noqa: BLE001
         proc.kill()
     reader.join(timeout=2)
-    try:
-        stderr = proc.stderr.read() or ""
-    except Exception:  # noqa: BLE001
-        stderr = ""
+    err_thread.join(timeout=2)
+    stderr = "".join(stderr_buf)
     try:
         path.unlink()
     except OSError:
@@ -404,7 +416,7 @@ def calibrate(code, test, kind="assert", target_batch_s=TARGET_BATCH_S,
     probe = run_child(_build_child(code, test, kind, 1, max_mem, entry),
                       stale_s=STALE_S, budget_s=60.0, workdir=workdir)
     if probe.result is None or not probe.result.get("ok"):
-        return None, probe
+        return None, None, probe
     per_exec = probe.result["batch_s"] / 1.0
     if per_exec < 1e-3:  # 太小的用例用 50 次探针提高估计精度
         probe2 = run_child(_build_child(code, test, kind, 50, max_mem, entry),
@@ -416,7 +428,7 @@ def calibrate(code, test, kind="assert", target_batch_s=TARGET_BATCH_S,
     else:
         reps = int(target_batch_s / per_exec)
     reps = max(MIN_REPS, min(max_reps, reps))
-    return reps, probe
+    return reps, per_exec, probe
 
 
 def measure_code(code, test, kind="assert", e_reps=E_REPS, trim=TRIM,
@@ -424,15 +436,18 @@ def measure_code(code, test, kind="assert", e_reps=E_REPS, trim=TRIM,
                  max_mem=DEFAULT_MAX_MEM_MB, stale_s=STALE_S, workdir=None,
                  progress=None, entry="solution"):
     """按 E=12 去极值测一份代码：返回 dict（含 status/time/mem）。"""
-    reps, probe = calibrate(code, test, kind, target_batch_s, max_reps, max_mem,
-                            workdir, entry)
+    reps, per_exec, probe = calibrate(code, test, kind, target_batch_s, max_reps, max_mem,
+                                      workdir, entry)
     if reps is None:
         res = probe.result or {}
         return {"status": probe.status or "incorrect",
                 "error": probe.error or res.get("error"), "down": False}
 
     stale_floor = stale_s if stale_s else STALE_S
-    budget = max(5.0, 20.0 * target_batch_s)
+    # 预算必须按“这一批真正要跑多久”算，而不是固定 5s：
+    # 单次 2s 的题 reps=1 也要 2s，固定 5s 会把它判 timeout（老师第 4 条）。
+    expected_batch_s = max(target_batch_s, reps * (per_exec or 0.0))
+    budget = max(10.0, 20.0 * expected_batch_s)
     values, rss = [], []
     downgraded = False
     for i in range(e_reps):
@@ -484,7 +499,8 @@ def measure_code(code, test, kind="assert", e_reps=E_REPS, trim=TRIM,
     }
     return {
         "status": "ok",
-        "median_ms": trimmed_mean(values, trim),
+        # median 是辅口径（真中位数），主口径是去极值均值——两者不能再是同一个值
+        "median_ms": round(statistics.median(values), 4),
         "mean_trimmed_ms": trimmed_mean(values, trim),
         "raw_ms": [round(v, 4) for v in values],
         "stats": desc,
@@ -542,14 +558,17 @@ def load_tasks(dataset, path, ids=None, limit=None):
 # 对外主接口
 # ---------------------------------------------------------------------------
 def measure_task(task, code=None, method="base", dataset_path=None,
-                 tier_plan=None, min_ms=2.0, **kw):
+                 tier_plan=None, min_ms=2.0, model="", model_version="",
+                 temperature=0.2, seed=42, **kw):
     """测一个 Task，返回符合 schema 的 Result。
 
     tier_plan: 由 eval/inputs.py 给出的档位列表；给多档时按 min_ms 自动升档，
     每次尝试都记进 time.tiers，避免“只用一档就下结论”。
     """
     use_code = code if code is not None else task["code"]
-    run_id = datetime.now().strftime("%Y%m%d-%H%M%S-") + task["task_id"].replace("/", "_")
+    slug = re.sub(r"[^0-9A-Za-z_.-]+", "_", model or "canonical")
+    run_id = "%s-%s-s%d-%s-%s" % (datetime.now().strftime("%Y%m%d-%H%M%S"), slug, seed,
+                                  harness_commit(), task["task_id"].replace("/", "_"))
     started = datetime.now().isoformat(timespec="seconds")
     plan = tier_plan or [{"tier": "t1", "n": None, "gen": "native",
                           "args_hash": None, "test": task["test"]}]
@@ -576,7 +595,7 @@ def measure_task(task, code=None, method="base", dataset_path=None,
             if m.get("status") == "incorrect" and i < len(plan) - 1:
                 continue
             break
-        too_fast = m["median_ms"] < min_ms
+        too_fast = (m.get("mean_trimmed_ms") or m["median_ms"]) < min_ms
         if too_fast and i < len(plan) - 1:
             continue  # 升档
         break
@@ -602,7 +621,9 @@ def measure_task(task, code=None, method="base", dataset_path=None,
         "dataset": task.get("dataset"),
         "method": method,
         "started_at": started,
-        "manifest": manifest(dataset_path=dataset_path),
+        "manifest": manifest(model=model, model_version=model_version,
+                             temperature=temperature, seed=seed,
+                             dataset_path=dataset_path),
         "status": status,
         "error": m.get("error"),
         "time": time_block,
@@ -615,7 +636,7 @@ def measure_task(task, code=None, method="base", dataset_path=None,
     }
 
 
-def calibrate_task(task, dataset_path=None, **kw):
+def calibrate_task(task, dataset_path=None, model="canonical", seed=42, **kw):
     """给 B 用：返回 difficulty 需要的客观量（A 不改题库，B 自己回填）。"""
     started = datetime.now().isoformat(timespec="seconds")
     m = measure_code(task["code"], task["test"], kind=task.get("kind", "assert"),
@@ -628,13 +649,13 @@ def calibrate_task(task, dataset_path=None, **kw):
         "status": "ok",
         "started_at": started,
         "difficulty": {
-            "baseline_ms": round(m["median_ms"], 4),
+            "baseline_ms": round(m["mean_trimmed_ms"], 4),  # 与主口径一致，别让 B 的题库用另一套
             "cv": m["stats"]["cv"],
             "raw_ms": m["raw_ms"],
             "reps": m["reps"],
             "mem": m["mem"],
         },
-        "manifest": manifest(dataset_path=dataset_path),
+        "manifest": manifest(model=model, seed=seed, dataset_path=dataset_path),
         "protocol_version": PROTOCOL_VERSION,
     }
 
@@ -672,6 +693,30 @@ def selftest():
     assert r["status"] == "timeout", r
     assert "heartbeat stale" in (r.get("error") or ""), r
     print("  ok:", r.get("error"))
+
+    print("== 回归1：单次 2s 的大任务必须 ok（不能判 timeout） ==")
+    big = "import time\ndef h():\n    time.sleep(2.0)\n"
+    r = measure_code(big, "h()\n", kind="assert", e_reps=2, target_batch_s=0.25)
+    assert r["status"] == "ok", r
+    print("  ok: status=ok, median=%.0f ms, reps=%d" % (r["median_ms"], r["reps"]))
+
+    print("== 回归2：计时不得被 tracemalloc 污染（且 memory 档确实更慢） ==")
+    alloc_code = "def f(n):\n    return [i * i for i in range(n)]\n"
+    alloc_test = "assert f(2000)[-1] == 3996001\n"
+    t_run = run_child(_build_child(alloc_code, alloc_test, "assert", 300, DEFAULT_MAX_MEM_MB,
+                                   "f", "time"), budget_s=60.0)
+    m_run = run_child(_build_child(alloc_code, alloc_test, "assert", 300, DEFAULT_MAX_MEM_MB,
+                                   "f", "mem"), budget_s=60.0)
+    t_ms = t_run.result["batch_s"] / 300.0 * 1000.0
+    m_ms = m_run.result["batch_s"] / 300.0 * 1000.0
+    ratio_mem = m_ms / t_ms
+    res = measure_code(alloc_code, alloc_test, e_reps=3, target_batch_s=0.05)
+    ratio_used = res["median_ms"] / t_ms
+    print("  time=%.4fms  mem=%.4fms  mem/time=%.2fx  harness/timed=%.2fx"
+          % (t_ms, m_ms, ratio_mem, ratio_used))
+    assert ratio_mem > 1.2, "tracemalloc 本该明显更慢，说明这版没插桩？"
+    assert 0.7 <= ratio_used <= 1.3, "计时口径被污染：harness/timed=%.2f" % ratio_used
+    print("  ok: 计时走的是无插桩路径")
 
     print("\nALL SELFTESTS PASSED")
     return 0
@@ -750,6 +795,9 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+
 
 
 
