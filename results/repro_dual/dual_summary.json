@@ -1,6 +1,7 @@
 [
   {
     "file": "repro_deepseek_v4_flash_0731.json",
+    "batch": "repro_dual",
     "model": "api:deepseek-v4-flash-0731",
     "dataset_problems": 20,
     "epochs": 3,
@@ -23,6 +24,33 @@
     "paper_gt0_mem": 10,
     "bad_reasons": {
       "AssertionError": 1
+    }
+  },
+  {
+    "file": "repro_deepseek_v4_flash_0731.json",
+    "batch": "repro_dual_postfix",
+    "model": "api:deepseek-v4-flash-0731",
+    "dataset_problems": 20,
+    "epochs": 3,
+    "accept_rule": "paper",
+    "n_ok": 17,
+    "n_bad": 3,
+    "paper_mem_avg": 18.8,
+    "paper_mem_median": 4.3,
+    "paper_time_avg": 16.0,
+    "paper_time_median": 3.0,
+    "new_mem_mean": -33.266666666666666,
+    "new_mem_median": 0.0,
+    "new_time_mean": 11.64,
+    "new_time_median": 5.1,
+    "n_fake_100": 0,
+    "n_mem_tie": 12,
+    "n_mem_pairs": 15,
+    "tm_level_mb": 0.001,
+    "n_new_mem": 15,
+    "paper_gt0_mem": 14,
+    "bad_reasons": {
+      "AssertionError": 3
     }
   }
 ]

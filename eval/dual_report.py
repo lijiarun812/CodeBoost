@@ -60,6 +60,7 @@ def analyze(path: Path) -> dict:
 
     return {
         "file": path.name,
+        "batch": path.parent.name,
         "model": d.get("mode", "?"),
         "dataset_problems": d.get("num_problems"),
         "epochs": d.get("epochs"),
@@ -87,6 +88,11 @@ def analyze(path: Path) -> dict:
     }
 
 
+def label(r) -> str:
+    """模型名 + 批次目录，避免「同一模型跑两批」在表里出现两行同名。"""
+    return "%s（%s）" % (r["model"].replace("api:", ""), r["batch"])
+
+
 def fmt(v, nd=1):
     return "n/a" if v is None else ("%+.1f%%" % v)
 
@@ -99,7 +105,7 @@ def md(reports: list) -> str:
     w("|---|---|---|---|---|---|---|")
     for r in reports:
         w("| %s | %d/%d | %s / %s | %s | %s / %s | %s | %s |" % (
-            r["model"].replace("api:", ""), r["n_ok"], r["dataset_problems"],
+            label(r), r["n_ok"], r["dataset_problems"],
             fmt(r["paper_mem_avg"]), fmt(r["paper_mem_median"]),
             "—",  # 中期加权判据的复现结果在另一份 JSON（accept-rule=weighted）
             fmt(r["new_mem_mean"]), fmt(r["new_mem_median"]),
@@ -110,12 +116,12 @@ def md(reports: list) -> str:
     w("|---|---|---|---|")
     for r in reports:
         w("| %s | %d | %d | %s |" % (
-            r["model"].replace("api:", ""), r["n_fake_100"], r["n_ok"],
+            label(r), r["n_fake_100"], r["n_ok"],
             "旧口径积分近似在 final 上塌成 0；新口径用 tracemalloc 峰值，不会塌 0"))
     w("")
     for r in reports:
         if r["fake_examples"]:
-            w("**%s 假 100%% 样例**（论文口径 / 新口径）" % r["model"].replace("api:", ""))
+            w("**%s 假 100%% 样例**（论文口径 / 新口径）" % label(r))
             for pid, name, pm, nm in r["fake_examples"]:
                 w("- `idx=%s` %s：论文 %+.1f%% → 新口径 %+.1f%%" % (pid, name, pm, nm))
             w("")
@@ -125,7 +131,7 @@ def md(reports: list) -> str:
     for r in reports:
         reasons = "；".join("%s ×%d" % (k or "(空)", v) for k, v in r["bad_reasons"].most_common(3))
         w("| %s | %d/%d | %s |" % (
-            r["model"].replace("api:", ""), r["n_bad"], r["dataset_problems"], reasons or "—"))
+            label(r), r["n_bad"], r["dataset_problems"], reasons or "—"))
     w("")
     w("### 表 4  新口径内存列的分辨力（能分开 baseline 与 final 吗）\n")
     w("| 模型 | baseline 峰值中位 | peak 完全相同的题 | 说明 |")
@@ -135,7 +141,7 @@ def md(reports: list) -> str:
                 if r["n_mem_pairs"] and r["n_mem_tie"] / r["n_mem_pairs"] >= 0.8
                 else "内存列可用")
         w("| %s | %s | %d/%d | %s |" % (
-            r["model"].replace("api:", ""),
+            label(r),
             "n/a" if r["tm_level_mb"] is None else "%.4f MB" % r["tm_level_mb"],
             r["n_mem_tie"], r["n_mem_pairs"], note))
     w("")
