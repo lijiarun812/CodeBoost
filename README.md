@@ -113,8 +113,11 @@ py perfcodegen\pcg_repro.py --provider deepseek --model deepseek-chat `
     --num 20 --samples 5 --time-strategy feedback
 ```
 
-反馈粒度消融：`--time-strategy simple`（只说“优化”）/ `feedback`（给最慢用例）/ `none`（不优化）。
-详见 [`perfcodegen/README.md`](perfcodegen/README.md)。
+反馈粒度分 5 档（对应两条论文路线）：`none`（不优化）/ `simple`（只说优化）/ `feedback`（最慢用例）/
+`effi3num`（EffiLearner 的 3 汇总数字档）/ `fusion`（最慢用例 + per-case 表 + 行级热点）。
+证据包可用 `--evidence slowest|table|hotlines|all` 开关，早停用 `--min-gain/--patience`。
+两篇论文的定位、8 维对比、5 个融合点与其他优化方向见
+[`docs/方法对比与融合方案.md`](docs/方法对比与融合方案.md)，驱动细节见 [`perfcodegen/README.md`](perfcodegen/README.md)。
 
 ### 生成汇报用的两张表
 

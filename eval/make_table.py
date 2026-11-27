@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from eval.paper_numbers import DIFFS, EFFILEARNER, PERFCODEGEN  # noqa: E402
+from eval.paper_numbers import DIFFS, EFFIBENCH, EFFILEARNER, PERFCODEGEN  # noqa: E402
 from eval.reanalyze_repro import analyze_record, summarize  # noqa: E402
 
 
@@ -135,7 +135,11 @@ def main(argv=None):
 
     lines = ["# 论文 vs 复现：可直接上 PPT 的对照表", "",
              "> 由 `eval/make_table.py` 生成；论文数字全部来自 `eval/paper_numbers.py`（附 PDF 页码），"
-             "我们的数字来自 `results/`。", ""]
+             "我们的数字来自 `results/`。", "",
+             "**评测基准**：%s（%d 题 / 评测 %d 个模型）。%s" % (
+                 EFFIBENCH["paper"], EFFIBENCH["n_problems"],
+                 EFFIBENCH["n_models_evaluated"], EFFIBENCH["headline"]), "",
+             "> 出处：%s" % EFFIBENCH["source"], ""]
     lines += build_section_effi(effi)
     lines += build_section_pcg(pcg)
     lines += build_section_diff()

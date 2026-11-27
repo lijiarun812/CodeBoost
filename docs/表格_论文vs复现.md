@@ -2,6 +2,10 @@
 
 > 由 `eval/make_table.py` 生成；论文数字全部来自 `eval/paper_numbers.py`（附 PDF 页码），我们的数字来自 `results/`。
 
+**评测基准**：EffiBench: Benchmarking the Efficiency of Automatically Generated Code（NeurIPS 2024 Datasets & Benchmarks）（1000 题 / 评测 42 个模型）。GPT-4 生成代码平均是 canonical solution 的 3.12 倍耗时，极端情况 13.89 倍耗时、43.92 倍总内存
+
+> 出处：doc/EffiBench.pdf 摘要（第 1 页）
+
 ## 一、EffiLearner：论文 vs 复现
 
 **论文结果**（doc/EffiLearner.pdf：Table 1（第 6 页）+ §4.3 Main Results 正文）

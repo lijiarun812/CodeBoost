@@ -37,6 +37,16 @@ EFFILEARNER = {
     "note": "论文在 EffiBench 上跑；只统计通过全部测试用例的代码，因此成功率不影响“效率”指标。",
 }
 
+EFFIBENCH = {
+    "paper": "EffiBench: Benchmarking the Efficiency of Automatically Generated Code（NeurIPS 2024 Datasets & Benchmarks）",
+    "source": "doc/EffiBench.pdf 摘要（第 1 页）",
+    "n_problems": 1000,
+    "n_models_evaluated": 42,
+    "headline": "GPT-4 生成代码平均是 canonical solution 的 3.12 倍耗时，极端情况 13.89 倍耗时、43.92 倍总内存",
+    "note": "它是**基准**不是优化框架：提供 1000 道 LeetCode 效率关键题 + 每题的标准解 + 效率指标，"
+            "EffiLearner 与 PerfCodeGen 都在它上面评过（或与它同源的题集）。",
+}
+
 PERFCODEGEN = {
     "paper": "PerfCodeGen: Improving Performance of LLM Generated Code with Execution Feedback（FORGE 2025 @ ICSE）",
     "source": "doc/PerfCodeGen.pdf 摘要（第 1 页）+ 官方仓库 README「Key result」",

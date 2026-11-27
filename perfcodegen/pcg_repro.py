@@ -40,6 +40,7 @@ for p in (str(ROOT), str(HERE)):
         sys.path.insert(0, p)
 
 from eval import metrics  # noqa: E402
+from eval.hotlines import hotspots, render as render_hotspots  # noqa: E402
 from eval.measure import measure  # noqa: E402
 from upstream.sanitize import sanitize  # noqa: E402
 
@@ -93,25 +94,73 @@ def correctness_instruction(fail):
             .replace("[trigger]", TRIGGER))
 
 
-def time_instruction(strategy, current_measure, previous_measure=None):
-    """§2.2：三种反馈粒度，正好对应我们组的“反馈粒度”消融。"""
+def _fmt(value, fmt):
+    return fmt % value if isinstance(value, (int, float)) else "n/a"
+
+
+def _per_case_table(measure_res, limit=5):
+    rows = sorted([(i, ms) for i, ms in enumerate(measure_res.get("per_case_ms") or [])],
+                  key=lambda x: -x[1])[:limit]
+    lines = ["Per-case execution time (slowest first):"]
+    for i, ms in rows:
+        lines.append("  case #%d: %.3f ms" % (i, ms))
+    lines.append("  total: %.3f ms" % (measure_res.get("total_ms") or 0.0))
+    return "\n".join(lines)
+
+
+def _evidence_text(task, code, cur, args):
+    """按 --evidence 拼证据包：最慢用例 / per-case 表 / 热点行。"""
+    ev = args.evidence or ("all" if args.time_strategy == "fusion" else "slowest")
+    slow = cur.get("slowest") or {}
+    case_src = (slow.get("src") or "").strip()
+    parts = ["Slowest test case:\n%s\nIt costs %.3f ms per execution."
+             % (case_src, slow.get("ms") or 0.0)]
+    if ev in ("table", "all"):
+        parts.append(_per_case_table(cur))
+    if ev in ("hotlines", "all"):
+        hot = hotspots(code, case_src, task["entry_point"], top=3,
+                       max_time=min(10.0, args.max_time), workdir=args.workdir)
+        parts.append(render_hotspots(hot))
+    return "\n\n".join(parts), ev
+
+
+def time_instruction(strategy, task, code, cur, args, previous_measure=None):
+    """§2.2 的 5 档反馈粒度：对应两条论文路线的不同信号强度。"""
     if strategy == "none":
-        return None
+        return None, "none"
     if strategy == "simple":
         return (TEMPLATES["time_simple_execution_feedback"][0]["instruction"]
                 .replace("[regular_requirement]", REGULAR_REQUIREMENT)
-                .replace("[trigger]", TRIGGER))
-    # 默认：PerfCodeGen 的“最慢用例 + 耗时”反馈
-    case = (current_measure.get("slowest") or {}).get("src", "")
-    ms = (current_measure.get("slowest") or {}).get("ms", 0.0)
+                .replace("[trigger]", TRIGGER)), "simple"
+    if strategy == "effi3num":
+        # EffiLearner 的 result-aware 档：只给 3 个汇总数字，不给用例也不给行级
+        overhead = ("The total memory usage during the code execution is: %s MB*s.\n"
+                    "The total execution time is: %.4f s.\n"
+                    "The maximum memory peak requirement is: %s MB.\n"
+                    % (_fmt(cur.get("mem_mbs"), "%.3f"),
+                       (cur.get("total_ms") or 0.0) / 1000.0,
+                       _fmt(cur.get("peak_mb"), "%.1f")))
+        return ((TEMPLATES["time_simple_instruction"][0]["instruction"]
+                 .replace("[regular_requirement]", REGULAR_REQUIREMENT)
+                 .replace("[trigger]", TRIGGER)) + "\n\nOverhead Analysis:\n" + overhead), "effi3num"
+    if strategy == "fusion":
+        head = TEMPLATES["time_execution_feedback_with_testcase"][0]["instruction"].replace(
+            "[regular_requirement]", REGULAR_REQUIREMENT).replace("[trigger]", TRIGGER)
+        ev_text, ev_mode = _evidence_text(task, code, cur, args)
+        tail = ("\n\nBefore rewriting, first estimate the time complexity of the current solution, "
+                "then implement the optimization. Keep the behaviour identical.")
+        return head + "\n\n" + ev_text + tail, ev_mode
+    # feedback：PerfCodeGen 的“最慢用例 + 耗时”原始档
+    case = (cur.get("slowest") or {}).get("src", "")
+    ms = (cur.get("slowest") or {}).get("ms", 0.0)
     head = TEMPLATES["time_execution_feedback_with_testcase"][0]["instruction"].replace(
         "[regular_requirement]", REGULAR_REQUIREMENT).replace("[trigger]", TRIGGER)
     body = TEMPLATES["time_execution_feedback_with_testcase"][1]["instruction"].replace(
         "{testcase}", "%s\n\nIt costs %.3f ms per execution." % (case, ms)).replace(
         "[regular_requirement]", REGULAR_REQUIREMENT).replace("[trigger]", TRIGGER)
-    if previous_measure and current_measure.get("total_ms") and previous_measure.get("total_ms"):
+    if previous_measure and cur.get("total_ms") and previous_measure.get("total_ms"):
         body += "\n\nFor reference, the previous version took %.3f ms in total." % previous_measure["total_ms"]
-    return head + "\n\n" + body
+    return head + "\n\n" + body, "slowest"
 
 
 # ---------------------------------------------------------------------------
@@ -217,11 +266,11 @@ def _measure(code, task, args, runs=None):
                    max_time=args.max_time, workdir=args.workdir)
 
 
-def _accepted(cand, cur):
-    """Pareto 判据：时间至少快 5%，且（如果有内存数据）常驻内存不劣化超过 5%。"""
+def _accepted(cand, cur, min_gain=0.05):
+    """Pareto 判据：时间至少快 min_gain，且（如果有内存数据）常驻内存不劣化超过 5%。"""
     if not cand.get("ok") or not cand.get("total_ms"):
         return False, "wrong"
-    if not cand["total_ms"] < cur["total_ms"] * 0.95:
+    if not cand["total_ms"] < cur["total_ms"] * (1.0 - min_gain):
         return False, "no_gain"
     if cand.get("mem_mb_avg") and cur.get("mem_mb_avg"):
         if cand["mem_mb_avg"] > cur["mem_mb_avg"] * 1.05:
@@ -310,8 +359,10 @@ def run_task(task, args, llm, out_path):
     # ---- phase 2: time refine ----
     record["time"] = []
     if current and current.get("ok") and args.time_strategy != "none":
+        stale = 0
         for rd in range(args.time_rounds):
-            instr = time_instruction(args.time_strategy, current)
+            instr, ev_mode = time_instruction(
+                args.time_strategy, task, current_code, current, args, previous_measure=None)
             try:
                 raw = llm.chat(refine_messages(task, current_code, instr))[0]
             except Exception as e:  # noqa: BLE001
@@ -319,15 +370,25 @@ def run_task(task, args, llm, out_path):
                 break
             code = to_program(raw, task)
             cand = _measure(code, task, args, runs=max(2, args.runs))
-            ok, reason = _accepted(cand, current)
+            ok, reason = _accepted(cand, current, args.min_gain)
             record["time"].append({
                 "rd": rd, "accepted": ok, "reason": reason,
+                "strategy": args.time_strategy, "evidence": ev_mode,
+                "evidence_chars": len(instr or ""),
+                "evidence_pack": (instr or "")[:800],
                 "before_ms": current.get("total_ms"),
                 "after_ms": cand.get("total_ms") if cand.get("ok") else None,
                 "slowest": (current.get("slowest") or {}).get("src", "")[:200],
             })
             if ok:
                 current_code, current = code, cand
+                stale = 0
+            else:
+                stale += 1
+                if stale >= max(1, args.patience):
+                    print("   [早停] 连续 %d 轮无收益（min_gain=%.0f%%）"
+                          % (stale, args.min_gain * 100))
+                    break
 
     # ---- final ----
     if current and current.get("ok"):
@@ -384,7 +445,14 @@ def main(argv=None):
     p.add_argument("--samples", type=int, default=1, help="base 阶段采样数（论文 20）")
     p.add_argument("--correct-rounds", type=int, default=1)
     p.add_argument("--time-rounds", type=int, default=1)
-    p.add_argument("--time-strategy", choices=["feedback", "simple", "none"], default="feedback")
+    p.add_argument("--time-strategy", choices=["feedback", "simple", "none", "effi3num", "fusion"],
+                   default="feedback",
+                   help="反馈粒度：none 不优化 / simple 只说优化 / feedback 最慢用例 / "
+                        "effi3num EffiLearner 的 3 数字档 / fusion 最慢用例+per-case 表+热点行")
+    p.add_argument("--evidence", choices=["", "slowest", "table", "hotlines", "all"], default="",
+                   help="fusion 的证据包内容（默认 fusion→all，其余→slowest）")
+    p.add_argument("--min-gain", type=float, default=0.05, help="判定“有收益”的最小时间降幅")
+    p.add_argument("--patience", type=int, default=1, help="连续几轮无收益后早停")
     p.add_argument("--model", default="")
     p.add_argument("--api-base", default=os.environ.get("OPENAI_BASE_URL", ""))
     p.add_argument("--api-key", default=os.environ.get("OPENAI_KEY") or os.environ.get("OPENAI_API_KEY", ""))
@@ -474,6 +542,9 @@ def main(argv=None):
         "correct_rounds": args.correct_rounds,
         "time_rounds": args.time_rounds,
         "time_strategy": args.time_strategy,
+        "evidence": args.evidence or ("all" if args.time_strategy == "fusion" else "slowest"),
+        "min_gain": args.min_gain,
+        "patience": args.patience,
         "temperature": args.temperature,
         "min_baseline_ms": args.min_baseline_ms,
         "n_calls": llm.n_calls,

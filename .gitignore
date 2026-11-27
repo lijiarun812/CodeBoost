@@ -18,6 +18,7 @@ datasets/*
 results/**/tmp*/
 results/**/_tmp/
 results/perfcodegen_mock/
+results/mock_*/
 
 # 系统 / 编辑器
 .DS_Store

@@ -40,6 +40,21 @@ python perfcodegen/pcg_repro.py --provider deepseek --model deepseek-chat \
 
 Windows 上建议显式指定解释器，例如 `C:\Python313\python.exe`。
 
+## 五档反馈粒度（对应两条论文路线）
+
+| `--time-strategy` | 喂给模型的东西 | 对应 | 单题成本 |
+|---|---|---|---|
+| `none` | 不优化，只测 base | 下界对照 | 0 |
+| `simple` | 只说“优化一下”（`time_simple_execution_feedback` rd0） | 盲优化基线 | 1 次调用 |
+| `feedback` | 最慢测试用例 + 它的耗时 | **PerfCodeGen** 原档 | 1 次调用 |
+| `effi3num` | 只有 3 个汇总数字（内存 MB*s / 时间 / 峰值） | **EffiLearner 的 result-aware 档** | 1 次调用 |
+| `fusion` | 最慢用例 + per-case 耗时表 + 行级热点 + “先估复杂度” | **两篇融合** | 1 次调用 + 1 次 traced 执行 |
+
+`fusion` 的证据包可用 `--evidence slowest|table|hotlines|all` 单独开关，用来做“信息量”消融。
+早停：`--min-gain 0.05 --patience 1`（连续 N 轮收益不足即停）。
+每轮都会把 `strategy / evidence / evidence_chars / evidence_pack` 写进逐题 JSON，
+所以“反馈长度 vs 收益”可以直接画曲线。
+
 ## 指标
 
 | 指标 | 定义 | 口径来源 |
@@ -80,6 +95,9 @@ results/perfcodegen/<model>/
 
 0. 第一次运行时 Python 会对 `upstream/sanitize.py` 打一条 `SyntaxWarning: invalid escape sequence '\s'`
    —— 那是**官方代码**里的正则字符串没写 raw string，不影响结果；我们不改上游文件（见 `upstream/NOTICE.md`）。
+0.5 **官方仓库“缺文件”的真相**：`src/prompt.py` 默认加载 `src/templates.json`，但官方仓库只提供了
+   `templates_chat.json`，所以直接按 README 跑会 `FileNotFoundError`。这就是中期那次“跑不起来”的原因；
+   绕法是 `Prompt(chat=True)`，或者像本驱动一样直接读 `templates_chat.json`。
 1. 亚毫秒题（如 HumanEval/55、63）的测量噪声与优化收益同量级，必须用 `--min-baseline-ms 1.0` 过滤，
    否则会重演中期汇报里“加速比在噪声里”的问题；
 2. 单采样跑 `Best@5/10` 会退化成 `Best@1`，汇报时要注明采样数；
