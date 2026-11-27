@@ -1,0 +1,255 @@
+{
+  "protocol_version": "proto-2026.11",
+  "harness_commit": "78f11d0",
+  "locked_at": "2026-11-27T22:58:54",
+  "python": "3.13.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "command": "python eval/lock_golden.py --runs 2 --e-reps 12",
+  "e_reps": 12,
+  "tasks": [
+    "31",
+    "40",
+    "55",
+    "59",
+    "60",
+    "63",
+    "96",
+    "120",
+    "123",
+    "130",
+    "139",
+    "147"
+  ],
+  "tolerance_rule": "|new-old|/old <= max(2*cv, 0.25)",
+  "note": "harness 没有 --profile 开关；等价验证用「同一命令跑 2 次，逐题 spread 记录在 runs_mean_trimmed_ms/run_spread」+ eval/timing_check.py 证计时未被 tracemalloc 污染",
+  "results": [
+    {
+      "task_id": "HumanEval/31",
+      "status": "ok",
+      "mean_trimmed_ms": 0.568767,
+      "median_ms": 0.5711,
+      "cv": 0.06,
+      "reps": 388,
+      "peak_tracemalloc_mb": 0.0011,
+      "peak_rss_mb": 19.848,
+      "runs_mean_trimmed_ms": [
+        0.568767,
+        0.573836
+      ],
+      "run_spread": 0.0089,
+      "old_mean_trimmed_ms": 0.5787,
+      "delta_rel": -0.0172,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/40",
+      "status": "ok",
+      "mean_trimmed_ms": 0.00968,
+      "median_ms": 0.0096,
+      "cv": 0.0736,
+      "reps": 16942,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.898,
+      "runs_mean_trimmed_ms": [
+        0.00968,
+        0.00944
+      ],
+      "run_spread": 0.0248,
+      "old_mean_trimmed_ms": 0.0092,
+      "delta_rel": 0.0522,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/55",
+      "status": "ok",
+      "mean_trimmed_ms": 0.056367,
+      "median_ms": 0.0563,
+      "cv": 0.0687,
+      "reps": 3809,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.695,
+      "runs_mean_trimmed_ms": [
+        0.056367,
+        0.058671
+      ],
+      "run_spread": 0.0409,
+      "old_mean_trimmed_ms": 0.0557,
+      "delta_rel": 0.012,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/59",
+      "status": "ok",
+      "mean_trimmed_ms": 0.582076,
+      "median_ms": 0.5788,
+      "cv": 0.0721,
+      "reps": 431,
+      "peak_tracemalloc_mb": 0.0013,
+      "peak_rss_mb": 19.844,
+      "runs_mean_trimmed_ms": [
+        0.582076,
+        0.554008
+      ],
+      "run_spread": 0.0482,
+      "old_mean_trimmed_ms": 0.6203,
+      "delta_rel": -0.0616,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/60",
+      "status": "ok",
+      "mean_trimmed_ms": 0.001338,
+      "median_ms": 0.0013,
+      "cv": 0.0851,
+      "reps": 36743,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.73,
+      "runs_mean_trimmed_ms": [
+        0.001338,
+        0.001377
+      ],
+      "run_spread": 0.0295,
+      "old_mean_trimmed_ms": 0.0014,
+      "delta_rel": -0.0443,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/63",
+      "status": "ok",
+      "mean_trimmed_ms": 0.304729,
+      "median_ms": 0.3045,
+      "cv": 0.0334,
+      "reps": 883,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.754,
+      "runs_mean_trimmed_ms": [
+        0.304729,
+        0.297491
+      ],
+      "run_spread": 0.0238,
+      "old_mean_trimmed_ms": 0.2937,
+      "delta_rel": 0.0376,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/96",
+      "status": "ok",
+      "mean_trimmed_ms": 0.074887,
+      "median_ms": 0.0748,
+      "cv": 0.0383,
+      "reps": 3384,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.855,
+      "runs_mean_trimmed_ms": [
+        0.074887,
+        0.073691
+      ],
+      "run_spread": 0.016,
+      "old_mean_trimmed_ms": 0.0759,
+      "delta_rel": -0.0133,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/120",
+      "status": "ok",
+      "mean_trimmed_ms": 0.002561,
+      "median_ms": 0.0025,
+      "cv": 0.0478,
+      "reps": 35420,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.887,
+      "runs_mean_trimmed_ms": [
+        0.002561,
+        0.002651
+      ],
+      "run_spread": 0.0353,
+      "old_mean_trimmed_ms": 0.0026,
+      "delta_rel": -0.015,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/123",
+      "status": "ok",
+      "mean_trimmed_ms": 0.007599,
+      "median_ms": 0.0075,
+      "cv": 0.0306,
+      "reps": 14499,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.785,
+      "runs_mean_trimmed_ms": [
+        0.007599,
+        0.007601
+      ],
+      "run_spread": 0.0002,
+      "old_mean_trimmed_ms": 0.0076,
+      "delta_rel": -0.0001,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/130",
+      "status": "ok",
+      "mean_trimmed_ms": 0.008838,
+      "median_ms": 0.0089,
+      "cv": 0.024,
+      "reps": 21161,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.949,
+      "runs_mean_trimmed_ms": [
+        0.008838,
+        0.008995
+      ],
+      "run_spread": 0.0177,
+      "old_mean_trimmed_ms": 0.0086,
+      "delta_rel": 0.0277,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/139",
+      "status": "ok",
+      "mean_trimmed_ms": 0.001216,
+      "median_ms": 0.0012,
+      "cv": 0.075,
+      "reps": 55506,
+      "peak_tracemalloc_mb": 0.001,
+      "peak_rss_mb": 19.789,
+      "runs_mean_trimmed_ms": [
+        0.001216,
+        0.001244
+      ],
+      "run_spread": 0.0227,
+      "old_mean_trimmed_ms": 0.0011,
+      "delta_rel": 0.1055,
+      "tol": 0.25,
+      "within_tol": true
+    },
+    {
+      "task_id": "HumanEval/147",
+      "status": "ok",
+      "mean_trimmed_ms": 19.339721,
+      "median_ms": 19.3406,
+      "cv": 0.0586,
+      "reps": 14,
+      "peak_tracemalloc_mb": 3.6854,
+      "peak_rss_mb": 29.59,
+      "runs_mean_trimmed_ms": [
+        19.339721,
+        18.644553
+      ],
+      "run_spread": 0.0359,
+      "old_mean_trimmed_ms": 18.2211,
+      "delta_rel": 0.0614,
+      "tol": 0.25,
+      "within_tol": true
+    }
+  ]
+}
