@@ -78,6 +78,8 @@ results/perfcodegen/<model>/
 
 ## 已知问题（如实记录）
 
+0. 第一次运行时 Python 会对 `upstream/sanitize.py` 打一条 `SyntaxWarning: invalid escape sequence '\s'`
+   —— 那是**官方代码**里的正则字符串没写 raw string，不影响结果；我们不改上游文件（见 `upstream/NOTICE.md`）。
 1. 亚毫秒题（如 HumanEval/55、63）的测量噪声与优化收益同量级，必须用 `--min-baseline-ms 1.0` 过滤，
    否则会重演中期汇报里“加速比在噪声里”的问题；
 2. 单采样跑 `Best@5/10` 会退化成 `Best@1`，汇报时要注明采样数；
