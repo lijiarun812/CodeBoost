@@ -255,6 +255,29 @@ def list_to_list(head):
         out.append(head.val)
         head = head.next
     return out
+
+
+def build_tree_from_list(vals):
+    """部分题目的测试块用这个名字建树。"""
+    return build_tree(vals)
+
+
+def build_list_from_list(vals):
+    return build_list(vals)
+'''
+
+# 必须在被测代码之后注入：模型常自己重定义 TreeNode/ListNode，别名要打在新类上
+POST_HELPERS = r'''
+try:
+    if not hasattr(TreeNode, "fromList"):
+        TreeNode.fromList = staticmethod(build_tree)
+except Exception:
+    pass
+try:
+    if not hasattr(ListNode, "fromList"):
+        ListNode.fromList = staticmethod(build_list)
+except Exception:
+    pass
 '''
 
 
@@ -284,7 +307,7 @@ def build_program(user_code, test_block, repeats, profile_lines=False):
         + "\n" + IMPORT_PKG + "\n" + TREE_NODE + "\n" + LIST_NODE + "\n" + BUILD_HELPERS
         + "\n\n# ==== 被测 Solution 代码 ====\n"
         + user_code
-        + "\n\n\n"
+        + "\n\n" + POST_HELPERS + "\n\n"
         + "def _effi_workload():\n"
         + "    for _i in range(%d):\n" % repeats
         + workload_body

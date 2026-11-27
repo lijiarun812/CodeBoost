@@ -1,0 +1,1097 @@
+{
+  "mode": "api:deepseek-v4-pro",
+  "num_problems": 20,
+  "num_ok": 15,
+  "epochs": 3,
+  "target_time": 0.25,
+  "accept_rule": "paper",
+  "max_repeats": 20000,
+  "results": [
+    {
+      "problem_idx": 252,
+      "task_name": "Meeting Rooms",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.03248589999930118,
+        "mem_mbs": 0.6021858841671914,
+        "peak_mb": 22.125
+      },
+      "final": {
+        "exec_time": 0.03248589999930118,
+        "mem_mbs": 0.6021858841671914,
+        "peak_mb": 22.125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0017491956250296425,
+        "median_ms": 0.0017,
+        "cv": 0.0107,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.527,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0017523824999898352,
+        "median_ms": 0.0018,
+        "cv": 0.0261,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.52,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def canAttendMeetings(self, intervals):\n        # Sort intervals by start time\n        intervals.sort(key=lambda x: x[0])\n        \n        # Check for overlaps\n        for i in range(1, len(intervals)):\n            if intervals[i][0] < intervals[i-1][1]:\n                return False\n        \n        return True\n",
+      "history": [
+        {
+          "exec_time": 0.03248589999930118,
+          "mem_mbs": 0.6021858841671914,
+          "peak_mb": 22.125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.03248589999930118,
+          "mem_mbs": 0.6021858841671914,
+          "peak_mb": 22.125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.03248589999930118,
+          "mem_mbs": 0.6021858841671914,
+          "peak_mb": 22.125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.03248589999930118,
+          "mem_mbs": 0.6021858841671914,
+          "peak_mb": 22.125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 254,
+      "task_name": "Factor Combinations",
+      "status": "baseline_failed",
+      "error": "AssertionError"
+    },
+    {
+      "problem_idx": 256,
+      "task_name": "Paint House",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.05459870000049705,
+        "mem_mbs": 1.1763618172476527,
+        "peak_mb": 22.5078125
+      },
+      "final": {
+        "exec_time": 0.05459870000049705,
+        "mem_mbs": 1.1763618172476527,
+        "peak_mb": 22.5078125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002918114375006553,
+        "median_ms": 0.0029,
+        "cv": 0.0227,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.555,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002935699523561029,
+        "median_ms": 0.0029,
+        "cv": 0.0373,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.539,
+        "reps": 17419
+      },
+      "final_code": "class Solution:\n    def minCost(self, costs):\n        if not costs:\n            return 0\n        \n        n = len(costs)\n        # dp[i][j] = minimum cost to paint up to house i, with house i painted color j\n        dp = [[0] * 3 for _ in range(n)]\n        \n        # Base case: first house\n        dp[0] = costs[0]\n        \n        for i in range(1, n):\n            dp[i][0] = costs[i][0] + min(dp[i-1][1], dp[i-1][2])\n            dp[i][1] = costs[i][1] + min(dp[i-1][0], dp[i-1][2])\n            dp[i][2] = costs[i][2] + min(dp[i-1][0], dp[i-1][1])\n        \n        return min(dp[-1])\n",
+      "history": [
+        {
+          "exec_time": 0.05459870000049705,
+          "mem_mbs": 1.1763618172476527,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.05459870000049705,
+          "mem_mbs": 1.1763618172476527,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.05459870000049705,
+          "mem_mbs": 1.1763618172476527,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.05459870000049705,
+          "mem_mbs": 1.1763618172476527,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.6,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 260,
+      "task_name": "Single Number III",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.037742600001365645,
+        "mem_mbs": 0.6526002930122843,
+        "peak_mb": 22.4609375
+      },
+      "final": {
+        "exec_time": 0.037742600001365645,
+        "mem_mbs": 0.6526002930122843,
+        "peak_mb": 22.4609375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002059167500010517,
+        "median_ms": 0.0021,
+        "cv": 0.0142,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.539,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002103434374976132,
+        "median_ms": 0.0021,
+        "cv": 0.0226,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.531,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def singleNumber(self, nums):\n        # Step 1: XOR all numbers to get xor of the two unique numbers\n        xor = 0\n        for num in nums:\n            xor ^= num\n        \n        # Step 2: Find a set bit in xor (rightmost set bit)\n        diff = xor & (-xor)\n        \n        # Step 3: Divide numbers into two groups and XOR separately\n        a, b = 0, 0\n        for num in nums:\n            if num & diff:\n                a ^= num\n            else:\n                b ^= num\n        \n        return [a, b]\n",
+      "history": [
+        {
+          "exec_time": 0.037742600001365645,
+          "mem_mbs": 0.6526002930122843,
+          "peak_mb": 22.4609375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.037742600001365645,
+          "mem_mbs": 0.6526002930122843,
+          "peak_mb": 22.4609375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.037742600001365645,
+          "mem_mbs": 0.6526002930122843,
+          "peak_mb": 22.4609375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.037742600001365645,
+          "mem_mbs": 0.6526002930122843,
+          "peak_mb": 22.4609375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -2.1,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 264,
+      "task_name": "Ugly Number II",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.048574399999779416,
+        "mem_mbs": 0.7588670718454296,
+        "peak_mb": 22.15625
+      },
+      "final": {
+        "exec_time": 0.048574399999779416,
+        "mem_mbs": 0.7588670718454296,
+        "peak_mb": 22.15625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0026369768750100775,
+        "median_ms": 0.0026,
+        "cv": 0.0132,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.574,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0026532225927976684,
+        "median_ms": 0.0026,
+        "cv": 0.0175,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.559,
+        "reps": 16939
+      },
+      "final_code": "class Solution:\n    def nthUglyNumber(self, n: int) -> int:\n        ugly = [1]\n        i2 = i3 = i5 = 0\n        while len(ugly) < n:\n            next2, next3, next5 = ugly[i2] * 2, ugly[i3] * 3, ugly[i5] * 5\n            next_ugly = min(next2, next3, next5)\n            ugly.append(next_ugly)\n            if next_ugly == next2:\n                i2 += 1\n            if next_ugly == next3:\n                i3 += 1\n            if next_ugly == next5:\n                i5 += 1\n        return ugly[-1]\n",
+      "history": [
+        {
+          "exec_time": 0.048574399999779416,
+          "mem_mbs": 0.7588670718454296,
+          "peak_mb": 22.15625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.048574399999779416,
+          "mem_mbs": 0.7588670718454296,
+          "peak_mb": 22.15625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.048574399999779416,
+          "mem_mbs": 0.7588670718454296,
+          "peak_mb": 22.15625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.048574399999779416,
+          "mem_mbs": 0.7588670718454296,
+          "peak_mb": 22.15625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.6,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 265,
+      "task_name": "Paint House II",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.058729000000312226,
+        "mem_mbs": 1.0027977867876388,
+        "peak_mb": 22.13671875
+      },
+      "final": {
+        "exec_time": 0.058729000000312226,
+        "mem_mbs": 1.0027977867876388,
+        "peak_mb": 22.13671875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0031621106250213416,
+        "median_ms": 0.0032,
+        "cv": 0.0187,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.547,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0031799524999769346,
+        "median_ms": 0.0032,
+        "cv": 0.0158,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.617,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def minCostII(self, costs):\n        if not costs:\n            return 0\n        \n        n = len(costs)\n        k = len(costs[0])\n        \n        # Initialize dp with the first row\n        prev_dp = costs[0][:]\n        \n        for i in range(1, n):\n            curr_dp = [0] * k\n            \n            # Find the minimum and second minimum costs from previous row\n            min1 = float('inf')\n            min2 = float('inf')\n            min1_idx = -1\n            \n            for j in range(k):\n                if prev_dp[j] < min1:\n                    min2 = min1\n                    min1 = prev_dp[j]\n                    min1_idx = j\n                elif prev_dp[j] < min2:\n                    min2 = prev_dp[j]\n            \n            # Compute current row costs\n            for j in range(k):\n                if j != min1_idx:\n                    curr_dp[j] = costs[i][j] + min1\n                else:\n                    curr_dp[j] = costs[i][j] + min2\n            \n            prev_dp = curr_dp\n        \n        return min(prev_dp)\n",
+      "history": [
+        {
+          "exec_time": 0.058729000000312226,
+          "mem_mbs": 1.0027977867876388,
+          "peak_mb": 22.13671875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.058729000000312226,
+          "mem_mbs": 1.0027977867876388,
+          "peak_mb": 22.13671875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.058729000000312226,
+          "mem_mbs": 1.0027977867876388,
+          "peak_mb": 22.13671875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.058729000000312226,
+          "mem_mbs": 1.0027977867876388,
+          "peak_mb": 22.13671875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.6,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 267,
+      "task_name": "Palindrome Permutation II",
+      "status": "baseline_failed",
+      "error": "AssertionError"
+    },
+    {
+      "problem_idx": 268,
+      "task_name": "Missing Number",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.017564500001753913,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.36328125
+      },
+      "final": {
+        "exec_time": 0.017564500001753913,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.36328125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.001036129375006567,
+        "median_ms": 0.001,
+        "cv": 0.0302,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.465,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010328300000082891,
+        "median_ms": 0.001,
+        "cv": 0.0211,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.527,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def missingNumber(self, nums):\n        n = len(nums)\n        # Sum of numbers from 0 to n using the formula n*(n+1)/2\n        expected_sum = n * (n + 1) // 2\n        # Actual sum of numbers in the array\n        actual_sum = sum(nums)\n        # The difference is the missing number\n        return expected_sum - actual_sum\n",
+      "history": [
+        {
+          "exec_time": 0.017564500001753913,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.36328125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.017564500001753913,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.36328125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.017564500001753913,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.36328125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.017564500001753913,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.36328125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 269,
+      "task_name": "Alien Dictionary",
+      "status": "ok",
+      "repeats": 9640,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.11047520000283839,
+        "mem_mbs": 2.4286206835604673,
+        "peak_mb": 22.16796875
+      },
+      "final": {
+        "exec_time": 0.11047520000283839,
+        "mem_mbs": 2.4286206835604673,
+        "peak_mb": 22.16796875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.012218389184447832,
+        "median_ms": 0.0123,
+        "cv": 0.0212,
+        "peak_tracemalloc_mb": 0.0024,
+        "peak_rss_mb": 23.586,
+        "reps": 14100
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.012128909605259844,
+        "median_ms": 0.012,
+        "cv": 0.0388,
+        "peak_tracemalloc_mb": 0.0024,
+        "peak_rss_mb": 23.594,
+        "reps": 14669
+      },
+      "final_code": "from collections import defaultdict, deque\nfrom typing import List\n\nclass Solution:\n    def alienOrder(self, words: List[str]) -> str:\n        # Step 1: Build graph\n        adj = defaultdict(set)\n        indegree = {char: 0 for word in words for char in word}\n        \n        for i in range(len(words) - 1):\n            w1, w2 = words[i], words[i + 1]\n            min_len = min(len(w1), len(w2))\n            # Check for invalid case where w1 is longer and prefix of w2\n            if len(w1) > len(w2) and w1[:min_len] == w2[:min_len]:\n                return \"\"\n            for j in range(min_len):\n                if w1[j] != w2[j]:\n                    if w2[j] not in adj[w1[j]]:\n                        adj[w1[j]].add(w2[j])\n                        indegree[w2[j]] += 1\n                    break\n        \n        # Step 2: Topological sort (Kahn's algorithm)\n        queue = deque([c for c in indegree if indegree[c] == 0])\n        order = []\n        \n        while queue:\n            char = queue.popleft()\n            order.append(char)\n            for neighbor in adj[char]:\n                indegree[neighbor] -= 1\n                if indegree[neighbor] == 0:\n                    queue.append(neighbor)\n        \n        if len(order) < len(indegree):\n            return \"\"  # Cycle detected\n        return \"\".join(order)\n",
+      "history": [
+        {
+          "exec_time": 0.11047520000283839,
+          "mem_mbs": 2.4286206835604673,
+          "peak_mb": 22.16796875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.11047520000283839,
+          "mem_mbs": 2.4286206835604673,
+          "peak_mb": 22.16796875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.11047520000283839,
+          "mem_mbs": 2.4286206835604673,
+          "peak_mb": 22.16796875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.11047520000283839,
+          "mem_mbs": 2.4286206835604673,
+          "peak_mb": 22.16796875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.7,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 270,
+      "task_name": "Closest Binary Search Tree Value",
+      "status": "baseline_failed",
+      "error": "AttributeError: type object 'TreeNode' has no attribute 'fromList'"
+    },
+    {
+      "problem_idx": 274,
+      "task_name": "H",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.022130900000775,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.38671875
+      },
+      "final": {
+        "exec_time": 0.022130900000775,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.38671875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0012396843749684194,
+        "median_ms": 0.0012,
+        "cv": 0.0146,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.539,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0012362012499806951,
+        "median_ms": 0.0012,
+        "cv": 0.0159,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.551,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def hIndex(self, citations):\n        citations.sort(reverse=True)\n        h = 0\n        for i, c in enumerate(citations, start=1):\n            if c >= i:\n                h = i\n            else:\n                break\n        return h\n",
+      "history": [
+        {
+          "exec_time": 0.022130900000775,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.38671875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.022130900000775,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.38671875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.022130900000775,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.38671875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.022130900000775,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.38671875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 275,
+      "task_name": "H",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.017567200000485172,
+        "mem_mbs": 0.3238342808642187,
+        "peak_mb": 22.15234375
+      },
+      "final": {
+        "exec_time": 0.017567200000485172,
+        "mem_mbs": 0.3238342808642187,
+        "peak_mb": 22.15234375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010558206249697832,
+        "median_ms": 0.0011,
+        "cv": 0.03,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.531,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010360406250356391,
+        "median_ms": 0.001,
+        "cv": 0.0134,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.551,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def hIndex(self, citations):\n        n = len(citations)\n        left, right = 0, n - 1\n        while left <= right:\n            mid = left + (right - left) // 2\n            if citations[mid] >= n - mid:\n                right = mid - 1\n            else:\n                left = mid + 1\n        return n - left\n",
+      "history": [
+        {
+          "exec_time": 0.017567200000485172,
+          "mem_mbs": 0.3238342808642187,
+          "peak_mb": 22.15234375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.017567200000485172,
+          "mem_mbs": 0.3238342808642187,
+          "peak_mb": 22.15234375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.017567200000485172,
+          "mem_mbs": 0.3238342808642187,
+          "peak_mb": 22.15234375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.017567200000485172,
+          "mem_mbs": 0.3238342808642187,
+          "peak_mb": 22.15234375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 1.9,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 285,
+      "task_name": "Inorder Successor in BST",
+      "status": "baseline_failed",
+      "error": "NameError: name 'build_tree_from_list' is not defined"
+    },
+    {
+      "problem_idx": 287,
+      "task_name": "Find the Duplicate Number",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.013773799997579772,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.3828125
+      },
+      "final": {
+        "exec_time": 0.013773799997579772,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.3828125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0008564831250168937,
+        "median_ms": 0.0008,
+        "cv": 0.0533,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.547,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0008511956250458752,
+        "median_ms": 0.0009,
+        "cv": 0.0191,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.512,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def findDuplicate(self, nums):\n        # Phase 1: Finding the intersection point of the two runners.\n        tortoise = nums[0]\n        hare = nums[0]\n        \n        while True:\n            tortoise = nums[tortoise]\n            hare = nums[nums[hare]]\n            if tortoise == hare:\n                break\n        \n        # Phase 2: Find the entrance to the cycle.\n        tortoise = nums[0]\n        while tortoise != hare:\n            tortoise = nums[tortoise]\n            hare = nums[hare]\n        \n        return hare\n",
+      "history": [
+        {
+          "exec_time": 0.013773799997579772,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.3828125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.013773799997579772,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.3828125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.013773799997579772,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.3828125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.013773799997579772,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.3828125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.6,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 301,
+      "task_name": "Remove Invalid Parentheses",
+      "status": "ok",
+      "repeats": 8125,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.13390630000139936,
+        "mem_mbs": 2.8361745820611475,
+        "peak_mb": 22.46875
+      },
+      "final": {
+        "exec_time": 0.13390630000139936,
+        "mem_mbs": 2.8361745820611475,
+        "peak_mb": 22.46875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.017196801291604093,
+        "median_ms": 0.0172,
+        "cv": 0.0194,
+        "peak_tracemalloc_mb": 0.0034,
+        "peak_rss_mb": 23.508,
+        "reps": 10684
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.017409130383939996,
+        "median_ms": 0.0174,
+        "cv": 0.0214,
+        "peak_tracemalloc_mb": 0.0034,
+        "peak_rss_mb": 23.586,
+        "reps": 10680
+      },
+      "final_code": "from collections import deque\n\nclass Solution:\n    def removeInvalidParentheses(self, s: str):\n        def is_valid(string):\n            count = 0\n            for char in string:\n                if char == '(':\n                    count += 1\n                elif char == ')':\n                    count -= 1\n                if count < 0:\n                    return False\n            return count == 0\n\n        level = {s}\n        while True:\n            valid = list(filter(is_valid, level))\n            if valid:\n                return valid\n            next_level = set()\n            for string in level:\n                for i in range(len(string)):\n                    if string[i] in '()':\n                        next_level.add(string[:i] + string[i+1:])\n            level = next_level\n",
+      "history": [
+        {
+          "exec_time": 0.13390630000139936,
+          "mem_mbs": 2.8361745820611475,
+          "peak_mb": 22.46875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.13390630000139936,
+          "mem_mbs": 2.8361745820611475,
+          "peak_mb": 22.46875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.13390630000139936,
+          "mem_mbs": 2.8361745820611475,
+          "peak_mb": 22.46875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.13390630000139936,
+          "mem_mbs": 2.8361745820611475,
+          "peak_mb": 22.46875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -1.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 306,
+      "task_name": "Additive Number",
+      "status": "baseline_failed",
+      "error": "AssertionError"
+    },
+    {
+      "problem_idx": 309,
+      "task_name": "Best Time to Buy and Sell Stock with Cooldown",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.02577920000112499,
+        "mem_mbs": 0.4980317836549517,
+        "peak_mb": 22.16015625
+      },
+      "final": {
+        "exec_time": 0.02577920000112499,
+        "mem_mbs": 0.4980317836549517,
+        "peak_mb": 22.16015625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.001445721250047427,
+        "median_ms": 0.0014,
+        "cv": 0.0274,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.555,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0014625325000224621,
+        "median_ms": 0.0015,
+        "cv": 0.023,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.477,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def maxProfit(self, prices):\n        if not prices:\n            return 0\n        \n        n = len(prices)\n        hold = -prices[0]  # Max profit if we hold a stock\n        sold = 0           # Max profit if we just sold today\n        rest = 0           # Max profit if we are in cooldown or not holding\n        \n        for i in range(1, n):\n            prev_sold = sold\n            sold = hold + prices[i]\n            hold = max(hold, rest - prices[i])\n            rest = max(rest, prev_sold)\n        \n        return max(sold, rest)\n",
+      "history": [
+        {
+          "exec_time": 0.02577920000112499,
+          "mem_mbs": 0.4980317836549517,
+          "peak_mb": 22.16015625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.02577920000112499,
+          "mem_mbs": 0.4980317836549517,
+          "peak_mb": 22.16015625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.02577920000112499,
+          "mem_mbs": 0.4980317836549517,
+          "peak_mb": 22.16015625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.02577920000112499,
+          "mem_mbs": 0.4980317836549517,
+          "peak_mb": 22.16015625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -1.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 312,
+      "task_name": "Burst Balloons",
+      "status": "ok",
+      "repeats": 16519,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.1464544999980717,
+        "mem_mbs": 2.9675770468283815,
+        "peak_mb": 22.4140625
+      },
+      "final": {
+        "exec_time": 0.1464544999980717,
+        "mem_mbs": 2.9675770468283815,
+        "peak_mb": 22.4140625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.009139568642425374,
+        "median_ms": 0.0091,
+        "cv": 0.0563,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.52,
+        "reps": 15741
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0092022590638077,
+        "median_ms": 0.0092,
+        "cv": 0.0078,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.547,
+        "reps": 16301
+      },
+      "final_code": "class Solution:\n    def maxCoins(self, nums):\n        nums = [1] + nums + [1]\n        n = len(nums)\n        dp = [[0] * n for _ in range(n)]\n\n        for length in range(2, n):\n            for left in range(n - length):\n                right = left + length\n                for i in range(left + 1, right):\n                    dp[left][right] = max(\n                        dp[left][right],\n                        nums[left] * nums[i] * nums[right] + dp[left][i] + dp[i][right]\n                    )\n\n        return dp[0][n - 1]\n",
+      "history": [
+        {
+          "exec_time": 0.1464544999980717,
+          "mem_mbs": 2.9675770468283815,
+          "peak_mb": 22.4140625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.1464544999980717,
+          "mem_mbs": 2.9675770468283815,
+          "peak_mb": 22.4140625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.1464544999980717,
+          "mem_mbs": 2.9675770468283815,
+          "peak_mb": 22.4140625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.1464544999980717,
+          "mem_mbs": 2.9675770468283815,
+          "peak_mb": 22.4140625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.7,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 314,
+      "task_name": "Binary Tree Vertical Order Traversal",
+      "status": "ok",
+      "repeats": 5900,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.13558130000092206,
+        "mem_mbs": 3.0029570476519893,
+        "peak_mb": 22.51953125
+      },
+      "final": {
+        "exec_time": 0.13558130000092206,
+        "mem_mbs": 3.0029570476519893,
+        "peak_mb": 22.51953125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.022452246267846577,
+        "median_ms": 0.0224,
+        "cv": 0.0176,
+        "peak_tracemalloc_mb": 0.0045,
+        "peak_rss_mb": 23.613,
+        "reps": 8976
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.022249506166981094,
+        "median_ms": 0.0223,
+        "cv": 0.147,
+        "peak_tracemalloc_mb": 0.0045,
+        "peak_rss_mb": 23.586,
+        "reps": 10378
+      },
+      "final_code": "from collections import defaultdict, deque\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\n    @staticmethod\n    def from_list(values):\n        if not values:\n            return None\n        nodes = [None if v is None else TreeNode(v) for v in values]\n        kids = nodes[::-1]\n        root = kids.pop()\n        for node in nodes:\n            if node:\n                if kids:\n                    node.left = kids.pop()\n                if kids:\n                    node.right = kids.pop()\n        return root\n\nclass Solution:\n    def verticalOrder(self, root):\n        if not root:\n            return []\n        \n        column_table = defaultdict(list)\n        queue = deque([(root, 0)])\n        \n        while queue:\n            node, column = queue.popleft()\n            column_table[column].append(node.val)\n            \n            if node.left:\n                queue.append((node.left, column - 1))\n            if node.right:\n                queue.append((node.right, column + 1))\n        \n        return [column_table[x] for x in sorted(column_table.keys())]\n",
+      "history": [
+        {
+          "exec_time": 0.13558130000092206,
+          "mem_mbs": 3.0029570476519893,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.13558130000092206,
+          "mem_mbs": 3.0029570476519893,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.13558130000092206,
+          "mem_mbs": 3.0029570476519893,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.13558130000092206,
+          "mem_mbs": 3.0029570476519893,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.9,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 315,
+      "task_name": "Count of Smaller Numbers After Self",
+      "status": "ok",
+      "repeats": 14071,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.0991219000025012,
+        "mem_mbs": 1.9872176133324615,
+        "peak_mb": 22.1484375
+      },
+      "final": {
+        "exec_time": 0.0991219000025012,
+        "mem_mbs": 1.9872176133324615,
+        "peak_mb": 22.1484375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.007311206379388533,
+        "median_ms": 0.0073,
+        "cv": 0.1011,
+        "peak_tracemalloc_mb": 0.0011,
+        "peak_rss_mb": 23.57,
+        "reps": 19171
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.007354443124995669,
+        "median_ms": 0.0074,
+        "cv": 0.121,
+        "peak_tracemalloc_mb": 0.0011,
+        "peak_rss_mb": 23.574,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def countSmaller(self, nums):\n        # Coordinate compression\n        sorted_unique = sorted(set(nums))\n        rank = {val: i + 1 for i, val in enumerate(sorted_unique)}\n        \n        def update(index, value, bit, size):\n            while index <= size:\n                bit[index] += value\n                index += index & -index\n        \n        def query(index, bit):\n            total = 0\n            while index > 0:\n                total += bit[index]\n                index -= index & -index\n            return total\n        \n        size = len(sorted_unique)\n        bit = [0] * (size + 1)\n        res = [0] * len(nums)\n        \n        # Traverse from right to left\n        for i in range(len(nums) - 1, -1, -1):\n            r = rank[nums[i]]\n            res[i] = query(r - 1, bit)\n            update(r, 1, bit, size)\n        \n        return res\n",
+      "history": [
+        {
+          "exec_time": 0.0991219000025012,
+          "mem_mbs": 1.9872176133324615,
+          "peak_mb": 22.1484375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.0991219000025012,
+          "mem_mbs": 1.9872176133324615,
+          "peak_mb": 22.1484375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.0991219000025012,
+          "mem_mbs": 1.9872176133324615,
+          "peak_mb": 22.1484375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.0991219000025012,
+          "mem_mbs": 1.9872176133324615,
+          "peak_mb": 22.1484375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.6,
+      "new_mem_reduction_pct": 0.0
+    }
+  ],
+  "avg_baseline_mem_mbs": 1.22,
+  "avg_final_mem_mbs": 1.22,
+  "avg_mem_reduction_pct": 0.0,
+  "avg_baseline_time_s": 0.0636,
+  "avg_final_time_s": 0.0636,
+  "avg_time_reduction_pct": 0.0
+}
