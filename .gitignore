@@ -23,3 +23,6 @@ results/mock_*/
 # 系统 / 编辑器
 .DS_Store
 Thumbs.db
+
+# 误克隆进项目根目录的副本（避免被当成 embedded git repo 提交）
+/CodeBoost/
