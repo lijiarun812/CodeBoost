@@ -628,17 +628,22 @@ def run(args):
                     history.append(dict(current_m, label="epoch%d" % ep))
                     continue
 
-                # 综合评分：时间 + 空间同时看，不再只盯 mem_mbs
-                cur_score = _score(current_m, ref_time=base_time, ref_mem=base_mem)
-                new_score = _score(cand_m, ref_time=base_time, ref_mem=base_mem)
-                if new_score < cur_score * 0.995:  # 0.5% 容忍噪声
+                # 接受判据：默认按论文（仅 mem_mbs 更小才保留），weighted 复现中期口径
+                if args.accept_rule == "paper":
+                    accept = cand_m["mem_mbs"] < current_m["mem_mbs"]
+                    detail = "mem_mbs %.3f -> %.3f" % (current_m["mem_mbs"], cand_m["mem_mbs"])
+                else:
+                    cur_score = _score(current_m, ref_time=base_time, ref_mem=base_mem)
+                    new_score = _score(cand_m, ref_time=base_time, ref_mem=base_mem)
+                    accept = new_score < cur_score * 0.995  # 0.5% 容忍噪声
+                    detail = "score %.4f -> %.4f" % (cur_score, new_score)
+                if accept:
                     current_code, current_m = cand_code, cand_m
                     last_exec_time = cand_m["exec_time"]
-                    print("   epoch %d: 采纳  mem=%.3f  time=%.4fs  peak=%.1f MB"
-                          % (ep, cand_m["mem_mbs"], cand_m["exec_time"], cand_m["peak_mb"]))
+                    print("   epoch %d: 采纳  %s  time=%.4fs  peak=%.1f MB"
+                          % (ep, detail, cand_m["exec_time"], cand_m["peak_mb"]))
                 else:
-                    reason = "无综合更优"
-                    print("   epoch %d: 保持   (%s)" % (ep, reason))
+                    print("   epoch %d: 保持   (%s)" % (ep, "判据未改善: " + detail))
                 history.append(dict(current_m, label="epoch%d" % ep))
 
         new_final = new_metrics(current_code, test_block, args, workdir)
@@ -648,6 +653,7 @@ def run(args):
             "task_name": name,
             "status": "ok",
             "repeats": reps,
+            "accept_rule": args.accept_rule,
             "baseline": {k: base_m[k] for k in ("exec_time", "mem_mbs", "peak_mb")},
             "final": {k: current_m[k] for k in ("exec_time", "mem_mbs", "peak_mb")},
             "new_baseline": new_base,
@@ -675,6 +681,7 @@ def run(args):
     summary = {"mode": "mock" if args.mock else "api:%s" % args.model,
                "num_problems": len(problems), "num_ok": len(ok),
                "epochs": args.epochs, "target_time": args.target_time,
+               "accept_rule": args.accept_rule,
                "max_repeats": args.max_repeats, "results": results}
     if ok:
         n = len(ok)
@@ -756,6 +763,9 @@ def main():
     p.add_argument("--start", type=int, default=None,
                    help="起始偏移(默认自动跳过前 100 道经典易题)")
     p.add_argument("--epochs", type=int, default=3, help="自我优化轮数")
+    p.add_argument("--accept-rule", choices=["paper", "weighted"], default="paper",
+                   help="接受判据：paper=仅 mem_mbs 更小才保留（忠实论文，默认）；"
+                        "weighted=时间/内存加权评分（复现中期口径）")
     p.add_argument("--target-time", type=float, default=0.25, help="自动校准的目标单次测量时长(秒)")
     p.add_argument("--max-repeats", type=int, default=20000, help="重复次数上限(放大测量信号)")
     p.add_argument("--max-time", type=int, default=30,
