@@ -14,6 +14,23 @@ from optimize.acceptance import AcceptanceConfig, Mode, decide_acceptance
 from optimize.feedback import build_feedback
 
 
+def _feedback_projection(feedback: Mapping[str, Any]) -> dict:
+    """Keep C's schema method separate from its diagnostic effective arm."""
+    if (not isinstance(feedback.get("prompt"), str)
+            or not isinstance(feedback.get("requested_method"), str)
+            or not isinstance(feedback.get("effective_method"), str)
+            or not isinstance(feedback.get("can_write_result"), bool)
+            or "degrade_reason" not in feedback):
+        raise ValueError("feedback_builder must return C's prompt and method metadata")
+    if feedback["can_write_result"] and not isinstance(feedback.get("method"), str):
+        raise ValueError("writable feedback requires a schema method")
+    return {key: feedback.get(key) for key in (
+        "method", "requested_method", "effective_method", "requested_arm",
+        "effective_arm", "degrade_reason", "schema_mapping_pending",
+        "eligible_for_requested_method", "can_write_result", "diagnostics",
+    )}
+
+
 def _frozen_plan(task: Mapping[str, Any], frozen_input: Mapping[str, Any]) -> dict:
     inputs = task.get("inputs")
     if not isinstance(inputs, list) or not any(
@@ -90,29 +107,26 @@ def run_offline_loop(
             feedback_method, task, current_code,
             total_ms=time.get("mean_trimmed_ms"),
         )
-        if not isinstance(feedback, dict) or not isinstance(feedback.get("prompt"), str):
-            raise ValueError("feedback_builder must return prompt and metadata")
-        formal_eligible = feedback.get("can_write_result") is True
+        if not isinstance(feedback, dict):
+            raise ValueError("feedback_builder must return a feedback dict")
+        feedback_meta = _feedback_projection(feedback)
+        formal_eligible = feedback_meta["can_write_result"]
         candidate_code = generate_candidate(feedback["prompt"], current_code, index)
         if not isinstance(candidate_code, str) or not candidate_code.strip():
             output["rounds"].append({
                 "round": index, "decision": "reject", "reason": "empty_candidate",
-                "feedback": {"requested_method": feedback.get("requested_method"),
-                             "effective_method": feedback.get("effective_method"),
-                             "can_write_result": formal_eligible},
+                "feedback": feedback_meta,
             })
             continue
         if candidate_code == current_code:
             output["rounds"].append({
                 "round": index, "decision": "reject", "reason": "unchanged_candidate",
-                "feedback": {"requested_method": feedback.get("requested_method"),
-                             "effective_method": feedback.get("effective_method"),
-                             "can_write_result": formal_eligible},
+                "feedback": feedback_meta,
             })
             continue
         # "diagnostic" is intentionally outside the frozen method enum. Its
         # in-memory Result must never be persisted while C's F4 is incomplete.
-        actual_method = feedback.get("method") if formal_eligible else "diagnostic"
+        actual_method = feedback_meta["method"] if formal_eligible else "diagnostic"
         candidate_measure = measure_task_fn(
             task, code=candidate_code, method=actual_method,
             tier_plan=[dict(plan)], **kwargs
@@ -125,12 +139,7 @@ def run_offline_loop(
             "decision": decision["decision"],
             "reason": decision["reason"],
             "decision_detail": decision,
-            "feedback": {
-                "requested_method": feedback.get("requested_method"),
-                "effective_method": feedback.get("effective_method"),
-                "degrade_reason": feedback.get("degrade_reason"),
-                "can_write_result": formal_eligible,
-            },
+            "feedback": feedback_meta,
             "formal_result_written": False,
         }
         output["rounds"].append(round_record)

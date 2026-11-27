@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import unittest
 
+from optimize.feedback import build_feedback
 from optimize.ours_pipeline import run_offline_loop
 
 
@@ -193,6 +195,75 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(output["rounds"][0]["feedback"]["can_write_result"])
         self.assertFalse(output["rounds"][0]["formal_result_written"])
         self.assertEqual(harness.calls[1]["method"], "diagnostic")
+
+    def test_real_c_f4_projection_keeps_full_and_hits_only_out_of_results(self):
+        diagnostic = {"status": "ok", "mode": "humaneval", "cases": [
+            {"idx": 0, "ms": 2.5, "src": "assert candidate(1) == 1"}],
+            "slowest": {"idx": 0, "ms": 2.5, "src": "assert candidate(1) == 1"}}
+        timing = {"ok": True, "status": "ok", "mode": "line_profiler", "unit": "ms",
+                  "source_sha256": hashlib.sha256(self.task["code"].encode()).hexdigest(),
+                  "items": [{"line": 1, "hits": 1, "line_time_ms": 3.0,
+                             "src": self.task["code"]}]}
+        for variant in ("full", "hits_only"):
+            with self.subTest(variant=variant):
+                case = diagnostic if variant == "full" else {
+                    **diagnostic, "slowest": {**diagnostic["slowest"], "ms": 0.3}}
+                def c_feedback(method, task, code, total_ms=None):
+                    return build_feedback(method, task, code, total_ms=total_ms,
+                                          diagnostic=case, line_timing=timing,
+                                          hot={"ok": True, "items": [{"line": 1, "hits": 4}]})
+                output, harness = self.run_case(
+                    "time-only", {"base": {}, "candidate-v1": {"time_ms": 80}},
+                    feedback_method="f4", feedback_builder=c_feedback,
+                )
+                feedback = output["rounds"][0]["feedback"]
+                self.assertEqual(feedback["requested_method"], "ours")
+                self.assertEqual(feedback["effective_method"],
+                                 "f4" if variant == "full" else "f4_line_hits")
+                self.assertIsNone(feedback["method"])
+                self.assertTrue(feedback["schema_mapping_pending"])
+                self.assertFalse(feedback["eligible_for_requested_method"])
+                self.assertFalse(feedback["can_write_result"])
+                self.assertIsInstance(feedback["diagnostics"], dict)
+                self.assertEqual(harness.calls[1]["method"], "diagnostic")
+                self.assertEqual(output["kind"], "diagnostic_demo")
+                self.assertFalse(output["formal_result_written"])
+
+    def test_real_c_f4_fallback_uses_actual_schema_method(self):
+        diagnostic = {"status": "ok", "slowest": {
+            "idx": 0, "ms": 2.5, "src": "assert candidate(1) == 1"}}
+        def c_feedback(method, task, code, total_ms=None):
+            return build_feedback(method, task, code, total_ms=total_ms,
+                                  diagnostic=diagnostic,
+                                  line_timing={"ok": False, "status": "timeout",
+                                               "reason": "diagnostic timeout"},
+                                  hot={"ok": False, "reason": "hotspot timeout"})
+        output, harness = self.run_case(
+            "time-only", {"base": {}, "candidate-v1": {"time_ms": 80}},
+            feedback_method="f4", feedback_builder=c_feedback,
+        )
+        feedback = output["rounds"][0]["feedback"]
+        self.assertEqual((feedback["method"], feedback["requested_method"],
+                          feedback["effective_method"], feedback["degrade_reason"]),
+                         ("f2", "ours", "f2", "fallback_f2"))
+        self.assertTrue(feedback["can_write_result"])
+        self.assertFalse(feedback["eligible_for_requested_method"])
+        self.assertEqual(harness.calls[1]["method"], "f2")
+        self.assertFalse(output["formal_result_written"])
+
+    def test_writable_feedback_without_schema_method_is_rejected(self):
+        harness = FakeHarness({"base": {}})
+        with self.assertRaisesRegex(ValueError, "schema method"):
+            run_offline_loop(
+                self.task, self.frozen, mode="time-only", feedback_method="f1",
+                generate_candidate=lambda *args: self.fail("generator should not run"),
+                measure_task_fn=harness,
+                feedback_builder=lambda *args, **kwargs: {
+                    "prompt": "prompt", "method": None, "requested_method": "f1",
+                    "effective_method": "f1", "degrade_reason": None,
+                    "can_write_result": True,
+                },
+            )
 
     def test_frozen_task_validation_and_failed_baseline(self):
         harness = FakeHarness({"base": {"status": "timeout"}})
