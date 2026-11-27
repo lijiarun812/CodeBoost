@@ -188,7 +188,9 @@ def analyze(path: Path, rss_baseline: float | None = None) -> dict:
 
 def label(r) -> str:
     """模型名 + 批次目录，避免「同一模型跑两批」在表里出现两行同名。"""
-    return "%s（%s）" % (r["model"].replace("api:", ""), r["batch"])
+    model = r["model"].replace("api:", "")
+    batch = r["batch"]
+    return model if model == batch else "%s（%s）" % (model, batch)
 
 
 def fmt(v, nd=1):
@@ -210,7 +212,8 @@ def md(reports: list) -> str:
             fmt(r["paper_time_avg"]), fmt(r["new_time_mean"])))
     w("")
     w("> ᵃ **TMU（本实现近似）**：`mem_mbs = ∫RSS dt ≈ 峰值 × 耗时`，是**内存与时间的综合指标**；"
-      "但在本实现里它与耗时高度共线（见表 5，r≈0.94–0.97），**因此不能当作独立的「空间收益」**；"
+      "但在本实现里它与耗时高度共线（见表 5：r 在 0.50–0.97 之间、随批次变化），**因此不能当作独立的「空间收益」**；"
+      "决定性证据是受控实验而不是相关系数——"
       "证据见 `eval/check_mem_metric.py`（同函数只加计算量、不加内存，峰值不变而 mem_mbs 涨三个数量级）。"
       "论文的 TMU 绝对值与我们不同口径（论文 GPT-3.5 的 `TMU÷ET = 437 MB` 比其 MU 91 MB 还大 4.8 倍），"
       "**绝对值不可比，只能比降幅**。")
@@ -276,7 +279,9 @@ def md(reports: list) -> str:
         rt, rm = r["tmu_vs_time_r"], r["mu_vs_time_r"]
         verdict = ("TMU 与时间高度共线 → 不能当空间指标"
                    if rt is not None and rt >= 0.8 else
-                   ("TMU 与时间不共线 → 需人工复核" if rt is not None else "样本不足"))
+                   ("本批不共线（但仍需按受控实验判断：" 
+                    "`mem_mbs/耗时 ≈ peak` 与 check_mem_metric 才是决定性证据）"
+                    if rt is not None else "样本不足"))
         w("| %s | %s | %s | %s |" % (
             label(r),
             "n/a" if rt is None else "%.3f" % rt,
