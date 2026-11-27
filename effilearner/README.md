@@ -67,8 +67,26 @@ py repro/effi_repro.py --num 100 --epochs 3 \
   --model deepseek-flash
 ```
 
-> 思考型模型（如 DeepSeek V4）默认会先生成长段推理，既慢又可能返回空正文，
-> 建议保持 `--thinking disabled`（默认值即为 disabled）。
+> 思考型模型（如 DeepSeek V4）默认会先生成长段推理，既慢又可能返回空正文；
+> 脚本默认 `--send-thinking auto`，仅对支持该字段的厂商发送 `thinking`，避免其他接口报 400。
+
+### 3. 厂商预设 / 接入任意模型（推荐）
+
+```bash
+py repro/effi_repro.py --list-providers          # 查看内置预设
+py repro/effi_repro.py --provider deepseek --model deepseek-flash --num 100 --epochs 3
+py repro/effi_repro.py --provider zhipu    --model glm-4.6          --num 100 --epochs 3
+```
+
+内置预设：`deepseek / dashscope / zhipu / moonshot / openai / siliconflow / openrouter / ollama`。
+接入**其他任意 OpenAI 兼容模型**时，直接用 `--api-base + --model + --api-key`，无需改代码：
+
+```bash
+py repro/effi_repro.py --api-base https://your-endpoint/v1 --model your-model --api-key sk-...
+```
+
+兼容性处理：脚本按厂商自动判断是否发送 `thinking` 字段；遇到不支持 `max_tokens`/`temperature`
+的接口会自动回退（改用 `max_completion_tokens` 或去掉该字段），保证可接更多模型。
 
 ## 参数说明
 
@@ -83,7 +101,10 @@ py repro/effi_repro.py --num 100 --epochs 3 \
 | `--max-repeats` | `20000` | 重复次数上限（放大测量信号） |
 | `--max-time` | `10` | 单次执行超时（秒） |
 | `--max-tokens` | `4096` | 单次生成 token 预算 |
-| `--thinking` | `disabled` | `enabled` / `disabled` |
+| `--thinking` | `disabled` | `enabled` / `disabled`（发送该字段时的取值） |
+| `--provider` | 无 | 内置厂商预设（自动填 base/model 与 thinking 兼容性） |
+| `--list-providers` | 关闭 | 列出全部内置预设 |
+| `--send-thinking` | `auto` | `auto`/`yes`/`no`：是否发送 thinking 字段（auto 按厂商判断） |
 | `--mock` | 关闭 | 不调 LLM 的离线自检 |
 | `--api-base` / `--api-key` / `--model` | 取环境变量 | OpenAI 兼容接口配置 |
 | `--compare` | 关闭 | 汇总 `results/repro` 下多个模型的结果 |

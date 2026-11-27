@@ -15,11 +15,13 @@
     # 1) 离线验证测量管线（不需要任何 Key）
     py repro/effi_repro.py --mock --num 3
 
-    # 2) 接真实模型（先设置下面三个环境变量，或改用 --api-key/--api-base/--model）
-    #    EFFI_API_KEY   = sk-xxx
-    #    EFFI_API_BASE  = https://api.deepseek.com/v1   （或其他 OpenAI 兼容地址）
-    #    EFFI_MODEL     = deepseek-chat
-    py repro/effi_repro.py --num 20 --epochs 3
+    # 2) 接真实模型（任意 OpenAI 兼容接口）
+    #    a) 内置厂商预设（自动填 base_url 与 thinking 兼容性）
+    py repro/effi_repro.py --provider deepseek --model deepseek-flash --num 20 --epochs 3
+    py repro/effi_repro.py --list-providers        # 查看全部预设
+    #    b) 自定义任意模型（--api-base + --model + --api-key，或环境变量）
+    #       EFFI_API_KEY / EFFI_API_BASE / EFFI_MODEL
+    py repro/effi_repro.py --api-base https://xxx/v1 --model some-model --num 20 --epochs 3
 """
 
 import argparse
@@ -43,7 +45,7 @@ import sys as _sys
 import json as _json
 
 
-def _effi_run(workload):
+def _effi_run(workload, profile_lines=False):
     import psutil
     proc = psutil.Process()
     series = []
@@ -61,8 +63,50 @@ def _effi_run(workload):
     th.daemon = True
     th.start()
 
+    # ---- 逐行计时剖析（sys.settrace） ----
+    line_times = {}   # lineno -> total wall-clock seconds
+    hit_count = {}
+    _in_target = [False]
+    _last_ts = [None]
+
+    def _trace(frame, event, arg):
+        if event == "call":
+            fn = frame.f_code.co_name
+            if fn.startswith("Solution") or fn in ("_effi_workload",):
+                _in_target[0] = True
+                _last_ts[0] = _t.perf_counter()
+                return _trace
+            return None
+        if not _in_target[0]:
+            return None
+        if event == "line":
+            now = _t.perf_counter()
+            lineno = frame.f_lineno
+            if _last_ts[0] is not None:
+                dt = now - _last_ts[0]
+                line_times[lineno] = line_times.get(lineno, 0.0) + dt
+                hit_count[lineno] = hit_count.get(lineno, 0) + 1
+            _last_ts[0] = now
+            return _trace
+        if event == "return":
+            now = _t.perf_counter()
+            lineno = frame.f_lineno
+            if _last_ts[0] is not None:
+                dt = now - _last_ts[0]
+                line_times[lineno] = line_times.get(lineno, 0.0) + dt
+            _in_target[0] = False
+            _last_ts[0] = None
+            return None
+        return _trace
+
     t0 = _t.perf_counter()
-    workload()
+    if profile_lines:
+        _sys.settrace(_trace)
+    try:
+        workload()
+    finally:
+        if profile_lines:
+            _sys.settrace(None)
     t1 = _t.perf_counter()
 
     stop[0] = True
@@ -74,8 +118,14 @@ def _effi_run(workload):
         mem_mbs += (series[i][1] + series[i - 1][1]) / 2.0 * dt
     peak = max([s[1] for s in series]) if series else 0.0
 
-    _sys.stdout.write("\n__EFFI__" + _json.dumps(
-        {"exec_time": t1 - t0, "mem_mbs": mem_mbs, "peak_mb": peak}) + "\n")
+    result = {"exec_time": t1 - t0, "mem_mbs": mem_mbs, "peak_mb": peak}
+    if profile_lines and line_times:
+        top = sorted(line_times.items(), key=lambda kv: -kv[1])[:15]
+        result["line_profile"] = [
+            {"line": ln, "time": round(tm, 6), "hits": hit_count.get(ln, 0)}
+            for ln, tm in top
+        ]
+    _sys.stdout.write("\n__EFFI__" + _json.dumps(result) + "\n")
     _sys.stdout.flush()
 '''
 
@@ -144,9 +194,10 @@ def _indent_block(block, spaces):
     return "\n".join(out)
 
 
-def build_program(user_code, test_block, repeats):
+def build_program(user_code, test_block, repeats, profile_lines=False):
     """拼出可独立运行的被测脚本：Solution 代码(模块级) + 重复执行测试块。"""
     workload_body = _indent_block(test_block, 8)  # def(4) 内 for(8) 内
+    profile_flag = "True" if profile_lines else "False"
     return (
         HARNESS_PRE
         + "\n" + IMPORT_PKG + "\n" + TREE_NODE + "\n" + LIST_NODE
@@ -156,23 +207,39 @@ def build_program(user_code, test_block, repeats):
         + "def _effi_workload():\n"
         + "    for _i in range(%d):\n" % repeats
         + workload_body
-        + "\n\n_effi_run(_effi_workload)\n"
+        + "\n\n_effi_run(_effi_workload, profile_lines=%s)\n" % profile_flag
     )
 
 
-def measure(user_code, test_block, repeats, max_time, workdir):
-    """运行 user_code + test_block，返回 {ok, exec_time, mem_mbs, peak_mb, error}。"""
-    src = build_program(user_code, test_block, repeats)
+def _suggest_timeout(last_exec_time: float, base: float = 30.0) -> float:
+    """根据上次运行时长给出推荐超时：至少 base s，再留 6x 余量。"""
+    if last_exec_time <= 0:
+        return base
+    return max(base, last_exec_time * 6)
+
+
+def measure(user_code, test_block, repeats, max_time, workdir,
+            profile_lines=False, last_exec_time=None):
+    """运行 user_code + test_block，返回 {ok, exec_time, mem_mbs, peak_mb, line_profile, error}。
+
+    - profile_lines=True 时做逐行计时剖析并附带 line_profile。
+    - 若提供 last_exec_time，则自适应超时（不低于 max_time，不超过 max_time*3）。
+    """
+    effective_timeout = max_time
+    if last_exec_time is not None:
+        effective_timeout = min(_suggest_timeout(last_exec_time, base=max_time), max_time * 3)
+
+    src = build_program(user_code, test_block, repeats, profile_lines=profile_lines)
     tmp = workdir / ("case_%d_%d.py" % (os.getpid(), int(time.time() * 1e6)))
     tmp.write_text(src, encoding="utf-8")
     try:
         proc = subprocess.run(
             [sys.executable, str(tmp)],
-            capture_output=True, text=True, timeout=max_time,
+            capture_output=True, text=True, timeout=effective_timeout,
             encoding="utf-8", errors="replace",
         )
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "timeout(%ss)" % max_time}
+        return {"ok": False, "error": "timeout(%ss)" % effective_timeout}
     finally:
         try:
             tmp.unlink()
@@ -226,35 +293,107 @@ def optimization_prompt(problem, completion, overhead):
         "Task Description:\n" + problem["markdown_description"] + "\n\n"
         "Test Case:\n" + problem["small_test_cases"] + "\n\n"
         "Original Code:\n```python\n" + completion + "```\n"
-        "Overhead Analysis:\n" + overhead + "\n"
+        "Overhead & Hotspot Analysis (read carefully — slow code OUTSIDE the marked hot lines "
+        "may be the ROOT CAUSE of those lines appearing slow; the true fix might be in a "
+        "nearby line that calls or sets up the hotspot):\n"
+        + overhead + "\n"
         "Optimization Rules:\n"
         "- Encapsulate the optimized code within a Python code block "
         "(i.e., ```python\\n[Your Code Here]\\n```).\n"
         "- Do not include the test case within the code block.\n"
-        "- Focus solely on code optimization; test cases are already provided.\n"
+        "- Optimize BOTH runtime AND memory SIMULTANEOUSLY; do not trade one for the other.\n"
+        "- Focus on the hotspot region AND its surrounding context (shown below). The true "
+        "bottleneck often lives in neighbouring or calling code.\n"
         "- Ensure the provided test case passes with your optimized solution.\n"
     )
 
 
-def overhead_text(m):
-    return (
-        "The total memory usage during the code execution is: %.2f MB*s.\n"
-        "The total execution time is: %.4f s.\n"
-        "The maximum memory peak requirement is: %.2f MB.\n"
-        % (m["mem_mbs"], m["exec_time"], m["peak_mb"])
+def _format_hotspot_with_context(source_lines, line_profile, window=3):
+    """把逐行剖析结果拼成：热点行 + 附近 window 行源码 + 该区域内耗时占比。
+
+    老师要求：不能只反馈耗时最大的一行，要反馈它周围所有代码，
+    因为其他部分的代码可能导致这一行耗时最多。
+    """
+    if not line_profile:
+        return ""
+    out = []
+    out.append("Per-line hotspot (top 15 lines by accumulated wall-clock time):")
+    total_time = sum(item["time"] for item in line_profile) or 1e-9
+    for item in line_profile:
+        ln, t, h = item["line"], item["time"], item["hits"]
+        out.append("  line %3d: t=%8.4fs  hits=%d  share=%5.1f%%"
+                   % (ln, t, h, 100 * t / total_time))
+
+    out.append("")
+    out.append("Hotspot regions with surrounding code context (±%d lines, center marked >>>):" % window)
+    shown = set()
+    for item in line_profile[:3]:
+        center = item["line"]
+        lo = max(1, center - window)
+        hi = min(len(source_lines), center + window)
+        key = (lo, hi)
+        if key in shown:
+            continue
+        shown.add(key)
+        out.append("")
+        out.append("  # --- region lines %d-%d (center=%d) ---" % (lo, hi, center))
+        for n in range(lo, hi + 1):
+            prefix = ">>>" if n == center else "   "
+            src_line = source_lines[n - 1].rstrip() if n - 1 < len(source_lines) else ""
+            out.append("  %s %3d: %s" % (prefix, n, src_line))
+    return "\n".join(out)
+
+
+def overhead_text(m, source_lines=None, hot_window=3):
+    """综合开销文本：时间 + 空间同时报告，并在有源码 + line_profile 时输出热点上下文。"""
+    text = (
+        "[Performance — Time AND Space (optimize both)]\n"
+        "  • Total execution time  : %.4f s\n"
+        "  • Peak memory (RSS)     : %.2f MB\n"
+        "  • Memory-time integral  : %.2f MB·s (area under RSS curve)\n"
+        % (m["exec_time"], m["peak_mb"], m["mem_mbs"])
     )
+    lp = m.get("line_profile")
+    if source_lines and lp:
+        text += "\n" + _format_hotspot_with_context(source_lines, lp, window=hot_window)
+    return text
+
+
+# ---------------------------------------------------------------------------
+# 厂商预设（任意 OpenAI 兼容接口都可接入；thinking=是否支持 thinking 字段）
+# ---------------------------------------------------------------------------
+PROVIDERS = {
+    "deepseek":    {"base": "https://api.deepseek.com/v1",                       "model": "deepseek-v4-pro",  "thinking": True},
+    "dashscope":   {"base": "https://dashscope.aliyuncs.com/compatible-mode/v1", "model": "qwen3-coder-plus", "thinking": True},
+    "zhipu":       {"base": "https://open.bigmodel.cn/api/paas/v4",              "model": "glm-5.4",          "thinking": True},
+    "moonshot":    {"base": "https://api.moonshot.cn/v1",                        "model": "kimi-k2.5-code",   "thinking": False},
+    "openai":      {"base": "https://api.openai.com/v1",                         "model": "gpt-4o",           "thinking": False},
+    "siliconflow": {"base": "https://api.siliconflow.cn/v1",                     "model": "Qwen/Qwen2.5-Coder-32B-Instruct", "thinking": False},
+    "openrouter":  {"base": "https://openrouter.ai/api/v1",                      "model": "anthropic/claude-sonnet-4.6", "thinking": False},
+    "ollama":      {"base": "http://localhost:11434/v1",                         "model": "qwen2.5-coder:7b", "thinking": False},
+}
+
+
+def _host_supports_thinking(api_base):
+    """未指定厂商时，按地址自动判断是否需要发送 thinking 字段。"""
+    b = (api_base or "").lower()
+    return any(k in b for k in ("deepseek", "bigmodel", "dashscope"))
 
 
 # ---------------------------------------------------------------------------
 # OpenAI 兼容 API 调用（requests，无 openai SDK 依赖）
 # ---------------------------------------------------------------------------
 class LLMClient:
-    def __init__(self, api_base, api_key, model, max_tokens=8192, thinking="disabled"):
+    def __init__(self, api_base, api_key, model, max_tokens=8192, thinking="disabled",
+                 send_thinking=True, extra_headers=None):
         self.url = api_base.rstrip("/") + "/chat/completions"
         self.key = api_key
         self.model = model
         self.max_tokens = max_tokens
         self.thinking = thinking
+        self.send_thinking = send_thinking
+        self.extra_headers = extra_headers or {}
+        self.max_tokens_key = "max_tokens"
 
     def chat(self, prompt, system=None, temperature=0.2):
         import requests
@@ -263,26 +402,40 @@ class LLMClient:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {"model": self.model, "messages": messages,
-                   "temperature": temperature,
-                   "thinking": {"type": self.thinking}}  # disabled=关闭推理，快且省
+        payload = {"model": self.model, "messages": messages, "temperature": temperature}
+        if self.send_thinking:
+            payload["thinking"] = {"type": self.thinking}  # 仅对支持的厂商发送，避免 400
 
         budget = self.max_tokens
         content = ""
         for attempt in range(6):
-            payload["max_tokens"] = budget
+            if self.max_tokens_key != "max_tokens":
+                payload.pop("max_tokens", None)
+            payload[self.max_tokens_key] = budget
+            headers = {"Authorization": "Bearer " + self.key,
+                       "Content-Type": "application/json"}
+            headers.update(self.extra_headers)
             try:
-                resp = requests.post(
-                    self.url,
-                    headers={"Authorization": "Bearer " + self.key,
-                             "Content-Type": "application/json"},
-                    json=payload,
-                    timeout=300,
-                )
+                resp = requests.post(self.url, headers=headers, json=payload, timeout=300)
                 if resp.status_code != 200:
                     if resp.status_code in (429, 500, 502, 503, 504):
                         time.sleep(min(2 ** attempt, 8))
                         continue
+                    # 400 兼容：部分接口不支持 max_tokens / temperature / thinking 字段
+                    if resp.status_code == 400:
+                        low = (resp.text or "").lower()
+                        changed = False
+                        if "max_tokens" in low and self.max_tokens_key == "max_tokens":
+                            self.max_tokens_key = "max_completion_tokens"
+                            changed = True
+                        if "temperature" in low and "temperature" in payload:
+                            payload.pop("temperature", None)
+                            changed = True
+                        if "thinking" in low and "thinking" in payload:
+                            payload.pop("thinking", None)
+                            changed = True
+                        if changed:
+                            continue
                     raise RuntimeError("HTTP %d: %s" % (resp.status_code, resp.text[:300]))
                 data = resp.json()  # 响应体在此才真正读取，连接 reset 也可能发生在这里
             except requests.exceptions.RequestException:
@@ -292,7 +445,11 @@ class LLMClient:
                 time.sleep(min(2 ** attempt, 8))
                 continue
             choice = data["choices"][0]
-            content = choice.get("message", {}).get("content") or ""
+            msg = choice.get("message", {}) or {}
+            content = msg.get("content")
+            if isinstance(content, list):  # 兼容多段 content 的接口
+                content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+            content = content or ""
             if content.strip():
                 return content
             # 正文为空多半是 reasoning 吃满预算被截断，翻倍重试
@@ -306,6 +463,20 @@ class LLMClient:
 # ---------------------------------------------------------------------------
 # 主流程
 # ---------------------------------------------------------------------------
+def _score(m, wt=0.5, wm=0.5, ref_time=None, ref_mem=None):
+    """综合评分（越小越好）：归一化时间与空间的加权和。
+
+    默认 0.5/0.5，同时优化时间 + 空间；可通过 wt/wm 调整偏好。
+    ref_time/ref_mem 用于归一化；缺失时用 m 自身值（退化为绝对值比较）。
+    """
+    t = m.get("exec_time", 0.0)
+    mem = m.get("mem_mbs", 0.0) + m.get("peak_mb", 0.0) * 0.02  # 小权重纳入峰值
+    if ref_time and ref_mem:
+        t = t / max(ref_time, 1e-9)
+        mem = mem / max(ref_mem, 1e-9)
+    return wt * t + wm * mem
+
+
 def load_problems(dataset_path, num, start):
     data = json.loads(Path(dataset_path).read_text(encoding="utf-8"))
     picked = []
@@ -316,6 +487,9 @@ def load_problems(dataset_path, num, start):
         if not entry.get("markdown_description") or not entry.get("small_test_cases"):
             continue
         picked.append(entry)
+    # start=None 时自动跳过前 100 道简单题（数据集前若干行是经典易题）
+    if start is None:
+        start = min(100, max(0, len(picked) - num))
     return picked[start:start + num]
 
 
@@ -334,15 +508,19 @@ def run(args):
     if not args.mock:
         if not (args.api_base and args.api_key and args.model):
             print("[BLOCKED] 缺少 API 配置，请设置以下任一方式后重试：")
+            print("  内置厂商: --provider deepseek|dashscope|zhipu|moonshot|openai|siliconflow|openrouter|ollama")
             print("  环境变量: EFFI_API_BASE / EFFI_API_KEY / EFFI_MODEL")
-            print("  或参数  : --api-base --api-key --model")
+            print("  或参数  : --api-base --api-key --model（任意 OpenAI 兼容接口）")
+            print("  查看全部预设: py repro/effi_repro.py --list-providers")
             print("  想先验证测量管线可用: py repro/effi_repro.py --mock --num 3")
             return
-        client = LLMClient(args.api_base, args.api_key, args.model, args.max_tokens, args.thinking)
+        client = LLMClient(args.api_base, args.api_key, args.model, args.max_tokens, args.thinking,
+                           send_thinking=getattr(args, "send_thinking_field", False))
 
     print("=" * 70)
-    print("EffiLearner 简化复现  |  %d 题  |  epochs=%d  |  %s"
-          % (len(problems), args.epochs,
+    print("EffiLearner 简化复现  |  %d 题(start=%d)  |  epochs=%d  |  profile=%s  |  %s"
+          % (len(problems), args.start if args.start is not None else 100,
+             args.epochs, args.profile,
              "MOCK(canonical_solution)" if args.mock else ("API:" + str(args.model))))
     print("=" * 70)
 
@@ -375,25 +553,36 @@ def run(args):
                             "status": "baseline_failed",
                             "error": probe.get("error")})
             continue
-        base_m = measure(base_code, test_block, reps, args.max_time, workdir)
+
+        profile = args.profile in ("always", "baseline")
+        base_m = measure(base_code, test_block, reps, args.max_time, workdir,
+                         profile_lines=profile)
         if not base_m.get("ok"):
             print("   baseline 不可执行，跳过: %s" % base_m.get("error"))
             results.append({"problem_idx": pid, "task_name": name,
                             "status": "baseline_failed",
                             "error": base_m.get("error")})
             continue
-        print("   baseline : mem=%.3f MB*s  time=%.4fs  peak=%.1f MB  (reps=%d)"
-              % (base_m["mem_mbs"], base_m["exec_time"], base_m["peak_mb"], reps))
+        base_time = base_m["exec_time"]
+        base_mem = base_m["mem_mbs"]
+        print("   baseline : mem=%.3f MB*s  time=%.4fs  peak=%.1f MB  (reps=%d, timeout=%ss)"
+              % (base_m["mem_mbs"], base_m["exec_time"], base_m["peak_mb"], reps, args.max_time))
 
         current_code = base_code
         current_m = base_m
         history = [dict(base_m, label="baseline")]
 
         if not args.mock:
+            last_exec_time = base_time
             for ep in range(1, args.epochs + 1):
+                source_lines = current_code.splitlines()
+                profile_now = args.profile in ("always", "on_epoch")
                 try:
                     raw = client.chat(
-                        optimization_prompt(problem, current_code, overhead_text(current_m)),
+                        optimization_prompt(
+                            problem, current_code,
+                            overhead_text(current_m, source_lines=source_lines,
+                                          hot_window=args.hot_window)),
                         system="You are a code developer expert.",
                         temperature=0.2,
                     )
@@ -401,13 +590,24 @@ def run(args):
                     print("   epoch %d: 调用 API 失败: %s" % (ep, e))
                     break
                 cand_code = extract_code(raw)
-                cand_m = measure(cand_code, test_block, reps, args.max_time, workdir)
-                if cand_m.get("ok") and cand_m["mem_mbs"] < current_m["mem_mbs"]:
+                cand_m = measure(cand_code, test_block, reps, args.max_time, workdir,
+                                 profile_lines=profile_now,
+                                 last_exec_time=last_exec_time)
+                if not cand_m.get("ok"):
+                    print("   epoch %d: 保持   (%s)" % (ep, cand_m.get("error")))
+                    history.append(dict(current_m, label="epoch%d" % ep))
+                    continue
+
+                # 综合评分：时间 + 空间同时看，不再只盯 mem_mbs
+                cur_score = _score(current_m, ref_time=base_time, ref_mem=base_mem)
+                new_score = _score(cand_m, ref_time=base_time, ref_mem=base_mem)
+                if new_score < cur_score * 0.995:  # 0.5% 容忍噪声
                     current_code, current_m = cand_code, cand_m
-                    print("   epoch %d: 采纳  mem=%.3f MB*s  time=%.4fs  peak=%.1f MB"
+                    last_exec_time = cand_m["exec_time"]
+                    print("   epoch %d: 采纳  mem=%.3f  time=%.4fs  peak=%.1f MB"
                           % (ep, cand_m["mem_mbs"], cand_m["exec_time"], cand_m["peak_mb"]))
                 else:
-                    reason = cand_m.get("error") if not cand_m.get("ok") else "无更优"
+                    reason = "无综合更优"
                     print("   epoch %d: 保持   (%s)" % (ep, reason))
                 history.append(dict(current_m, label="epoch%d" % ep))
 
@@ -511,20 +711,56 @@ def main():
     p.add_argument("--dataset", default=str(REPO_ROOT / "datasets" / "dataset.json"))
     p.add_argument("--out", default=str(REPO_ROOT / "results" / "repro"))
     p.add_argument("--num", type=int, default=20, help="题目数量")
-    p.add_argument("--start", type=int, default=0, help="起始偏移")
+    p.add_argument("--start", type=int, default=None,
+                   help="起始偏移(默认自动跳过前 100 道经典易题)")
     p.add_argument("--epochs", type=int, default=3, help="自我优化轮数")
     p.add_argument("--target-time", type=float, default=0.25, help="自动校准的目标单次测量时长(秒)")
     p.add_argument("--max-repeats", type=int, default=20000, help="重复次数上限(放大测量信号)")
-    p.add_argument("--max-time", type=int, default=10, help="单次执行超时(秒)")
+    p.add_argument("--max-time", type=int, default=30,
+                   help="单次执行超时(秒)，同时作为自适应超时的下界(不再用 180s 卡死)")
     p.add_argument("--mock", action="store_true", help="用 canonical_solution 当初始代码且不调 LLM")
+    p.add_argument("--profile", choices=["off", "on_epoch", "baseline", "always"], default="on_epoch",
+                   help="逐行剖析: off=关闭; baseline=仅首轮; on_epoch=每轮优化(给模型热点反馈); always=全开")
+    p.add_argument("--hot-window", type=int, default=5,
+                   help="热点周围源码上下文窗口大小(±N 行，老师要求反馈上下文而非单行)")
+    p.add_argument("--score-wt", type=float, default=0.5, help="综合评分中时间权重")
+    p.add_argument("--score-wm", type=float, default=0.5, help="综合评分中内存权重(+峰值*0.02)")
     p.add_argument("--api-base", default=os.getenv("EFFI_API_BASE") or os.getenv("OPENAI_API_BASE"))
     p.add_argument("--api-key", default=os.getenv("EFFI_API_KEY") or os.getenv("OPENAI_API_KEY"))
     p.add_argument("--model", default=os.getenv("EFFI_MODEL") or os.getenv("OPENAI_MODEL"))
+    p.add_argument("--provider", choices=sorted(PROVIDERS.keys()),
+                   help="内置厂商预设(自动填 base/model 与 thinking 兼容性)；其他模型用 --api-base/--model")
+    p.add_argument("--list-providers", action="store_true", help="列出内置厂商预设后退出")
     p.add_argument("--max-tokens", type=int, default=4096, help="单次生成 token 预算")
     p.add_argument("--thinking", choices=["enabled", "disabled"], default="disabled",
-                   help="是否开启推理模式(默认 disabled，快且省)")
+                   help="thinking 字段取值(仅在发送该字段时生效)")
+    p.add_argument("--send-thinking", dest="send_thinking", choices=["auto", "yes", "no"], default="auto",
+                   help="是否发送 thinking 字段(auto=按厂商自动判断，避免不支持的接口报 400)")
     p.add_argument("--compare", action="store_true", help="汇总多个模型的结果做对比")
     args = p.parse_args()
+    if args.list_providers:
+        print("可用厂商预设：")
+        for k in sorted(PROVIDERS):
+            v = PROVIDERS[k]
+            print("  %-12s base=%s  model=%s  thinking=%s"
+                  % (k, v["base"], v["model"] or "<需指定 --model>", v["thinking"]))
+        print("\n自定义模型：--api-base <URL> --model <名称> --api-key <KEY>（任意 OpenAI 兼容接口）")
+        return
+    # 解析厂商预设 + thinking 字段兼容性
+    preset = PROVIDERS[args.provider] if args.provider else None
+    if preset:
+        if not args.api_base:
+            args.api_base = preset["base"]
+        if not args.model:
+            args.model = preset["model"]
+    if args.send_thinking == "yes":
+        args.send_thinking_field = True
+    elif args.send_thinking == "no":
+        args.send_thinking_field = False
+    elif preset:
+        args.send_thinking_field = preset["thinking"]
+    else:
+        args.send_thinking_field = _host_supports_thinking(args.api_base)
     if args.compare:
         compare(args)
     else:
