@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Callable, Mapping
 
 from eval.harness import measure_task
+from eval.space import pareto_accept
 from optimize.acceptance import AcceptanceConfig, Mode, decide_acceptance
 from optimize.feedback import build_feedback
 
@@ -47,6 +48,34 @@ def _frozen_plan(task: Mapping[str, Any], frozen_input: Mapping[str, Any]) -> di
     return {**dict(frozen_input), "test": test}
 
 
+def _pair_reason(baseline: Mapping[str, Any], candidate: Mapping[str, Any],
+                 expected: tuple[str, str, str]) -> str | None:
+    """A's Pareto rule does not verify frozen task/tier/args_hash pairing."""
+    def key(result: Mapping[str, Any]) -> tuple | None:
+        time = result.get("time") or {}
+        tiers = time.get("tiers") if isinstance(time, Mapping) else None
+        if not isinstance(tiers, list) or not tiers or not isinstance(tiers[-1], Mapping):
+            return None
+        last = tiers[-1]
+        values = (result.get("task_id"), last.get("tier"), last.get("args_hash"))
+        return values if all(isinstance(value, str) and value for value in values) else None
+
+    base_key, candidate_key = key(baseline), key(candidate)
+    if base_key is None or candidate_key is None:
+        return "pair_unavailable"
+    return "pair_mismatch" if base_key != candidate_key or base_key != expected else None
+
+
+def _time_missing(result: Mapping[str, Any]) -> bool:
+    time = result.get("time") or {}
+    return not isinstance(time, Mapping) or time.get("mean_trimmed_ms") is None
+
+
+def _peak_missing(result: Mapping[str, Any]) -> bool:
+    mem = result.get("mem") or {}
+    return not isinstance(mem, Mapping) or mem.get("peak_tracemalloc_mb") is None
+
+
 def run_offline_loop(
     task: Mapping[str, Any],
     frozen_input: Mapping[str, Any],
@@ -59,6 +88,7 @@ def run_offline_loop(
     config: AcceptanceConfig = AcceptanceConfig(),
     rounds: int = 1,
     measurement_kwargs: Mapping[str, Any] | None = None,
+    rss_baseline_mb: float | None = None,
 ) -> dict:
     """Connect feedback, mock candidate, shared measurement, and acceptance.
 
@@ -69,6 +99,8 @@ def run_offline_loop(
     """
     if not isinstance(task.get("code"), str) or not task["code"]:
         raise ValueError("Task.code is required")
+    if not isinstance(task.get("task_id"), str) or not task["task_id"]:
+        raise ValueError("Task.task_id is required")
     if not isinstance(task.get("description"), str) or not task["description"].strip():
         raise ValueError("Task.description is required")
     if mode not in ("time-only", "mem-only", "joint"):
@@ -76,12 +108,14 @@ def run_offline_loop(
     if not isinstance(rounds, int) or isinstance(rounds, bool) or rounds < 1:
         raise ValueError("rounds must be a positive integer")
     plan = _frozen_plan(task, frozen_input)
+    expected_pair = (task["task_id"], plan["tier"], plan["args_hash"])
     kwargs = dict(measurement_kwargs or {})
     if {"task", "code", "method", "tier_plan"} & kwargs.keys():
         raise ValueError("measurement_kwargs cannot override task/code/method/tier_plan")
 
     initial_code = task["code"]
     current_code = initial_code
+    current_method = "base"
     current_measure = measure_task_fn(
         task, code=None, method="base", tier_plan=[dict(plan)], **kwargs
     )
@@ -91,6 +125,9 @@ def run_offline_loop(
         "task_id": task.get("task_id"),
         "mode": mode,
         "feedback_method": feedback_method,
+        "acceptance_rule": ("eval.space.pareto_accept:v1.1" if mode == "joint"
+                            else "optimize.acceptance.decide_acceptance:group"),
+        "rss_baseline_mb": rss_baseline_mb if mode == "joint" else None,
         "frozen_input": {"tier": plan["tier"], "args_hash": plan["args_hash"]},
         "initial_code": initial_code,
         "current_code": current_code,
@@ -98,10 +135,28 @@ def run_offline_loop(
         "rounds": [],
     }
     if current_measure.get("status") != "ok":
-        output["stop_reason"] = "baseline_status_" + str(current_measure.get("status"))
+        if mode == "joint":
+            output["stop_reason"] = "incomparable"
+            output["incomparable_reason"] = "baseline_status_" + str(current_measure.get("status"))
+        else:
+            output["stop_reason"] = "baseline_status_" + str(current_measure.get("status"))
         return output
 
     for index in range(rounds):
+        baseline_retest = None
+        if mode == "joint" and _time_missing(current_measure):
+            previous = current_measure
+            current_measure = measure_task_fn(
+                task, code=None if current_code == initial_code else current_code,
+                method=current_method, tier_plan=[dict(plan)], **kwargs,
+            )
+            baseline_retest = {"side": "baseline", "reason": "time_missing",
+                               "before": previous, "after": current_measure}
+            if current_measure.get("status") != "ok" or _time_missing(current_measure):
+                output["stop_reason"] = "incomparable"
+                output["incomparable_reason"] = "baseline_time_unavailable_after_retest"
+                output["baseline_retest"] = baseline_retest
+                break
         time = current_measure.get("time") or {}
         feedback = feedback_builder(
             feedback_method, task, current_code,
@@ -115,12 +170,16 @@ def run_offline_loop(
         if not isinstance(candidate_code, str) or not candidate_code.strip():
             output["rounds"].append({
                 "round": index, "decision": "reject", "reason": "empty_candidate",
+                "acceptance_rule": output["acceptance_rule"],
+                "source_code": current_code, "prompt": feedback["prompt"],
                 "feedback": feedback_meta,
             })
             continue
         if candidate_code == current_code:
             output["rounds"].append({
                 "round": index, "decision": "reject", "reason": "unchanged_candidate",
+                "acceptance_rule": output["acceptance_rule"],
+                "source_code": current_code, "prompt": feedback["prompt"],
                 "feedback": feedback_meta,
             })
             continue
@@ -131,14 +190,65 @@ def run_offline_loop(
             task, code=candidate_code, method=actual_method,
             tier_plan=[dict(plan)], **kwargs
         )
-        decision = decide_acceptance(current_measure, candidate_measure, mode, config)
+        retest_record = baseline_retest
+        if mode == "joint":
+            retests_used = 1 if baseline_retest is not None else 0
+            if candidate_measure.get("status") == "incorrect":
+                decision = pareto_accept(current_measure, candidate_measure,
+                                         rss_baseline_mb=rss_baseline_mb,
+                                         retests_used=retests_used, retest_budget=1)
+            else:
+                mismatch = _pair_reason(current_measure, candidate_measure, expected_pair)
+                decision = ({"decision": "reject", "reasons": [mismatch],
+                             "pair_reason": mismatch} if mismatch else
+                            pareto_accept(current_measure, candidate_measure,
+                                          rss_baseline_mb=rss_baseline_mb,
+                                          retests_used=retests_used, retest_budget=1))
+            if decision["decision"] == "retest":
+                side = ("baseline" if decision.get("retest_reason") == "peak_missing"
+                        and _peak_missing(current_measure) else "candidate")
+                before = current_measure if side == "baseline" else candidate_measure
+                if side == "baseline":
+                    current_measure = measure_task_fn(
+                        task, code=None if current_code == initial_code else current_code,
+                        method=current_method, tier_plan=[dict(plan)], **kwargs,
+                    )
+                else:
+                    candidate_measure = measure_task_fn(
+                        task, code=candidate_code, method=actual_method,
+                        tier_plan=[dict(plan)], **kwargs,
+                    )
+                after = current_measure if side == "baseline" else candidate_measure
+                retest_record = {"side": side, "reason": decision.get("retest_reason"),
+                                 "before": before, "after": after}
+                mismatch = _pair_reason(current_measure, candidate_measure, expected_pair)
+                decision = ({"decision": "reject", "reasons": [mismatch],
+                             "pair_reason": mismatch} if mismatch else
+                            pareto_accept(current_measure, candidate_measure,
+                                          rss_baseline_mb=rss_baseline_mb,
+                                          retests_used=1, retest_budget=1))
+        else:
+            mismatch = (_pair_reason(current_measure, candidate_measure, expected_pair)
+                        if candidate_measure.get("status") == "ok" else None)
+            decision = ({"decision": "reject", "accepted": False,
+                         "reason": mismatch, "pair_reason": mismatch} if mismatch else
+                        decide_acceptance(current_measure, candidate_measure, mode, config))
         round_record = {
             "round": index,
+            "acceptance_rule": output["acceptance_rule"],
+            "source_code": current_code,
+            "prompt": feedback["prompt"],
             "candidate_code": candidate_code,
             "candidate_status": candidate_measure.get("status"),
             "decision": decision["decision"],
-            "reason": decision["reason"],
+            "reason": decision.get("reason") or "; ".join(decision.get("reasons", [])),
             "decision_detail": decision,
+            "baseline_measurement": current_measure,
+            "candidate_measurement": candidate_measure,
+            "retest": retest_record,
+            "space_improvement_claimed": (
+                decision.get("space_better") is True if mode == "joint" else None
+            ),
             "feedback": feedback_meta,
             "formal_result_written": False,
         }
@@ -146,13 +256,15 @@ def run_offline_loop(
         if decision["decision"] == "retest":
             # Keep both unmodified harness Results for a later, explicit retest.
             # A pending decision must not seed another candidate generation.
-            round_record["baseline_measurement"] = current_measure
-            round_record["candidate_measurement"] = candidate_measure
             output["pending_retest"] = round_record
             output["stop_reason"] = "pending_retest"
             break
-        if decision["accepted"]:
+        if decision["decision"] == "incomparable":
+            output["stop_reason"] = "incomparable"
+            break
+        if decision.get("accepted", decision["decision"] == "accept"):
             current_code = candidate_code
             current_measure = candidate_measure
+            current_method = actual_method
     output["current_code"] = current_code
     return output

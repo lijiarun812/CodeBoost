@@ -39,12 +39,18 @@ class FakeHarness:
     def __init__(self, cases):
         self.cases = cases
         self.calls = []
+        self.case_calls = {}
 
     def __call__(self, task, code=None, method="base", tier_plan=None, **kwargs):
         self.calls.append({"code": code, "method": method,
                            "tier_plan": copy.deepcopy(tier_plan), "kwargs": kwargs})
         plan = tier_plan[0]
-        settings = self.cases["base" if code is None else code]
+        case = "base" if code is None else code
+        settings = self.cases[case]
+        if isinstance(settings, list):
+            count = self.case_calls.get(case, 0)
+            self.case_calls[case] = count + 1
+            settings = settings[min(count, len(settings) - 1)]
         return _measured(task, plan, **settings)
 
 
@@ -90,6 +96,16 @@ class PipelineTests(unittest.TestCase):
                          ("reject", "pair_mismatch"))
         self.assertEqual(output["current_code"], self.task["code"])
 
+    def test_matching_results_with_wrong_frozen_hash_are_rejected(self):
+        output, _ = self.run_case(
+            "joint", {"base": {"args_hash": "wrong"},
+                      "candidate-v1": {"time_ms": 80, "heap_mb": 8,
+                                       "args_hash": "wrong"}},
+        )
+        self.assertEqual(output["rounds"][0]["decision_detail"]["pair_reason"],
+                         "pair_mismatch")
+        self.assertEqual(output["current_code"], self.task["code"])
+
     def test_incorrect_candidate_is_rejected(self):
         output, _ = self.run_case(
             "time-only", {"base": {}, "candidate-v1": {"status": "incorrect"}}
@@ -98,17 +114,15 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(output["current_code"], self.task["code"])
 
     def test_missing_memory_retests_space_modes(self):
-        for mode in ("mem-only", "joint"):
-            with self.subTest(mode=mode):
-                output, _ = self.run_case(
-                    mode, {"base": {}, "candidate-v1": {
-                        "time_ms": 80, "heap_mb": None,
-                    }}
-                )
-                self.assertEqual((output["rounds"][0]["decision"],
-                                  output["rounds"][0]["reason"]),
-                                 ("retest", "memory_unmeasurable"))
-                self.assertEqual(output["current_code"], self.task["code"])
+        output, _ = self.run_case(
+            "mem-only", {"base": {}, "candidate-v1": {
+                "time_ms": 80, "heap_mb": None,
+            }}
+        )
+        self.assertEqual((output["rounds"][0]["decision"],
+                          output["rounds"][0]["reason"]),
+                         ("retest", "memory_unmeasurable"))
+        self.assertEqual(output["current_code"], self.task["code"])
 
     def test_first_round_retest_stops_and_preserves_candidate_measurement(self):
         generated = []
@@ -116,7 +130,7 @@ class PipelineTests(unittest.TestCase):
             generated.append((code, index))
             return f"candidate-v{index + 1}"
         output, harness = self.run_case(
-            "joint", {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": None}},
+            "mem-only", {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": None}},
             generator=generator, rounds=2,
         )
         self.assertEqual(generated, [(self.task["code"], 0)])
@@ -141,7 +155,7 @@ class PipelineTests(unittest.TestCase):
             generated.append((code, index))
             return f"candidate-v{index + 1}"
         output, harness = self.run_case(
-            "joint", {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 9},
+            "mem-only", {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8},
                       "candidate-v2": {"time_ms": 70, "heap_mb": None}},
             generator=generator, rounds=3,
         )
@@ -153,7 +167,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(output["stop_reason"], "pending_retest")
         self.assertEqual(output["pending_retest"]["candidate_code"], "candidate-v2")
         self.assertEqual(output["pending_retest"]["baseline_measurement"]["mem"]
-                         ["peak_tracemalloc_mb"], 9)
+                         ["peak_tracemalloc_mb"], 8)
 
     def test_three_modes_keep_distinct_acceptance_reasons(self):
         cases = {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 12}}
@@ -163,18 +177,116 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(time_only["rounds"][0]["reason"],
                          "accepted_time_gain_with_memory_regression")
         self.assertEqual(mem_only["rounds"][0]["reason"], "memory_gain_below_threshold")
-        self.assertEqual(joint["rounds"][0]["reason"], "memory_regression_too_large")
+        self.assertIsNone(mem_only["rounds"][0]["space_improvement_claimed"])
+        self.assertEqual(joint["rounds"][0]["decision"], "reject")
+        self.assertTrue(joint["rounds"][0]["decision_detail"]["space_worse"])
+
+    def test_joint_candidate_peak_missing_retests_once_then_time_only(self):
+        output, harness = self.run_case(
+            "joint", {"base": {}, "candidate-v1": {
+                "time_ms": 80, "heap_mb": None}}, rounds=1,
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["decision"], "accept")
+        self.assertEqual(row["retest"]["side"], "candidate")
+        self.assertEqual(row["retest"]["reason"], "peak_missing")
+        self.assertEqual(len(harness.calls), 3)
+        self.assertFalse(row["decision_detail"]["space_axis"])
+        self.assertFalse(row["space_improvement_claimed"])
+        self.assertFalse(row["decision_detail"]["space_better"])
+        self.assertEqual(output["current_code"], "candidate-v1")
+        self.assertEqual(harness.calls[1]["tier_plan"], harness.calls[2]["tier_plan"])
+
+    def test_joint_baseline_peak_missing_retests_baseline_side(self):
+        output, harness = self.run_case(
+            "joint", {"base": [{"heap_mb": None}, {"heap_mb": 10}],
+                      "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["retest"]["side"], "baseline")
+        self.assertIsNone(row["retest"]["before"]["mem"]["peak_tracemalloc_mb"])
+        self.assertEqual(row["retest"]["after"]["mem"]["peak_tracemalloc_mb"], 10)
+        self.assertEqual([call["code"] for call in harness.calls], [None, "candidate-v1", None])
+        self.assertEqual(row["decision"], "accept")
+
+    def test_joint_baseline_time_missing_retests_before_generation(self):
+        generated = []
+        output, harness = self.run_case(
+            "joint", {"base": [{"time_ms": None}, {"time_ms": 100}],
+                      "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
+            generator=lambda prompt, code, index: generated.append(index) or "candidate-v1",
+        )
+        self.assertEqual(generated, [0])
+        self.assertEqual([call["code"] for call in harness.calls],
+                         [None, None, "candidate-v1"])
+        self.assertEqual(output["rounds"][0]["retest"]["side"], "baseline")
+        self.assertEqual(output["rounds"][0]["retest"]["reason"], "time_missing")
+        self.assertEqual(output["rounds"][0]["decision"], "accept")
+
+    def test_joint_time_still_missing_is_incomparable_after_one_retest(self):
+        output, harness = self.run_case(
+            "joint", {"base": {}, "candidate-v1": {"time_ms": None}},
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["decision"], "incomparable")
+        self.assertEqual(row["retest"]["side"], "candidate")
+        self.assertEqual(output["stop_reason"], "incomparable")
+        self.assertEqual(output["current_code"], self.task["code"])
+        self.assertEqual(len(harness.calls), 3)
+
+    def test_joint_rechecks_hash_pair_after_candidate_retest(self):
+        output, _ = self.run_case(
+            "joint", {"base": {}, "candidate-v1": [
+                {"time_ms": 80, "heap_mb": None},
+                {"time_ms": 80, "heap_mb": 8, "args_hash": "wrong"}]},
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["decision"], "reject")
+        self.assertEqual(row["decision_detail"]["pair_reason"], "pair_mismatch")
+        self.assertEqual(output["current_code"], self.task["code"])
+
+    def test_joint_candidate_timeout_retests_once_and_rejects(self):
+        output, harness = self.run_case(
+            "joint", {"base": {}, "candidate-v1": {"status": "timeout"}},
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["decision"], "reject")
+        self.assertEqual(row["retest"]["side"], "candidate")
+        self.assertEqual(row["retest"]["reason"], "timeout")
+        self.assertEqual(len(harness.calls), 3)
+        self.assertEqual(output["current_code"], self.task["code"])
+
+    def test_joint_incorrect_rejects_without_retest(self):
+        output, harness = self.run_case(
+            "joint", {"base": {}, "candidate-v1": {"status": "incorrect"}},
+        )
+        self.assertEqual(output["rounds"][0]["decision"], "reject")
+        self.assertIsNone(output["rounds"][0]["retest"])
+        self.assertEqual(len(harness.calls), 2)
+
+    def test_joint_censored_space_markers_are_preserved(self):
+        output, _ = self.run_case(
+            "joint", {"base": {}, "candidate-v1": {"time_ms": 100, "heap_mb": 0.01}},
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["decision"], "accept")
+        self.assertTrue(row["decision_detail"]["censored"])
+        self.assertTrue(row["decision_detail"]["space_axis"])
+        self.assertTrue(row["space_improvement_claimed"])
 
     def test_each_round_records_reason_and_updates_current_only_on_accept(self):
-        cases = {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 10.5},
-                 "candidate-v2": {"time_ms": 70, "heap_mb": 11}}
+        cases = {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 9},
+                 "candidate-v2": {"time_ms": 70, "heap_mb": 8}}
         seen = []
         def generator(prompt, code, index):
             seen.append((index, code, prompt))
             return f"candidate-v{index + 1}"
         output, harness = self.run_case("joint", cases, generator=generator, rounds=2)
-        self.assertEqual([row["reason"] for row in output["rounds"]],
-                         ["accepted_time_gain_with_memory_regression"] * 2)
+        self.assertEqual([row["decision"] for row in output["rounds"]],
+                         ["accept", "accept"])
+        self.assertTrue(all(row["decision_detail"]["space_better"]
+                            for row in output["rounds"]))
+        self.assertEqual(output["acceptance_rule"], "eval.space.pareto_accept:v1.1")
         self.assertEqual(seen[0][1], self.task["code"])
         self.assertEqual(seen[1][1], "candidate-v1")
         self.assertIn(self.task["description"], seen[0][2])
@@ -272,7 +384,8 @@ class PipelineTests(unittest.TestCase):
             generate_candidate=lambda *args: self.fail("generator should not run"),
             measure_task_fn=harness,
         )
-        self.assertEqual(output["stop_reason"], "baseline_status_timeout")
+        self.assertEqual(output["stop_reason"], "incomparable")
+        self.assertEqual(output["incomparable_reason"], "baseline_status_timeout")
         self.assertEqual(output["rounds"], [])
         with self.assertRaisesRegex(ValueError, "Task.inputs"):
             run_offline_loop(
