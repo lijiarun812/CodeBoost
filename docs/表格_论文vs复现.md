@@ -43,8 +43,13 @@
 | GPT-4 上被优化到优于 ground truth 的题目比例（HumanEval） | ~47% | 见下表 |
 | 同上（MBPP） | ~56% | 本次未跑 MBPP |
 
-> 还没有 `results/perfcodegen/<model>/summary.json`。先跑：
-> `python perfcodegen/pcg_repro.py --provider deepseek --model deepseek-chat --num 20 --samples 5`
+**我们的复现**
+
+| 模型 | 题目数 | %Correct | Speedup(avg) | %Opt(avg) | Best@5 | 最终版 Speedup（vs base） | 最终版 %Opt（vs base） | 剔除极端 |
+|---|---|---|---|---|---|---|---|---|
+| deepseek-flash | 2 | 1.0 | 77.6429 | 1 | 77.6429 | None | None | 0 |
+
+> 反馈策略：feedback；采样数：1；测量相对 MAD 中位数：0.1139
 
 ## 三、与论文设置的差异（这一节答辩必问）
 

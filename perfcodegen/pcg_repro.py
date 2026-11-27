@@ -322,6 +322,15 @@ def run_task(task, args, llm, out_path):
                                   for s in samples]}
 
     ok_samples = [s for s in samples if s.get("correct")]
+    best_base_ms = min((s["ms"] for s in ok_samples if s.get("ms")), default=None)
+    record["best_base_ms"] = round(best_base_ms, 4) if best_base_ms else None
+    if args.min_base_ms and best_base_ms is not None and best_base_ms < args.min_base_ms:
+        record["status"] = "noise_skipped"
+        print("   [跳过] base 仅 %.4f ms < %.2f ms，噪声不可控" % (best_base_ms, args.min_base_ms))
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
+        return record
+
     if not ok_samples:
         current_code = samples[0].get("code", "")
         current = samples[0].get("fail") or {"ok": False, "error": "no_correct_sample", "case": None}
@@ -329,6 +338,10 @@ def run_task(task, args, llm, out_path):
         best = min(ok_samples, key=lambda s: s["ms"])
         current_code = best.get("code") or ""
         current = _measure(current_code, task, args, runs=args.runs) if current_code else None
+        # 用与 final 相同的估计量（min-of-runs）重测一次 base，作为 vs-base 的参照，
+        # 否则 base 是 runs=1、final 是 runs=3，会把“测量估计量差异”误算成优化收益。
+        if current and current.get("ok"):
+            record["base_ref_ms"] = round(current["total_ms"], 4)
 
     # ---- phase 1: correctness refine ----
     record["correctness"] = []
@@ -420,7 +433,7 @@ def run_task(task, args, llm, out_path):
 # ---------------------------------------------------------------------------
 # 汇总
 # ---------------------------------------------------------------------------
-def summarize(records):
+def summarize(records, max_speedup=metrics.EXTREME_SPEEDUP):
     tasks = []
     for r in records:
         if r.get("status") not in ("ok", "failed"):
@@ -429,12 +442,13 @@ def summarize(records):
         tasks.append({
             "task_id": r["task_id"],
             "gt_ms": (r.get("gt") or {}).get("total_ms"),
+            "base_ms": r.get("base_ref_ms"),
             "samples": [{"correct": s.get("correct"), "ms": s.get("ms")} for s in samples],
             "final": {"correct": (r.get("final") or {}).get("correct"),
                       "ms": (r.get("final") or {}).get("ms")},
             "rel_mad": r.get("rel_mad"),
         })
-    return metrics.aggregate(tasks)
+    return metrics.aggregate(tasks, max_speedup=max_speedup)
 
 
 def main(argv=None):
@@ -465,7 +479,11 @@ def main(argv=None):
     p.add_argument("--max-repeats", type=int, default=20000)
     p.add_argument("--max-time", type=float, default=20.0)
     p.add_argument("--min-baseline-ms", type=float, default=0.0,
-                   help="基线耗时低于该值的题直接跳过（建议 1.0，避开亚毫秒噪声）")
+                   help="GT 耗时低于该值的题直接跳过（建议 1.0，避开亚毫秒噪声）")
+    p.add_argument("--min-base-ms", type=float, default=0.0,
+                   help="模型 base 代码耗时低于该值的题跳过（比 GT 过滤更贴近实际测量对象）")
+    p.add_argument("--max-speedup", type=float, default=100.0,
+                   help="比 GT 快超过该倍数的采样视为测量伪影并剔除（官方 100，0=关闭）")
     p.add_argument("--max-calls", type=int, default=200)
     p.add_argument("--out", default=str(ROOT / "results" / "perfcodegen"))
     p.add_argument("--resume", action="store_true")
@@ -533,7 +551,7 @@ def main(argv=None):
                   % (rec["gt"]["total_ms"], rec["final"]["ms"] or 0,
                      rec["final"]["speedup"], llm.n_calls))
 
-    summary = summarize(records)
+    summary = summarize(records, max_speedup=args.max_speedup)
     summary.update({
         "model": args.model or "mock",
         "dataset": str(args.dataset),
@@ -547,6 +565,8 @@ def main(argv=None):
         "patience": args.patience,
         "temperature": args.temperature,
         "min_baseline_ms": args.min_baseline_ms,
+        "min_base_ms": args.min_base_ms,
+        "max_speedup": args.max_speedup,
         "n_calls": llm.n_calls,
         "wall_s": round(time.time() - t0, 1),
         "skipped": [r["task_id"] for r in records if r.get("status") in ("noise_skipped", "gt_failed")],

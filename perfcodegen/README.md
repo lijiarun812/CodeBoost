@@ -98,6 +98,11 @@ results/perfcodegen/<model>/
 0.5 **官方仓库“缺文件”的真相**：`src/prompt.py` 默认加载 `src/templates.json`，但官方仓库只提供了
    `templates_chat.json`，所以直接按 README 跑会 `FileNotFoundError`。这就是中期那次“跑不起来”的原因；
    绕法是 `Prompt(chat=True)`，或者像本驱动一样直接读 `templates_chat.json`。
+0.6 **HumanEval 的 GT 很朴素，别用“比 GT 快多少倍”当主指标**：canonical solution 常常写成
+   `for k in range(2, n-1)` 这种朴素版本，模型随手写个 sqrt 版就能“快 100 倍”。所以我们：
+   - 默认 `--max-speedup 100`，把比 GT 快 100 倍以上的采样当测量伪影剔除（官方 PerfCodeGen 也这么做）；
+   - 额外报告 **vs base** 指标（`speedup_vs_base_avg / pct_opt_vs_base`）——这才回答“我们的优化有没有用”；
+   - `--min-base-ms 1.0` 可以直接跳过 base 就亚毫秒的题（比过滤 GT 更贴近实际测量对象）。
 1. 亚毫秒题（如 HumanEval/55、63）的测量噪声与优化收益同量级，必须用 `--min-baseline-ms 1.0` 过滤，
    否则会重演中期汇报里“加速比在噪声里”的问题；
 2. 单采样跑 `Best@5/10` 会退化成 `Best@1`，汇报时要注明采样数；

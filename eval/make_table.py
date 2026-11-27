@@ -99,13 +99,14 @@ def build_section_pcg(rows):
                   ""]
         return lines
     lines += ["**我们的复现**", "",
-              "| 模型 | 题目数 | %Correct | Speedup(avg) | %Opt(avg) | Best@5 | 最终版 Speedup | 最终版 %Opt |",
-              "|---|---|---|---|---|---|---|---|"]
+              "| 模型 | 题目数 | %Correct | Speedup(avg) | %Opt(avg) | Best@5 | 最终版 Speedup（vs base） | 最终版 %Opt（vs base） | 剔除极端 |",
+              "|---|---|---|---|---|---|---|---|---|"]
     for d in rows:
-        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
             d.get("model"), d.get("n_tasks"), d.get("pct_correct"),
             d.get("speedup_avg"), d.get("pct_opt_avg"), d.get("speedup@5"),
-            d.get("final_speedup_avg"), d.get("final_pct_opt")))
+            d.get("speedup_vs_base_avg"), d.get("pct_opt_vs_base"),
+            d.get("n_dropped_extreme", 0)))
     strategy = sorted({d.get("time_strategy") for d in rows if d.get("time_strategy")})
     lines += ["", "> 反馈策略：%s；采样数：%s；测量相对 MAD 中位数：%s" % (
         "、".join(strategy) or "—",
