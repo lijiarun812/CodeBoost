@@ -141,6 +141,11 @@ def run_offline_loop(
         else:
             output["stop_reason"] = "baseline_status_" + str(current_measure.get("status"))
         return output
+    baseline_pair_issue = _pair_reason(current_measure, current_measure, expected_pair)
+    if baseline_pair_issue:
+        output["stop_reason"] = "incomparable"
+        output["incomparable_reason"] = baseline_pair_issue
+        return output
 
     for index in range(rounds):
         baseline_retest = None
@@ -157,10 +162,19 @@ def run_offline_loop(
                 output["incomparable_reason"] = "baseline_time_unavailable_after_retest"
                 output["baseline_retest"] = baseline_retest
                 break
+        current_pair_issue = _pair_reason(current_measure, current_measure, expected_pair)
+        if current_pair_issue:
+            output["stop_reason"] = "incomparable"
+            output["incomparable_reason"] = current_pair_issue
+            if baseline_retest is not None:
+                output["baseline_retest"] = baseline_retest
+            break
         time = current_measure.get("time") or {}
         feedback = feedback_builder(
             feedback_method, task, current_code,
             total_ms=time.get("mean_trimmed_ms"),
+            space_result=current_measure,
+            rss_baseline_mb=rss_baseline_mb,
         )
         if not isinstance(feedback, dict):
             raise ValueError("feedback_builder must return a feedback dict")

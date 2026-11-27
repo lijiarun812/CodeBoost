@@ -82,26 +82,43 @@ class OfflineRunnerTests(unittest.TestCase):
                   "source_sha256": hashlib.sha256(self.task["code"].encode()).hexdigest(),
                   "items": [{"line": 1, "hits": 1, "line_time_ms": 3.0,
                              "src": self.task["code"]}]}
-        def c_feedback(method, task, code, total_ms=None):
-            return build_feedback(method, task, code, total_ms=total_ms,
-                                  diagnostic=diagnostic, line_timing=timing)
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            formal_path, diagnostic_path = root / "result.json", root / "diagnostic.json"
-            output, _ = self.run_case(
-                {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
-                feedback_method="f4", feedback_builder=c_feedback,
-                allow_formal_results=True,
-                write_result=lambda record: formal_path.write_text(json.dumps(record)),
-                write_diagnostic=lambda record: diagnostic_path.write_text(json.dumps(record)),
-            )
-            self.assertTrue(diagnostic_path.exists())
-            self.assertFalse(formal_path.exists())
-            self.assertEqual(output["formal_results_written"], 0)
-            self.assertFalse(output["formal_result_written"])
-            self.assertFalse(output["rounds"][0]["feedback"]["can_write_result"])
-            self.assertEqual(json.loads(diagnostic_path.read_text())["kind"],
-                             "diagnostic_demo")
+        for variant in ("f4", "f4_line_hits"):
+            with self.subTest(variant=variant):
+                case = diagnostic if variant == "f4" else {
+                    **diagnostic, "slowest": {**diagnostic["slowest"], "ms": 0.3}}
+
+                def c_feedback(method, task, code, *, total_ms=None,
+                               space_result=None, rss_baseline_mb=None):
+                    return build_feedback(
+                        method, task, code, total_ms=total_ms,
+                        diagnostic=case, line_timing=timing,
+                        hot={"ok": True, "items": [{"line": 1, "hits": 4}]},
+                        space_result=space_result,
+                        rss_baseline_mb=rss_baseline_mb,
+                    )
+
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    formal_path = root / "result.json"
+                    diagnostic_path = root / "diagnostic.json"
+                    output, _ = self.run_case(
+                        {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
+                        feedback_method="f4", feedback_builder=c_feedback,
+                        allow_formal_results=True,
+                        write_result=lambda record: formal_path.write_text(json.dumps(record)),
+                        write_diagnostic=lambda record: diagnostic_path.write_text(json.dumps(record)),
+                    )
+                    self.assertTrue(diagnostic_path.exists())
+                    self.assertFalse(formal_path.exists())
+                    self.assertEqual(output["formal_results_written"], 0)
+                    self.assertFalse(output["formal_result_written"])
+                    feedback = output["rounds"][0]["feedback"]
+                    self.assertEqual(feedback["effective_method"], variant)
+                    self.assertFalse(feedback["can_write_result"])
+                    self.assertEqual(feedback["diagnostics"]["space"]["rss_baseline_mb"],
+                                     self.rss_record["peak_rss_mb"])
+                    self.assertEqual(json.loads(diagnostic_path.read_text())["kind"],
+                                     "diagnostic_demo")
 
     def test_opt_in_result_writer_uses_schema_method_only_in_temp_dir(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -23,11 +23,11 @@ def _task():
 
 
 def _measured(task, plan, *, status="ok", time_ms=100.0, cv=0.01,
-              heap_mb=10.0, rss_mb=100.0, args_hash=None):
+              heap_mb=10.0, rss_mb=100.0, args_hash=None, tier=None):
     return {
         "task_id": task["task_id"], "status": status,
         "time": {"mean_trimmed_ms": time_ms, "cv": cv,
-                 "tiers": [{"tier": plan["tier"],
+                 "tiers": [{"tier": plan["tier"] if tier is None else tier,
                             "args_hash": plan["args_hash"] if args_hash is None else args_hash,
                             "status": status}]},
         "mem": {"peak_tracemalloc_mb": heap_mb, "peak_rss_mb": rss_mb},
@@ -97,14 +97,28 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(output["current_code"], self.task["code"])
 
     def test_matching_results_with_wrong_frozen_hash_are_rejected(self):
-        output, _ = self.run_case(
+        output, harness = self.run_case(
             "joint", {"base": {"args_hash": "wrong"},
                       "candidate-v1": {"time_ms": 80, "heap_mb": 8,
                                        "args_hash": "wrong"}},
         )
-        self.assertEqual(output["rounds"][0]["decision_detail"]["pair_reason"],
-                         "pair_mismatch")
+        self.assertEqual(output["stop_reason"], "incomparable")
+        self.assertEqual(output["incomparable_reason"], "pair_mismatch")
+        self.assertEqual(output["rounds"], [])
+        self.assertEqual(len(harness.calls), 1)
         self.assertEqual(output["current_code"], self.task["code"])
+
+    def test_frozen_tier_mismatch_stops_before_feedback_or_generation(self):
+        generated = []
+        output, harness = self.run_case(
+            "joint", {"base": {"tier": "wrong"}},
+            generator=lambda *args: generated.append(args) or "candidate-v1",
+        )
+        self.assertEqual(output["stop_reason"], "incomparable")
+        self.assertEqual(output["incomparable_reason"], "pair_mismatch")
+        self.assertEqual(output["rounds"], [])
+        self.assertEqual(generated, [])
+        self.assertEqual(len(harness.calls), 1)
 
     def test_incorrect_candidate_is_rejected(self):
         output, _ = self.run_case(
@@ -293,8 +307,64 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(output["current_code"], "candidate-v2")
         self.assertEqual(len(harness.calls), 3)
 
+    def test_accepted_candidate_measurement_feeds_next_feedback(self):
+        harness = FakeHarness({"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8},
+                               "candidate-v2": {"time_ms": 70, "heap_mb": 7}})
+        seen = []
+
+        def recording_feedback(method, task, code, *, total_ms=None,
+                               space_result=None, rss_baseline_mb=None):
+            seen.append((code, total_ms, space_result, rss_baseline_mb))
+            return build_feedback(method, task, code, total_ms=total_ms,
+                                  space_result=space_result,
+                                  rss_baseline_mb=rss_baseline_mb)
+
+        output = run_offline_loop(
+            self.task, self.frozen, mode="joint", feedback_method="f1",
+            generate_candidate=lambda prompt, code, index: f"candidate-v{index + 1}",
+            measure_task_fn=harness, feedback_builder=recording_feedback,
+            rss_baseline_mb=95.0, rounds=2,
+        )
+        self.assertEqual([row["decision"] for row in output["rounds"]],
+                         ["accept", "accept"])
+        self.assertEqual([row[0] for row in seen], [self.task["code"], "candidate-v1"])
+        self.assertEqual([row[1] for row in seen], [100.0, 80])
+        self.assertIs(seen[0][2], output["rounds"][0]["baseline_measurement"])
+        self.assertIs(seen[1][2], output["rounds"][0]["candidate_measurement"])
+        self.assertIs(seen[1][2], output["rounds"][1]["baseline_measurement"])
+        self.assertEqual([row[3] for row in seen], [95.0, 95.0])
+        self.assertTrue(all(call["tier_plan"] == [self.frozen] for call in harness.calls))
+
+    def test_rejected_candidate_keeps_current_measurement_for_next_feedback(self):
+        harness = FakeHarness({"base": {}, "candidate-v1": {"time_ms": 120, "heap_mb": 12},
+                               "candidate-v2": {"time_ms": 80, "heap_mb": 8}})
+        seen = []
+
+        def recording_feedback(method, task, code, *, total_ms=None,
+                               space_result=None, rss_baseline_mb=None):
+            seen.append((code, space_result))
+            return build_feedback(method, task, code, total_ms=total_ms,
+                                  space_result=space_result,
+                                  rss_baseline_mb=rss_baseline_mb)
+
+        output = run_offline_loop(
+            self.task, self.frozen, mode="joint", feedback_method="f1",
+            generate_candidate=lambda prompt, code, index: f"candidate-v{index + 1}",
+            measure_task_fn=harness, feedback_builder=recording_feedback,
+            rss_baseline_mb=95.0, rounds=2,
+        )
+        self.assertEqual([row["decision"] for row in output["rounds"]],
+                         ["reject", "accept"])
+        self.assertEqual([row[0] for row in seen], [self.task["code"]] * 2)
+        self.assertIs(seen[0][1], seen[1][1])
+        self.assertIs(seen[1][1], output["rounds"][1]["baseline_measurement"])
+        self.assertIsNot(seen[1][1], output["rounds"][0]["candidate_measurement"])
+        self.assertEqual(output["current_code"], "candidate-v2")
+        self.assertTrue(all(call["tier_plan"] == [self.frozen] for call in harness.calls))
+
     def test_incomplete_f4_stays_diagnostic_even_if_candidate_accepted(self):
-        def unfinished_feedback(method, task, code, total_ms=None):
+        def unfinished_feedback(method, task, code, *, total_ms=None,
+                                space_result=None, rss_baseline_mb=None):
             return {"prompt": "offline prompt", "method": None,
                     "requested_method": "ours", "effective_method": "f4_line_hits",
                     "degrade_reason": None, "can_write_result": False}
@@ -320,10 +390,13 @@ class PipelineTests(unittest.TestCase):
             with self.subTest(variant=variant):
                 case = diagnostic if variant == "full" else {
                     **diagnostic, "slowest": {**diagnostic["slowest"], "ms": 0.3}}
-                def c_feedback(method, task, code, total_ms=None):
+                def c_feedback(method, task, code, *, total_ms=None,
+                               space_result=None, rss_baseline_mb=None):
                     return build_feedback(method, task, code, total_ms=total_ms,
                                           diagnostic=case, line_timing=timing,
-                                          hot={"ok": True, "items": [{"line": 1, "hits": 4}]})
+                                          hot={"ok": True, "items": [{"line": 1, "hits": 4}]},
+                                          space_result=space_result,
+                                          rss_baseline_mb=rss_baseline_mb)
                 output, harness = self.run_case(
                     "time-only", {"base": {}, "candidate-v1": {"time_ms": 80}},
                     feedback_method="f4", feedback_builder=c_feedback,
@@ -337,6 +410,10 @@ class PipelineTests(unittest.TestCase):
                 self.assertFalse(feedback["eligible_for_requested_method"])
                 self.assertFalse(feedback["can_write_result"])
                 self.assertIsInstance(feedback["diagnostics"], dict)
+                self.assertEqual(feedback["diagnostics"]["space"]["status"], "ok")
+                self.assertEqual(feedback["diagnostics"]["space"]["args_hash"],
+                                 self.frozen["args_hash"])
+                self.assertIn("peak_tracemalloc_mb", output["rounds"][0]["prompt"])
                 self.assertEqual(harness.calls[1]["method"], "diagnostic")
                 self.assertEqual(output["kind"], "diagnostic_demo")
                 self.assertFalse(output["formal_result_written"])
@@ -344,12 +421,15 @@ class PipelineTests(unittest.TestCase):
     def test_real_c_f4_fallback_uses_actual_schema_method(self):
         diagnostic = {"status": "ok", "slowest": {
             "idx": 0, "ms": 2.5, "src": "assert candidate(1) == 1"}}
-        def c_feedback(method, task, code, total_ms=None):
+        def c_feedback(method, task, code, *, total_ms=None,
+                       space_result=None, rss_baseline_mb=None):
             return build_feedback(method, task, code, total_ms=total_ms,
                                   diagnostic=diagnostic,
                                   line_timing={"ok": False, "status": "timeout",
                                                "reason": "diagnostic timeout"},
-                                  hot={"ok": False, "reason": "hotspot timeout"})
+                                  hot={"ok": False, "reason": "hotspot timeout"},
+                                  space_result=space_result,
+                                  rss_baseline_mb=rss_baseline_mb)
         output, harness = self.run_case(
             "time-only", {"base": {}, "candidate-v1": {"time_ms": 80}},
             feedback_method="f4", feedback_builder=c_feedback,
@@ -361,7 +441,65 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(feedback["can_write_result"])
         self.assertFalse(feedback["eligible_for_requested_method"])
         self.assertEqual(harness.calls[1]["method"], "f2")
+        self.assertEqual(feedback["diagnostics"]["space"]["status"],
+                         "omitted_after_feedback_downgrade")
+        self.assertNotIn("peak_tracemalloc_mb", output["rounds"][0]["prompt"])
         self.assertFalse(output["formal_result_written"])
+
+    def test_f4_feedback_reports_missing_heap_from_current_measurement(self):
+        diagnostic = {"status": "ok", "slowest": {
+            "idx": 0, "ms": 2.5, "src": "assert candidate(1) == 1"}}
+        timing = {"ok": True, "status": "ok", "mode": "line_profiler", "unit": "ms",
+                  "source_sha256": hashlib.sha256(self.task["code"].encode()).hexdigest(),
+                  "items": [{"line": 1, "hits": 1, "line_time_ms": 3.0,
+                             "src": self.task["code"]}]}
+
+        def c_feedback(method, task, code, *, total_ms=None,
+                       space_result=None, rss_baseline_mb=None):
+            return build_feedback(method, task, code, total_ms=total_ms,
+                                  diagnostic=diagnostic, line_timing=timing,
+                                  space_result=space_result,
+                                  rss_baseline_mb=rss_baseline_mb)
+
+        output, _ = self.run_case(
+            "time-only", {"base": {"heap_mb": None},
+                          "candidate-v1": {"time_ms": 80, "heap_mb": None}},
+            feedback_method="f4", feedback_builder=c_feedback,
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["feedback"]["diagnostics"]["space"]["peak_tm_status"],
+                         "unmeasured")
+        self.assertIn("缺值", row["prompt"])
+        self.assertFalse(row["feedback"]["can_write_result"])
+        self.assertFalse(output["formal_result_written"])
+
+    def test_f4_space_section_omitted_when_feedback_budget_is_full(self):
+        diagnostic = {"status": "ok", "slowest": {
+            "idx": 0, "ms": 2.5, "src": "assert candidate(1) == 1"}}
+        timing = {"ok": True, "status": "ok", "mode": "line_profiler", "unit": "ms",
+                  "source_sha256": hashlib.sha256(self.task["code"].encode()).hexdigest(),
+                  "items": [{"line": 1, "hits": 1, "line_time_ms": 3.0,
+                             "src": self.task["code"]}]}
+
+        def c_feedback(method, task, code, *, total_ms=None,
+                       space_result=None, rss_baseline_mb=None):
+            return build_feedback(method, task, code, total_ms=total_ms,
+                                  diagnostic=diagnostic, line_timing=timing,
+                                  space_result=space_result,
+                                  rss_baseline_mb=rss_baseline_mb,
+                                  radius=0, max_chars=300)
+
+        output, _ = self.run_case(
+            "time-only", {"base": {}, "candidate-v1": {"time_ms": 80}},
+            feedback_method="f4", feedback_builder=c_feedback,
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["feedback"]["effective_method"], "f4")
+        self.assertEqual(row["feedback"]["diagnostics"]["space"]["status"],
+                         "omitted_by_length_limit")
+        self.assertIn("   1: " + self.task["code"], row["prompt"])
+        self.assertNotIn("peak_tracemalloc_mb", row["prompt"])
+        self.assertFalse(row["feedback"]["can_write_result"])
 
     def test_writable_feedback_without_schema_method_is_rejected(self):
         harness = FakeHarness({"base": {}})
