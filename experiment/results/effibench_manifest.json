@@ -1,0 +1,122 @@
+[
+  {
+    "problem_idx": 1467,
+    "task_name": "Probability of a Two Boxes Having The Same Number of Distinct Balls"
+  },
+  {
+    "problem_idx": 2518,
+    "task_name": "Number of Great Partitions"
+  },
+  {
+    "problem_idx": 2355,
+    "task_name": "Maximum Number of Books You Can Take"
+  },
+  {
+    "problem_idx": 1055,
+    "task_name": "Shortest Way to Form String"
+  },
+  {
+    "problem_idx": 860,
+    "task_name": "Lemonade Change"
+  },
+  {
+    "problem_idx": 51,
+    "task_name": "N"
+  },
+  {
+    "problem_idx": 1631,
+    "task_name": "Path With Minimum Effort"
+  },
+  {
+    "problem_idx": 2537,
+    "task_name": "Count the Number of Good Subarrays"
+  },
+  {
+    "problem_idx": 1234,
+    "task_name": "Replace the Substring for Balanced String"
+  },
+  {
+    "problem_idx": 1353,
+    "task_name": "Maximum Number of Events That Can Be Attended"
+  },
+  {
+    "problem_idx": 1330,
+    "task_name": "Reverse Subarray To Maximize Array Value"
+  },
+  {
+    "problem_idx": 1567,
+    "task_name": "Maximum Length of Subarray With Positive Product"
+  },
+  {
+    "problem_idx": 2070,
+    "task_name": "Most Beautiful Item for Each Query"
+  },
+  {
+    "problem_idx": 329,
+    "task_name": "Longest Increasing Path in a Matrix"
+  },
+  {
+    "problem_idx": 2557,
+    "task_name": "Maximum Number of Integers to Choose From a Range II"
+  },
+  {
+    "problem_idx": 229,
+    "task_name": "Majority Element II"
+  },
+  {
+    "problem_idx": 774,
+    "task_name": "Minimize Max Distance to Gas Station"
+  },
+  {
+    "problem_idx": 2312,
+    "task_name": "Selling Pieces of Wood"
+  },
+  {
+    "problem_idx": 801,
+    "task_name": "Minimum Swaps To Make Sequences Increasing"
+  },
+  {
+    "problem_idx": 354,
+    "task_name": "Russian Doll Envelopes"
+  },
+  {
+    "problem_idx": 235,
+    "task_name": "Lowest Common Ancestor of a Binary Search Tree"
+  },
+  {
+    "problem_idx": 809,
+    "task_name": "Expressive Words"
+  },
+  {
+    "problem_idx": 1040,
+    "task_name": "Moving Stones Until Consecutive II"
+  },
+  {
+    "problem_idx": 2896,
+    "task_name": "Apply Operations to Make Two Strings Equal"
+  },
+  {
+    "problem_idx": 743,
+    "task_name": "Network Delay Time"
+  },
+  {
+    "problem_idx": 425,
+    "task_name": "Word Squares"
+  },
+  {
+    "problem_idx": 1289,
+    "task_name": "Minimum Falling Path Sum II"
+  },
+  {
+    "problem_idx": 1301,
+    "task_name": "Number of Paths with Max Score"
+  },
+  {
+    "problem_idx": 738,
+    "task_name": "Monotone Increasing Digits"
+  },
+  {
+    "problem_idx": 2250,
+    "task_name": "Count Number of Rectangles Containing Each Point"
+  }
+]

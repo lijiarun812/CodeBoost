@@ -1,0 +1,486 @@
+{
+  "1467": {
+    "problem_idx": 1467,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "2518": {
+    "problem_idx": 2518,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "TypeError: pow expected 2 arguments, got 3"
+    },
+    "perfcodegen": {
+      "correct": false,
+      "error": "TypeError: pow expected 2 arguments, got 3"
+    },
+    "ours": {
+      "correct": false,
+      "error": "TypeError: pow expected 2 arguments, got 3"
+    }
+  },
+  "1055": {
+    "problem_idx": 1055,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "860": {
+    "problem_idx": 860,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "51": {
+    "problem_idx": 51,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1631": {
+    "problem_idx": 1631,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "assert solution.minimumEffortPath([[803966, 614298, 761945, 378799, 472792, 567379, 585458, 323915, 670298, 337831], [586572, 541872, 797877, 451666, 23168, 192953, 858102, 792607, 527119, 550469], [103866, 221280, 670753, 598046, 628246, 238595, 142527, 48246, 156551, 137896], [154821, 82425, 575360, 831513, 71171, 481849, 484941, 854294, 785639, 783040]]) == 370568"
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "2537": {
+    "problem_idx": 2537,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1234": {
+    "problem_idx": 1234,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1353": {
+    "problem_idx": 1353,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1330": {
+    "problem_idx": 1330,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "assert solution.maxValueAfterReverse([55332, -31421]) == 86753"
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1567": {
+    "problem_idx": 1567,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "2070": {
+    "problem_idx": 2070,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "SyntaxError: invalid character '—' (U+2014) (<candidate>, line 4)"
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "329": {
+    "problem_idx": 329,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": false,
+      "error": "assert solution.longestIncreasingPath([[33, 38, 69, 18, 21, 36, 50, 30, 34, 11]]) == 4"
+    }
+  },
+  "229": {
+    "problem_idx": 229,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "354": {
+    "problem_idx": 354,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "assert solution.maxEnvelopes([[19, 22], [31, 35], [37, 51], [39, 70], [76, 34]]) == 4"
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "809": {
+    "problem_idx": 809,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1040": {
+    "problem_idx": 1040,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "assert solution.numMovesStonesII([29, 36, 38]) == [1, 6]"
+    },
+    "perfcodegen": {
+      "correct": false,
+      "error": "assert solution.numMovesStonesII([29, 36, 38]) == [1, 6]"
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "743": {
+    "problem_idx": 743,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": false,
+      "error": "assert solution.networkDelayTime([[1, 1, 36], [1, 1, 34], [1, 1, 59]], 1, 1) == 0"
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "425": {
+    "problem_idx": 425,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": false,
+      "error": "IndexError: list assignment index out of range"
+    },
+    "perfcodegen": {
+      "correct": false,
+      "error": "KeyError: 'a'"
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "1289": {
+    "problem_idx": 1289,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "738": {
+    "problem_idx": 738,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": true,
+      "error": null
+    }
+  },
+  "2250": {
+    "problem_idx": 2250,
+    "generator_error": null,
+    "canonical": true,
+    "test_count": 30,
+    "base": {
+      "correct": true,
+      "error": null
+    },
+    "vanilla": {
+      "correct": true,
+      "error": null
+    },
+    "perfcodegen": {
+      "correct": true,
+      "error": null
+    },
+    "ours": {
+      "correct": false,
+      "error": "assert solution.countRectangles([[36661094, 21], [800389704, 27], [43832129, 75], [796094599, 84], [526272144, 20], [770141496, 92], [858258965, 4], [58638223, 58]], [[944965472, 74], [789259152, 83], [728114845, 70], [803075300, 36], [509294651, 90], [36996334, 68], [33637012, 61], [843713593, 31], [844068964, 66]]) == [0, 1, 2, 0, 1, 3, 3, 0, 0]"
+    }
+  }
+}

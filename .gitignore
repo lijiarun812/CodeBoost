@@ -8,9 +8,12 @@ venv/
 datasets/*
 !datasets/sample_humaneval_20.json
 *.json.gz
+*.jsonl.gz
 
 # 本地密钥 / 环境
 .env
+.env.*
+!.env.example
 *.key
 
 # 运行产物与日志
