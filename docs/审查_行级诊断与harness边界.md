@@ -5,6 +5,12 @@
 > 审查方式：读全部代码 + 在 detached worktree 里跑他自己的测试 + 用真实 EffiBench 条目做集成探针
 > 结论：**架构方向通过，但不并入 `eval/hotlines.py` 的实现；只统一入口。合并前必须修 5 项，其中 2 项在我这边。**
 
+> **修订（2026-11-27 晚，C 提出后核实）**：本文 **F5 撤回**。`eval/schema.md:94` 的
+> `degrade_reason` 枚举**包含 `fallback_f2`**，我此前读漏了，C 保留该值是对的。
+> 现行裁定见 [`共享接口_行级诊断_v1.md`](共享接口_行级诊断_v1.md) §2：`degrade_reason`
+> 按**目标档位**选词（→f2 用 `fallback_f2`，→f1 用 `no_hotspot`，截断用 `budget_exceeded`），
+> 诊断自身的 `code_error/timeout/...` 只进 `diagnostics`，**不改 `Result.status`**。
+
 ---
 
 ## 一、先说通过的部分（这些做法比我们现有代码更稳）
