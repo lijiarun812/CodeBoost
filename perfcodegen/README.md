@@ -71,7 +71,7 @@ ground truth 的耗时用同一套测量核心测 `canonical_solution`，所以 
 1. **执行层**：单进程 + 子进程沙盒，串行采样；论文是集群并行。
 2. **采样数**：默认 1（`--samples` 可调），论文 20；因此 `Best@5/10` 需要显式把采样数调上去才有意义。
 3. **用例切分**：把 HumanEval `def check(candidate)` 里的每条 assert 当一条用例；论文用数据集自带
-   testcase 输入，并会对大输入做放大。我们在 `--min-baseline-ms` 上做了补偿：基线太快的题直接跳过。
+   testcase 输入，并会对大输入做放大。我们的补偿是**重复放大**：自动把单次执行重复到 ~0.25s 再取最小值（`--max-repeats 100000`），而不是直接把“快题”筛掉。
 4. **时间测量**：重复执行放大到 `--target-time`（默认 0.25s）+ 多轮取最小值 + 报告 MAD；论文用单次 wall clock。
 5. **采纳判据**：Pareto（时间至少快 5%，且内存不劣化 >5%），论文是“更优即采纳”。
 
@@ -102,7 +102,9 @@ results/perfcodegen/<model>/
    `for k in range(2, n-1)` 这种朴素版本，模型随手写个 sqrt 版就能“快 100 倍”。所以我们：
    - 默认 `--max-speedup 100`，把比 GT 快 100 倍以上的采样当测量伪影剔除（官方 PerfCodeGen 也这么做）；
    - 额外报告 **vs base** 指标（`speedup_vs_base_avg / pct_opt_vs_base`）——这才回答“我们的优化有没有用”；
-   - `--min-base-ms 1.0` 可以直接跳过 base 就亚毫秒的题（比过滤 GT 更贴近实际测量对象）。
+   - **不要**给 HumanEval 设 `--min-base-ms 1.0`：它的用例常在 0.001–0.02ms，实测 20 题会只剩 1 题。
+   - 该用 `--max-rel-mad 0.2`（默认，过滤测量不稳的题）和 `--min-gt-ms 0.001`（默认，过滤 GT <1µs 的退化题）。
+   - `--min-baseline-ms / --min-base-ms` 只适合 EffiBench 那种重题（几十毫秒级）。
 1. 亚毫秒题（如 HumanEval/55、63）的测量噪声与优化收益同量级，必须用 `--min-baseline-ms 1.0` 过滤，
    否则会重演中期汇报里“加速比在噪声里”的问题；
 2. 单采样跑 `Best@5/10` 会退化成 `Best@1`，汇报时要注明采样数；

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """PerfCodeGen 轻量复现驱动（base -> correctness refine -> time refine）。
 
 为什么要自己写驱动而不是直接跑官方脚本：
@@ -299,6 +299,16 @@ def run_task(task, args, llm, out_path):
         print("   [跳过] 基线仅 %.4f ms < %.2f ms，噪声不可控" % (gt["total_ms"], args.min_baseline_ms))
         return record
 
+    if args.min_gt_ms and gt["total_ms"] < args.min_gt_ms:
+        record["status"] = "too_fast"
+        print("   [跳过] GT 单次仅 %.5f ms < %.5f ms，不可比较" % (gt["total_ms"], args.min_gt_ms))
+        return record
+
+    if args.max_rel_mad and (gt.get("rel_mad") or 0) > args.max_rel_mad:
+        record["status"] = "noisy"
+        print("   [跳过] GT 测量相对 MAD %.3f > %.2f，噪声太大" % (gt["rel_mad"], args.max_rel_mad))
+        return record
+
     # ---- phase 0: base 采样 ----
     samples = []
     for i in range(max(1, args.samples)):
@@ -479,9 +489,14 @@ def main(argv=None):
     p.add_argument("--max-repeats", type=int, default=20000)
     p.add_argument("--max-time", type=float, default=20.0)
     p.add_argument("--min-baseline-ms", type=float, default=0.0,
-                   help="GT 耗时低于该值的题直接跳过（建议 1.0，避开亚毫秒噪声）")
+                   help="GT 耗时低于该值的题直接跳过（EffiBench 那种重题可设 1.0；HumanEval 千万别设，"
+                        "它的用例常在 0.001–0.02ms，靠重复放大来保证精度）")
     p.add_argument("--min-base-ms", type=float, default=0.0,
-                   help="模型 base 代码耗时低于该值的题跳过（比 GT 过滤更贴近实际测量对象）")
+                   help="模型 base 代码耗时低于该值的题跳过（同样只适合 EffiBench 级别的重题）")
+    p.add_argument("--min-gt-ms", type=float, default=0.001,
+                   help="GT 单次执行低于该值（默认 1µs）视为不可比较，直接跳过")
+    p.add_argument("--max-rel-mad", type=float, default=0.2,
+                   help="测量相对 MAD 超过该值的题跳过（默认 0.2，0=关闭）")
     p.add_argument("--max-speedup", type=float, default=100.0,
                    help="比 GT 快超过该倍数的采样视为测量伪影并剔除（官方 100，0=关闭）")
     p.add_argument("--max-calls", type=int, default=200)
@@ -567,9 +582,11 @@ def main(argv=None):
         "min_baseline_ms": args.min_baseline_ms,
         "min_base_ms": args.min_base_ms,
         "max_speedup": args.max_speedup,
+        "min_gt_ms": args.min_gt_ms,
+        "max_rel_mad": args.max_rel_mad,
         "n_calls": llm.n_calls,
         "wall_s": round(time.time() - t0, 1),
-        "skipped": [r["task_id"] for r in records if r.get("status") in ("noise_skipped", "gt_failed")],
+        "skipped": [r["task_id"] for r in records if r.get("status") in ("noise_skipped", "gt_failed", "too_fast", "noisy")],
     })
     (out_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     print("\n" + metrics.format_summary_table(summary, title="PerfCodeGen 复现（%s）" % (args.model or "mock")))
@@ -579,4 +596,5 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 

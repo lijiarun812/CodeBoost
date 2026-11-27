@@ -47,9 +47,9 @@
 
 | 模型 | 题目数 | %Correct | Speedup(avg) | %Opt(avg) | Best@5 | 最终版 Speedup（vs base） | 最终版 %Opt（vs base） | 剔除极端 |
 |---|---|---|---|---|---|---|---|---|
-| deepseek-flash | 2 | 1.0 | 77.6429 | 1 | 77.6429 | None | None | 0 |
+| deepseek-flash | 1 | 1.0 | 0.0 | 0.0 | 0.0 | 2.0 | 1 | 0 |
 
-> 反馈策略：feedback；采样数：1；测量相对 MAD 中位数：0.1139
+> 反馈策略：feedback；采样数：1；测量相对 MAD 中位数：None
 
 ## 三、与论文设置的差异（这一节答辩必问）
 

@@ -1,4 +1,4 @@
-"""统一的代码效率测量核心（只依赖标准库；内存采样在装了 psutil 时自动启用）。
+﻿"""统一的代码效率测量核心（只依赖标准库；内存采样在装了 psutil 时自动启用）。
 
 设计目标（对应终期汇报第 4、5 部分）：
 1. 噪声可控：自动放大重复次数到 target_time，多轮取样取中位数，并给出 MAD；
@@ -28,7 +28,7 @@ from pathlib import Path
 
 MARKER = "__CODEBOOST__"
 DEFAULT_TARGET_TIME = 0.25
-DEFAULT_MAX_REPEATS = 20000
+DEFAULT_MAX_REPEATS = 100000
 MIN_REPEATS = 5
 DEFAULT_RUNS = 3
 DEFAULT_MAX_TIME = 20.0
@@ -278,10 +278,10 @@ def calibrate(code, test, entry_point="solution", target_time=DEFAULT_TARGET_TIM
               max_repeats=DEFAULT_MAX_REPEATS, max_time=DEFAULT_MAX_TIME, workdir=None):
     """用 3 次重复做探针，估算单次耗时后放大到大致的 target_time。"""
     cases, _ = split_test_cases(test)
-    probe = _run(code, cases, entry_point, 3, "time", max_time, workdir)
+    probe = _run(code, cases, entry_point, 25, "time", max_time, workdir)
     if not probe.get("ok"):
         return None, probe.get("error")
-    per_iter = sum(probe["per_case"]) / 3.0
+    per_iter = sum(probe["per_case"]) / 25.0
     if per_iter <= 1e-7:
         return max_repeats, None
     reps = int(target_time / per_iter)
@@ -363,3 +363,4 @@ def measure(code, test, entry_point="solution", runs=DEFAULT_RUNS, repeats=None,
 def measure_file(path):
     """读取单题结果 JSON（便于离线重测脚本复用）。"""
     return json.loads(Path(path).read_text(encoding="utf-8"))
+

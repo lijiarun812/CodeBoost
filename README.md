@@ -108,7 +108,7 @@ py effilearner/effi_repro.py --num 100 --epochs 3
 # 离线自检：验证三相流程与指标（不调 API）
 py perfcodegen\pcg_repro.py --mock --num 5 --samples 1
 
-# 真实模型：20 题 × 5 采样（HumanEval 小样已入库，可选 --min-baseline-ms 1.0 过滤亚毫秒题）
+# 真实模型：20 题 × 5 采样（HumanEval 小样已入库；默认用 --max-rel-mad 0.2 过滤测量不稳的题）
 py perfcodegen\pcg_repro.py --provider deepseek --model deepseek-chat `
     --num 20 --samples 5 --time-strategy feedback
 ```
