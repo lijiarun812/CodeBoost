@@ -179,6 +179,84 @@ class TreeNode:
         self.next = next
 '''
 
+# 题目测试块常用、但模型输出里通常不带的辅助函数（缺了就会 NameError 直接判失败）
+BUILD_HELPERS = r'''
+from collections import deque as _deque
+
+
+def build_tree(vals):
+    """按 LeetCode 层序列表构造二叉树，None 表示空节点。"""
+    if not vals:
+        return None
+    it = iter(vals)
+    try:
+        root = TreeNode(next(it))
+    except StopIteration:
+        return None
+    q = _deque([root])
+    while q:
+        node = q.popleft()
+        try:
+            v = next(it)
+        except StopIteration:
+            break
+        if v is not None:
+            node.left = TreeNode(v)
+            q.append(node.left)
+        try:
+            v = next(it)
+        except StopIteration:
+            break
+        if v is not None:
+            node.right = TreeNode(v)
+            q.append(node.right)
+    return root
+
+
+def tree_to_list(root):
+    """层序展开为列表，去掉尾部 None，便于与期望值比较。"""
+    if root is None:
+        return []
+    out, q = [], _deque([root])
+    while q:
+        n = q.popleft()
+        if n is None:
+            out.append(None)
+            continue
+        out.append(n.val)
+        q.append(n.left)
+        q.append(n.right)
+    while out and out[-1] is None:
+        out.pop()
+    return out
+
+
+def decode_tree(data):
+    """兼容字符串形式（如 '[1,2,null,3]'）与列表形式。"""
+    if isinstance(data, str):
+        s = data.strip()
+        data = _json.loads(s) if s else []
+    return build_tree(data)
+
+
+def build_list(vals):
+    """列表转单链表。"""
+    dummy = ListNode()
+    cur = dummy
+    for v in vals:
+        cur.next = ListNode(v)
+        cur = cur.next
+    return dummy.next
+
+
+def list_to_list(head):
+    out = []
+    while head is not None:
+        out.append(head.val)
+        head = head.next
+    return out
+'''
+
 
 def extract_code(text):
     """从模型输出中抽取 ```python ...``` 代码块；没有则整体返回。"""
@@ -203,7 +281,7 @@ def build_program(user_code, test_block, repeats, profile_lines=False):
     profile_flag = "True" if profile_lines else "False"
     return (
         HARNESS_PRE
-        + "\n" + IMPORT_PKG + "\n" + TREE_NODE + "\n" + LIST_NODE
+        + "\n" + IMPORT_PKG + "\n" + TREE_NODE + "\n" + LIST_NODE + "\n" + BUILD_HELPERS
         + "\n\n# ==== 被测 Solution 代码 ====\n"
         + user_code
         + "\n\n\n"
@@ -212,6 +290,32 @@ def build_program(user_code, test_block, repeats, profile_lines=False):
         + workload_body
         + "\n\n_effi_run(_effi_workload, profile_lines=%s)\n" % profile_flag
     )
+
+
+def classify_error(err):
+    """失败原因分类，用于统计失败率构成（只归类，不判对错）。"""
+    e = (err or "").lower()
+    if not e:
+        return "unknown"
+    if "timeout" in e:
+        return "timeout"
+    if "syntaxerror" in e or "indentationerror" in e:
+        return "syntax"
+    m = re.search(r"nameerror: name '(\w+)'", e)
+    if m:
+        helper = m.group(1)
+        if helper in ("build_tree", "decode_tree", "build_list", "tree_to_list",
+                      "list_to_list", "treenode", "listnode", "node", "solution"):
+            return "missing_helper"
+        return "name_error"
+    if "assertionerror" in e or "assertion" in e:
+        return "assertion"
+    if "recursionerror" in e:
+        return "recursion"
+    if any(k in e for k in ("typeerror", "indexerror", "keyerror",
+                            "attributeerror", "valueerror")):
+        return "runtime"
+    return "other"
 
 
 def _suggest_timeout(last_exec_time: float, base: float = 30.0) -> float:
@@ -579,7 +683,8 @@ def run(args):
             print("   baseline 不可执行，跳过: %s" % probe.get("error"))
             results.append({"problem_idx": pid, "task_name": name,
                             "status": "baseline_failed",
-                            "error": probe.get("error")})
+                            "error": probe.get("error"),
+                            "error_type": classify_error(probe.get("error"))})
             continue
 
         profile = args.profile in ("always", "baseline")
@@ -589,7 +694,8 @@ def run(args):
             print("   baseline 不可执行，跳过: %s" % base_m.get("error"))
             results.append({"problem_idx": pid, "task_name": name,
                             "status": "baseline_failed",
-                            "error": base_m.get("error")})
+                            "error": base_m.get("error"),
+                            "error_type": classify_error(base_m.get("error"))})
             continue
         base_time = base_m["exec_time"]
         base_mem = base_m["mem_mbs"]
@@ -625,7 +731,9 @@ def run(args):
                                  last_exec_time=last_exec_time)
                 if not cand_m.get("ok"):
                     print("   epoch %d: 保持   (%s)" % (ep, cand_m.get("error")))
-                    history.append(dict(current_m, label="epoch%d" % ep))
+                    history.append({"ok": False, "error": cand_m.get("error"),
+                                    "error_type": classify_error(cand_m.get("error")),
+                                    "label": "epoch%d" % ep})
                     continue
 
                 # 接受判据：默认按论文（仅 mem_mbs 更小才保留），weighted 复现中期口径
@@ -678,8 +786,19 @@ def run(args):
 
     # 汇总
     ok = [r for r in results if r["status"] == "ok"]
+    err_dist = {}
+    for r in results:
+        if r.get("error_type"):
+            err_dist[r["error_type"]] = err_dist.get(r["error_type"], 0) + 1
+    for r in ok:
+        for h in r.get("history") or []:
+            if h.get("ok") is False:
+                k = "cand:" + classify_error(h.get("error"))
+                err_dist[k] = err_dist.get(k, 0) + 1
     summary = {"mode": "mock" if args.mock else "api:%s" % args.model,
                "num_problems": len(problems), "num_ok": len(ok),
+               "num_baseline_failed": len(results) - len(ok),
+               "error_distribution": err_dist,
                "epochs": args.epochs, "target_time": args.target_time,
                "accept_rule": args.accept_rule,
                "max_repeats": args.max_repeats, "results": results}
