@@ -209,8 +209,9 @@ def md(reports: list) -> str:
             fmt(r["new_mem_mean"]), fmt(r["new_mem_median"]),
             fmt(r["paper_time_avg"]), fmt(r["new_time_mean"])))
     w("")
-    w("> ᵃ **TMU（本实现近似）**：`mem_mbs = ∫RSS dt ≈ 峰值 × 耗时`，是**耗时代理**，不是空间指标；"
-      "其「降幅」实为耗时降幅的投影（证据见 `eval/check_mem_metric.py`）。"
+    w("> ᵃ **TMU（本实现近似）**：`mem_mbs = ∫RSS dt ≈ 峰值 × 耗时`，是**内存与时间的综合指标**；"
+      "但在本实现里它与耗时高度共线（见表 5，r≈0.94–0.97），**因此不能当作独立的「空间收益」**；"
+      "证据见 `eval/check_mem_metric.py`（同函数只加计算量、不加内存，峰值不变而 mem_mbs 涨三个数量级）。"
       "论文的 TMU 绝对值与我们不同口径（论文 GPT-3.5 的 `TMU÷ET = 437 MB` 比其 MU 91 MB 还大 4.8 倍），"
       "**绝对值不可比，只能比降幅**。")
     w("> ᵇ 中期加权判据同样建立在积分上，故同一问题。")

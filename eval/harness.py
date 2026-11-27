@@ -25,6 +25,7 @@ CLI 用法：
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import re
@@ -637,6 +638,39 @@ def load_tasks(dataset, path, ids=None, limit=None):
 _CHECK_DEF = re.compile(r"^(\s*)def\s+check\s*\(")
 
 
+def _split_top_level_asserts(body: str):
+    """把「一串顶层 assert」的测试块（EffiBench 形态）拆成逐条用例。
+
+    拆不动就返回 []，由调用方退回「整块一条」。规则：
+    - 顶层 assert 各自成一条用例；
+    - 紧邻其后的非 assert 语句（前置变量等）并入上一条用例；
+    - 只有 1 条或有语句落空时放弃拆分。
+    """
+    try:
+        tree = ast.parse(body)
+    except SyntaxError:
+        return []
+    lines = body.splitlines()
+    cases, pending = [], []
+    for node in tree.body:
+        try:
+            seg = "\n".join(lines[node.lineno - 1: node.end_lineno])
+        except IndexError:
+            return []
+        if isinstance(node, ast.Assert):
+            cases.append(pending + [seg])
+            pending = []
+        else:
+            pending.append(seg)
+    if pending:
+        if not cases:
+            return []
+        cases[-1].extend(pending)
+    if len(cases) < 2:
+        return []
+    return ["\n".join(c) for c in cases]
+
+
 def split_cases(test_code):
     """把 `def check(candidate)` 拆成一条条 assert（拆不动就整块当一条）。
 
@@ -652,7 +686,13 @@ def split_cases(test_code):
             break
     if start is None:
         body = textwrap.dedent(test_code or "").strip()
-        return ([body], "block") if body else ([], "block")
+        if not body:
+            return [], "block"
+        # EffiBench 形态：顶层一串 assert。能拆就逐条计时，否则整块一条（旧行为）。
+        per_assert = _split_top_level_asserts(body)
+        if per_assert:
+            return per_assert, "block_split"
+        return [body], "block"
     body, body_indent = [], None
     for ln in lines[start + 1:]:
         if not ln.strip():

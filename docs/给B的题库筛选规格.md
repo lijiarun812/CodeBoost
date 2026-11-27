@@ -16,10 +16,12 @@
 | ≥ 0.1 MB | 5 / 22（23%） |
 | ≥ 0.01 MB | 8 / 22 |
 
-而 `peak_rss`（对齐论文 MU 的那一列）**全部贴在 20.5 MB 的空载基线上**，差值 <0.1 MB。
+而 `peak_rss`（对齐论文 MU 的那一列）在本次 40 题里**全部贴在 20.5 MB 的空载基线上**，差值 <0.1 MB。
+这个「没有信号」有**两种可能原因，暂未区分**：
+① **测量分辨率**——RSS 是进程级采样（±0.5 MB），扣掉基线后小题只剩噪声；tracemalloc 的亚 KB 峰值同理；
+② **输入规模**——题目本身的输入太小，一次调用真的不分配多少内存。
+（这两条要靠「输入规模升档」实验才能分开，A 在做。）
 结论：**不筛题的后果就是「空间列全是 0」，Ours 的「同时优化空间」讲不出任何数字。**
-
-按 23% 的通过率倒推：**要凑 200 题，至少得测 ~800 题**。这是 B 的时间预算，请先估「800 题 × 每题 3 次测量」要跑多久，再动手。
 
 ---
 
@@ -38,62 +40,55 @@
 
 `baseline_ms` 中位数只有 **0.226 ms**、最大 51.3 ms——这批题本来就小。
 
-| # | 条件 | 门槛 | 是否硬门槛 |
+| # | 条件 | 门槛（**暂定值**） | 是否硬门槛 |
 |---|---|---|---|
-| **H1** | 空间可分辨 | `peak_tracemalloc_mb ≥ 0.05`（≥0.1 更稳） | ✅ **主门槛** |
-| **H2** | MU 可分辨 | `peak_rss_mb − 20.5 ≥ 5.0` | ❌ 只记录（7%，太严）；但清单里必须有这一列 |
+| **H1** | 空间可分辨 | `peak_tracemalloc_mb ≥ 0.05` MB | ✅ **主门槛** |
+| **H2** | MU 可分辨 | `peak_rss_mb − 基线 ≥ 5.0` MB | ❌ 只记录（太严），但清单里必须有这一列 |
 | **H3'** | 时间可测 | `baseline_ms ≥ 1.0` **且** `cv ≤ 0.10` | ✅ 硬门槛（旧的 20 ms 作废） |
 
-**预期产出**：H1 ∩ H3' ≈ **17%**。1000 题全测 ≈ **170 题**，正好落在 120–200；
-只要 120 题的话测 ~700 题就够。**这是你的时间预算依据。**
+> ⚠️ **这三个数是「30 题试测」得出的暂定门槛，不是冻结值。**
+> 30 题里 H1 命中 8 题、H1∩H3' 命中 5 题（17%）——**这个 17% 不能直接保证 1000 题会产出约 170 题**，
+> 样本太小、题目难度分布也不均匀。**请你在更大的样本上校准这三个门槛**（比如先扫 100–150 题），
+> 校准完把「实际命中率 + 建议门槛」回报给 A，由 A 更新本规格。
+
+**产出预期（按试测外推，仅供参考）**：H1 ∩ H3' ≈ 17%，1000 题量级**可能**落在 100–200 题区间；
+但这必须由你在更大样本上验证。只要 120 题的话，建议先扫 300 题再决定要不要全量。
 
 **排序建议**：在命中集合里按 `peak_tm_mb` 降序取（空间信号最强的优先），
 同档内按 `baseline_ms` 降序（大题目对空间更友好）。
 
 ---
 
-## 三、判定脚本（可直接跑，别自己重写测量）
+## 三、判定脚本（已入库，别自己重写测量）
 
-```python
-# python tools/grade_bank.py --dataset datasets/dataset.json --out bank/space_resolved.json
-import json, sys
-from pathlib import Path
-sys.path.insert(0, ".")                 # 仓库根
-from eval import harness
+脚本：`tools/scan_space_signal.py`（走 `eval/harness.py`，不含任何自建计时逻辑）。
 
-BASELINE_MB = 20.5      # 空载 RSS 基线（dual_report 会自动量，这里取缓存值）
-H1_PEAK_TM = 0.05       # MB
-H2_RSS_DELTA = 5.0      # MB（只记录，不作门槛）
-H3_MIN_MS, H3_MAX_CV = 1.0, 0.10   # 旧值 20 ms 实测不可达（3%），已降到 1 ms
+```bash
+# 先扫 40 题看通过率，再决定要不要全量（推荐）
+python tools/scan_space_signal.py --num 40
 
-def grade(entry):
-    code = entry["canonical_solution"]
-    m = harness.measure_code(
-        code, entry["test_case"], kind="test_block", entry="solution",
-        e_reps=harness.E_REPS, target_batch_s=0.25, max_reps=20000,
-    )
-    if m.get("status") != "ok":
-        return None, m.get("status"), m.get("error")
-    peak_tm = (m.get("mem") or {}).get("peak_tracemalloc_mb") or 0.0
-    peak_rss = (m.get("mem") or {}).get("peak_rss_mb") or 0.0
-    base_ms = m.get("mean_trimmed_ms") or 0.0
-    cv = (m.get("stats") or {}).get("cv") or 1.0
-    return {
-        "problem_idx": entry["problem_idx"],
-        "task_name": entry["task_name"],
-        "peak_tm_mb": round(peak_tm, 6),
-        "peak_rss_mb": round(peak_rss, 2),
-        "rss_delta_mb": round(max(0.0, peak_rss - BASELINE_MB), 2),
-        "baseline_ms": round(base_ms, 4),
-        "cv": round(cv, 4),
-        "pass_h1_space": peak_tm >= H1_PEAK_TM,
-        "pass_h2_mu": max(0.0, peak_rss - BASELINE_MB) >= H2_RSS_DELTA,
-        "pass_h3_time": base_ms >= H3_MIN_MS and cv <= H3_MAX_CV,
-    }, "ok", None
+# 全量扫描，逐题写 JSONL，可断点续跑
+python tools/scan_space_signal.py --start 0 --out results/bank_scan.jsonl
+
+# 门槛可调（默认就是上文暂定值）
+python tools/scan_space_signal.py --peak-tm-min 0.05 --rss-delta-min 5.0 --min-ms 1.0 --max-cv 0.10
 ```
 
-跑完把结果落到一个 JSON 数组里，字段就用上面那几个——**不要自己加 `difficulty` 文本标签**，
-难度一律用 `baseline_ms / peak_tm_mb / rss_delta_mb` 三个数客观表达（EffiBench 原始数据里没有 difficulty）。
+环境：只用标准库 + `psutil`（`peak_rss` 需要）。Python 3.10+，建议 `C:\Python313\python.exe`。
+**必须在装了 `psutil` 的环境跑**，否则 H2 那列为空。
+
+输出（`--out` 的 JSONL，每行一题，边跑边写）：
+
+```json
+{"problem_idx": 22, "task_name": "Generate Parentheses", "status": "ok",
+ "peak_tm_mb": 4.7071, "peak_rss_mb": 35.9, "rss_delta_mb": 15.38,
+ "baseline_ms": 18.427, "cv": 0.046, "reps": 271,
+ "pass_h1_space": true, "pass_h2_mu": true, "pass_h3_time": true,
+ "protocol_version": "proto-2026.11", "measured_at": "2026-11-27T21:58:03"}
+```
+
+失败题只写 `status`/`error`（`status != "ok"` 一律淘汰，不参与通过率）。
+stdout 汇总会给出 H1 / H2 / H3' / H1∩H3' 四个通过率；**样本 < 200 题时脚本会自己标「试测，不可外推」**。
 
 ---
 
