@@ -152,3 +152,17 @@ python eval\harness.py --dataset humaneval --tasks 31,40,55,59,60,63,96,120,123,
 超时怎么算，再谈方法有没有效。剩下的三件事（真·输入放大、行级耗时、schema 合并）都要等
 B 的题库、C 的 profiler 和组长的 v0 就位。
 
+---
+
+## 八、第二轮 review 的响应（组长改复现线之后）
+
+| 组长动作/意见 | 我的判断 | 处理 |
+|---|---|---|
+| P0 实跑验证（0.98x/0.99x vs 旧写法 10.71x） | 认可；他量的是自己机器，和本机 0.92x 一致 | 无异议 |
+| `pcg_repro` 仍用旧尺子（`from eval.measure`） | **完全正确**，这是“只有一把尺子”条款的硬违规 | 已由他改为调 harness（d91a8fc），我 review 通过 |
+| 修 `run_child` 相对 workdir bug | **真 bug**（相对路径 + cwd 二次拼接） | 接受他的 `resolve()` 修法，并在其基础上把脚本改为写系统 temp |
+| `_diag()` 用旧 measure 产反馈 | 他标注了“数字不进报告”，但**反馈来自另一把尺子**仍会污染结论 | 新增 `harness.measure_cases()`（同一计时路径），复现线把 `_diag` 换成它即可；`eval/measure.py` 仅留 legacy 对照 |
+| `mem_mb_avg ← peak_tracemalloc_mb` 键名映射 | 量纲都是 MB 但含义不同（平均常驻 vs 堆峰值），字段名会骗下游 | 建议复现线直接改名 `peak_tracemalloc_mb` / `peak_rss_mb`；schema 第七节已写死 |
+| 临时脚本堆在 `results/**/_tmp`（一次 79 个） | 属实 | 已在 harness 侧修：脚本写系统 temp + 每小时清理残留；回归用例覆盖 |
+
+本轮新增回归：`回归3` 逐用例合计 / 整块 = 0.96（同一把尺子）；`回归4` 相对 workdir 可用且无残留脚本。
