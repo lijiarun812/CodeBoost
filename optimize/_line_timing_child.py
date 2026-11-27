@@ -34,11 +34,27 @@ def main() -> None:
         code = request["code"]
         case_src = request["case_src"]
         entry = request["entry_point"]
+        prelude = request.get("prelude", "")
         namespace = {"__name__": "__codeboost_line_timing__"}
         # User code may print; keep stdout reserved for the machine-readable result.
         with contextlib.redirect_stdout(sys.stderr):
+            if prelude:
+                pre_namespace = {"__name__": "__codeboost_prelude__"}
+                exec(compile(prelude, "<prelude>", "exec"), pre_namespace)
+                namespace.update((key, value) for key, value in pre_namespace.items()
+                                 if key != "__name__")
             exec(compile(code, SOURCE_NAME, "exec"), namespace)
-            namespace["candidate"] = namespace.get(entry)
+            target = namespace.get(entry)
+            if target is None:
+                target = namespace.get(entry[:1].upper() + entry[1:])
+            if target is None:
+                target = namespace.get("Solution")
+            if isinstance(target, type):
+                target = target()
+            if target is not None:
+                namespace.setdefault(entry, target)
+                namespace.setdefault("solution", target)
+                namespace.setdefault("candidate", target)
             profiler = LineProfiler()
             seen = set()
             for value in namespace.values():
@@ -69,19 +85,19 @@ def main() -> None:
                 if not 1 <= line <= len(source_lines):
                     raise ValueError(f"line_out_of_range({line})")
                 row = merged.setdefault(line, {"line": line, "hits": 0,
-                                               "cumulative_ms": 0.0,
+                                               "line_time_ms": 0.0,
                                                "functions": set(),
                                                "src": source_lines[line - 1]})
                 row["hits"] += int(hits)
-                row["cumulative_ms"] += float(ticks) * stats.unit * 1000.0
+                row["line_time_ms"] += float(ticks) * stats.unit * 1000.0
                 row["functions"].add(function)
         if not merged:
             raise ValueError("no_profiled_line_events")
         items = list(merged.values())
         for row in items:
-            row["cumulative_ms"] = round(row["cumulative_ms"], 6)
+            row["line_time_ms"] = round(row["line_time_ms"], 6)
             row["functions"] = sorted(row["functions"])
-        items.sort(key=lambda row: (-row["cumulative_ms"], row["line"]))
+        items.sort(key=lambda row: (-row["line_time_ms"], row["line"]))
         _emit({"ok": True, "status": "ok", "mode": "line_profiler",
                "tool": "line_profiler", "tool_version": version,
                "unit": "ms", "timer_unit_s": stats.unit,

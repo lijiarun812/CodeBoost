@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import subprocess
 import sys
 from pathlib import Path
@@ -21,13 +22,15 @@ def profile_case(
     entry_point: str = "solution",
     *,
     timeout_s: float = 10.0,
+    prelude: str = "",
     python_executable: str | None = None,
     workdir: str | None = None,
 ) -> dict:
     """Profile one selected case; return explicit status, mode, units and rows."""
     if timeout_s <= 0:
         raise ValueError("timeout_s must be positive")
-    payload = {"code": code, "case_src": case_src, "entry_point": entry_point}
+    payload = {"code": code, "case_src": case_src, "entry_point": entry_point,
+               "prelude": prelude}
     command = [python_executable or sys.executable,
                str(Path(__file__).with_name("_line_timing_child.py"))]
     try:
@@ -74,8 +77,9 @@ def profile_case(
                 or not 1 <= row["line"] <= len(lines)
                 or row.get("src") != lines[row["line"] - 1]
                 or not isinstance(row.get("hits"), int)
-                or not isinstance(row.get("cumulative_ms"), (int, float))
-                or row["hits"] < 0 or row["cumulative_ms"] < 0):
+                or not isinstance(row.get("line_time_ms"), (int, float))
+                or not math.isfinite(row["line_time_ms"])
+                or row["hits"] < 0 or row["line_time_ms"] < 0):
             return {"ok": False, "status": "line_mismatch", "mode": "none",
                     "reason": "line_number_or_source_mismatch"}
     return result

@@ -10,6 +10,7 @@ as a substitute.
 from __future__ import annotations
 
 import hashlib
+import math
 
 from eval import harness
 from eval.hotlines import hotspots
@@ -20,9 +21,10 @@ from optimize.prompts import render_prompt
 
 _METHODS = {"f0": "vanilla", "f1": "f1", "f2": "f2", "f3": "f3", "f4": "ours"}
 _NO_FEEDBACK = "(No performance feedback available.)"
+_MAX_DIAGNOSTIC_TIMEOUT_S = 60.0
 
 
-def _bounded(lines: list[str], max_chars: int) -> tuple[str, bool]:
+def _bounded(lines: list[str], max_chars: int) -> tuple[str, bool, int]:
     """Keep only complete lines within the character budget."""
     if max_chars < 256:
         raise ValueError("max_chars must be at least 256")
@@ -32,26 +34,38 @@ def _bounded(lines: list[str], max_chars: int) -> tuple[str, bool]:
         added = len(line) + (1 if output else 0)
         if length + added + 16 > max_chars:
             marker = "... [truncated]"
+            kept_count = len(output)
             if length + len(marker) + 1 <= max_chars:
                 output.append(marker)
-            return "\n".join(output), True
+            return "\n".join(output), True, kept_count
         output.append(line)
         length += added
-    return "\n".join(output), False
+    return "\n".join(output), False, len(output)
 
 
-def _retained_hotspot_context(feedback: str, items: list[dict], code: str) -> list[int]:
-    """List hotspots retained with their exact line and nearby source text."""
-    source = code.splitlines()
+def _line_ranges(source_line_numbers: set[int]) -> list[tuple[int, int]]:
+    ranges = []
+    for number in sorted(source_line_numbers):
+        if ranges and number == ranges[-1][1] + 1:
+            ranges[-1] = (ranges[-1][0], number)
+        else:
+            ranges.append((number, number))
+    return ranges
+
+
+def _retained_hotspot_context(source_ranges: list[tuple[int, int]], items: list[dict],
+                              source_line_count: int) -> list[int]:
+    """Use emitted source-line ranges, never repeated source-text substrings."""
+    def covered(number: int) -> bool:
+        return any(start <= number <= end for start, end in source_ranges)
+
     retained = []
     for item in items:
         line = item["line"]
-        hit = f"L{line}: {item['hits']} hits"
-        numbered = f"{line:>4}: {source[line - 1]}"
-        if hit not in feedback or numbered not in feedback:
+        if not covered(line):
             continue
-        nearby = [n for n in (line - 1, line + 1) if 1 <= n <= len(source)]
-        if not nearby or any(f"{n:>4}: {source[n - 1]}" in feedback for n in nearby):
+        nearby = [n for n in (line - 1, line + 1) if 1 <= n <= source_line_count]
+        if not nearby or any(covered(n) for n in nearby):
             retained.append(line)
     return retained
 
@@ -71,8 +85,12 @@ def _timing_source_error(timing: dict, code: str) -> str | None:
                 or not 1 <= row["line"] <= len(lines)
                 or row.get("src") != lines[row["line"] - 1]
                 or not isinstance(row.get("hits"), int)
-                or not isinstance(row.get("cumulative_ms"), (int, float))):
+                or not isinstance(row.get("line_time_ms"), (int, float))
+                or not math.isfinite(row["line_time_ms"])
+                or row["line_time_ms"] < 0):
             return "line_number_or_source_mismatch"
+    if sum(row["line_time_ms"] for row in rows) <= 0:
+        return "zero_profiled_time"
     return None
 
 
@@ -107,11 +125,17 @@ def build_feedback(
         raise ValueError("method must be one of f0, f1, f2, f3, f4")
     if radius < 0:
         raise ValueError("radius must be nonnegative")
+    if not math.isfinite(line_timeout_s) or not 0 < line_timeout_s <= _MAX_DIAGNOSTIC_TIMEOUT_S:
+        raise ValueError("line_timeout_s must be positive and at most 60 seconds")
     description = task.get("description")
     if not isinstance(description, str) or not description.strip():
         raise ValueError("Task.description is required (full problem description)")
     meta = {"requested": arm, "effective": arm, "reasons": [], "case": None,
-            "hotspot_mode": None, "line_timing": None, "truncated": False}
+            "case_mode": None, "case_count": None, "slow_ms": None,
+            "diagnostic_timeout_s": None,
+            "diagnostic_timeout_cap_s": _MAX_DIAGNOSTIC_TIMEOUT_S,
+            "hotspot_mode": None,
+            "line_timing": None, "truncated": False}
     feedback = _NO_FEEDBACK
 
     if arm == "f0":
@@ -134,10 +158,15 @@ def build_feedback(
         except Exception as exc:  # diagnostic must not break prompt generation
             diag = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
         diag = diag if isinstance(diag, dict) else {"status": "error", "error": "invalid_case_payload"}
+        meta["case_mode"] = diag.get("mode")
+        cases = diag.get("cases")
+        meta["case_count"] = len(cases) if isinstance(cases, list) else None
         slow = diag.get("slowest") or {}
         slow = slow if isinstance(slow, dict) else {}
         if (diag.get("status") != "ok" or not isinstance(slow.get("src"), str)
-                or not slow.get("src") or not isinstance(slow.get("ms"), (int, float))):
+                or not slow.get("src") or isinstance(slow.get("ms"), bool)
+                or not isinstance(slow.get("ms"), (int, float))
+                or not math.isfinite(slow["ms"]) or slow["ms"] < 0):
             meta["effective"] = "f1" if total_ms is not None else "none"
             meta["reasons"].append(
                 "case_diagnostic_failed: " + str(diag.get("error") or diag.get("status") or "empty_case")
@@ -147,18 +176,27 @@ def build_feedback(
         else:
             meta["case"] = {"idx": slow.get("idx"), "ms": slow.get("ms"),
                             "src": slow["src"]}
+            meta["slow_ms"] = slow["ms"]
             feedback = f"Slowest test case:\n{slow['src']}\nCase execution time: {slow['ms']:.4f} ms."
             if arm in ("f3", "f4"):
+                timeout_s = min(_MAX_DIAGNOSTIC_TIMEOUT_S,
+                                max(line_timeout_s, 20.0 * slow["ms"] / 1000.0))
+                meta["diagnostic_timeout_s"] = timeout_s
                 timing = None
                 if arm == "f4":
-                    try:
-                        timing = line_timing if line_timing is not None else profile_case(
-                            code, slow["src"], task.get("entry_point", "solution"),
-                            timeout_s=line_timeout_s, workdir=workdir,
-                        )
-                    except Exception as exc:
-                        timing = {"ok": False, "status": "process_error",
-                                  "reason": f"{type(exc).__name__}: {exc}"}
+                    if slow["ms"] < 2.0:
+                        timing = {"ok": False, "status": "case_too_small",
+                                  "reason": "case_too_small(<2ms)"}
+                    else:
+                        try:
+                            timing = line_timing if line_timing is not None else profile_case(
+                                code, slow["src"], task.get("entry_point", "solution"),
+                                timeout_s=timeout_s, workdir=workdir,
+                                prelude=harness.PREAMBLE if task.get("kind") == "test_block" else "",
+                            )
+                        except Exception as exc:
+                            timing = {"ok": False, "status": "process_error",
+                                      "reason": f"{type(exc).__name__}: {exc}"}
                     timing = timing if isinstance(timing, dict) else {
                         "ok": False, "status": "bad_payload", "reason": "invalid_line_timing_payload"
                     }
@@ -185,7 +223,8 @@ def build_feedback(
                     try:
                         hits = hot if hot is not None else hotspots(
                             code, slow["src"], task.get("entry_point", "solution"),
-                            top=3, workdir=workdir,
+                            top=3, max_time=timeout_s, workdir=workdir,
+                            prelude=harness.PREAMBLE if task.get("kind") == "test_block" else "",
                         )
                     except Exception as exc:
                         hits = {"ok": False, "reason": f"{type(exc).__name__}: {exc}"}
@@ -200,7 +239,7 @@ def build_feedback(
                     and isinstance(item.get("hits"), int)
                     and 1 <= item["line"] <= len(source_lines)
                     and (not use_timing or (
-                        isinstance(item.get("cumulative_ms"), (int, float))
+                        isinstance(item.get("line_time_ms"), (int, float))
                         and item.get("src") == source_lines[item["line"] - 1]
                     ))
                 ][:3]
@@ -218,11 +257,13 @@ def build_feedback(
                 else:
                     meta["hotspot_mode"] = "line_profiler" if use_timing else "line_hits"
                     meta["hot_lines"] = [item["line"] for item in items]
+                    profiled_total_ms = (sum(row["line_time_ms"] for row in timing["items"])
+                                         if use_timing else None)
                     if use_timing:
-                        feedback = "逐行累计耗时（line_profiler 诊断值，含剖析开销；不用于最终 speedup）:\n"
+                        feedback = "热点行占本次已剖析行时间之和的比例（line_profiler 诊断值，含剖析开销；不用于最终 speedup；不含被调函数耗时）:\n"
                         feedback += "\n".join(
                             f"L{item['line']}: {item['hits']} hits | "
-                            f"{item['cumulative_ms']:.6f} ms cumulative | "
+                            f"占本次已剖析行时间之和的比例 {100 * item['line_time_ms'] / profiled_total_ms:.1f}% | "
                             f"{source_lines[item['line'] - 1].rstrip()}"
                             for item in items
                         )
@@ -239,50 +280,86 @@ def build_feedback(
                         try:
                             regions = context_regions(code, meta["hot_lines"], radius)
                             region_lines = [
-                                ("逐行累计耗时与周围源码（line_profiler 诊断值，单位 ms，"
-                                 "含剖析开销；不用于最终 speedup）:"
+                                ("热点行占本次已剖析行时间之和的比例与周围源码（line_profiler 诊断值，"
+                                 "含剖析开销；不用于最终 speedup；不含被调函数耗时）:"
                                  if use_timing else
                                  "高频执行行与周围源码（按执行次数排序，非逐行耗时）:")
                             ]
                             for item in items:
                                 summary = f"L{item['line']}: {item['hits']} hits"
                                 if use_timing:
-                                    summary += f" | {item['cumulative_ms']:.6f} ms cumulative"
+                                    summary += (" | 占本次已剖析行时间之和的比例 "
+                                                f"{100 * item['line_time_ms'] / profiled_total_ms:.1f}%")
                                 region_lines.append(summary)
                                 scope = scopes_at(code, item["line"])
                                 region_lines.append(
                                     "  Enclosing function/loop: "
                                     + (" -> ".join(scope) if scope else "(module)")
                                 )
+                            source_line_positions = {}
                             for region in regions:
                                 region_lines.append(
                                     f"Source lines {region['start']}-{region['end']} "
                                     f"(hot lines: {', '.join(map(str, region['hits']))}):"
                                 )
-                                region_lines.extend(region["source"].splitlines())
-                            feedback, meta["truncated"] = _bounded(region_lines, max_chars)
+                                for number in range(region["start"], region["end"] + 1):
+                                    source_line_positions[len(region_lines)] = number
+                                    region_lines.append(f"{number:>4}: {source_lines[number - 1]}")
+                            feedback, meta["truncated"], kept_count = _bounded(region_lines, max_chars)
                             meta["regions"] = [
                                 {"start": region["start"], "end": region["end"],
                                  "hits": region["hits"]} for region in regions
                             ]
+                            retained_ranges = _line_ranges({number for index, number
+                                                            in source_line_positions.items()
+                                                            if index < kept_count})
+                            meta["retained_source_ranges"] = retained_ranges
                             meta["retained_hot_lines"] = _retained_hotspot_context(
-                                feedback, items, code
+                                retained_ranges, items, len(source_lines)
                             )
                             if not meta["retained_hot_lines"]:
-                                feedback = "高频执行行（按执行次数排序，非逐行耗时）:\n"
-                                feedback += "\n".join(
-                                    f"L{item['line']}: {item['hits']} hits | "
-                                    f"{source_lines[item['line'] - 1].rstrip()}"
-                                    for item in items
-                                )
-                                meta["effective"] = "f3"
-                                meta["hotspot_mode"] = "line_hits" if not use_timing else "line_profiler_hits_only"
-                                meta["reasons"].append("f4_context_omitted_by_length_limit")
+                                if use_timing:
+                                    try:
+                                        fallback_hits = hot if hot is not None else hotspots(
+                                            code, slow["src"], task.get("entry_point", "solution"),
+                                            top=3, max_time=timeout_s, workdir=workdir,
+                                            prelude=harness.PREAMBLE if task.get("kind") == "test_block" else "",
+                                        )
+                                    except Exception as exc:
+                                        fallback_hits = {"ok": False, "reason": f"{type(exc).__name__}: {exc}"}
+                                    fallback_items = (fallback_hits.get("items") or []) if isinstance(fallback_hits, dict) else []
+                                    fallback_items = [item for item in fallback_items
+                                                      if isinstance(item, dict)
+                                                      and isinstance(item.get("line"), int)
+                                                      and isinstance(item.get("hits"), int)
+                                                      and 1 <= item["line"] <= len(source_lines)][:3]
+                                else:
+                                    fallback_items = items
+                                if not fallback_items:
+                                    meta["effective"] = "f2"
+                                    meta["hotspot_mode"] = None
+                                    meta["reasons"].append("line_hits_fallback_failed")
+                                    feedback = (f"Slowest test case:\n{slow['src']}\n"
+                                                f"Case execution time: {slow['ms']:.4f} ms.")
+                                else:
+                                    meta["effective"] = "f3"
+                                    meta["hotspot_mode"] = "line_hits"
+                                    meta["hot_lines"] = [item["line"] for item in fallback_items]
+                                    meta["reasons"].append("f4_context_omitted_by_length_limit")
+                                    feedback = "高频执行行（按执行次数排序，非逐行耗时）:\n"
+                                    feedback += "\n".join(
+                                        f"L{item['line']}: {item['hits']} hits | "
+                                        f"{source_lines[item['line'] - 1].rstrip()}"
+                                        for item in fallback_items
+                                    )
                         except (SyntaxError, ValueError) as exc:
-                            meta["effective"] = "f3"
+                            meta["effective"] = "f2"
+                            meta["hotspot_mode"] = None
                             meta["reasons"].append(
                                 f"source_context_failed: {type(exc).__name__}: {exc}"
                             )
+                            feedback = (f"Slowest test case:\n{slow['src']}\n"
+                                        f"Case execution time: {slow['ms']:.4f} ms.")
 
     effective = meta["effective"]
     # schema v1.1 has no f4_line_hits method. Full F4 also still lacks space
@@ -294,8 +371,10 @@ def build_feedback(
         degrade_reason = "budget_exceeded"
     elif effective == "f2":
         degrade_reason = "fallback_f2"
+    elif effective in ("f1", "f3", "f4_line_hits"):
+        degrade_reason = "no_hotspot"
     else:
-        degrade_reason = None  # no honest v1.1 enum mapping; keep projection pending
+        degrade_reason = "no_hotspot"
         mapping_pending = True
     actual_method = None if mapping_pending else _METHODS.get(effective)
     eligible = not mapping_pending and effective == arm and degrade_reason is None

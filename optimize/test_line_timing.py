@@ -31,7 +31,7 @@ class LineTimingContractTests(unittest.TestCase):
         base = {
             "ok": True, "status": "ok", "mode": "line_profiler", "unit": "ms",
             "source_sha256": hashlib.sha256(code.encode()).hexdigest(),
-            "items": [{"line": 2, "hits": 1, "cumulative_ms": 1.5,
+            "items": [{"line": 2, "hits": 1, "line_time_ms": 1.5,
                        "src": "    return 1"}],
         }
         with patch("optimize.line_timing.subprocess.run") as run:
@@ -71,7 +71,7 @@ class RealLineProfilerTests(unittest.TestCase):
         rows = {item["line"]: item for item in result["items"]}
         self.assertEqual(result["unit"], "ms")
         self.assertEqual(rows[4]["src"], "    time.sleep(0.02)")
-        self.assertGreater(rows[4]["cumulative_ms"], rows[3]["cumulative_ms"] * 5)
+        self.assertGreater(rows[4]["line_time_ms"], rows[3]["line_time_ms"] * 5)
 
     def test_loop_and_called_function_line_numbers(self):
         code = ("def helper(n):\n"
@@ -87,6 +87,19 @@ class RealLineProfilerTests(unittest.TestCase):
         self.assertGreater(rows[4]["hits"], 1)
         self.assertIn(7, rows)
         self.assertEqual(rows[7]["src"], "    return helper(n)")
+
+    def test_effibench_typing_list_prelude_keeps_source_lines(self):
+        from eval.harness import PREAMBLE
+        code = ("class Solution:\n"
+                "    def run(self, values: List[int]) -> int:\n"
+                "        return sum(values)\n")
+        result = profile_case(code, "assert solution.run([1, 2, 3]) == 6",
+                              "solution", prelude=PREAMBLE)
+        self.assertTrue(result["ok"], result.get("reason"))
+        rows = {item["line"]: item for item in result["items"]}
+        self.assertEqual(rows[3]["src"], "        return sum(values)")
+        self.assertEqual(rows[3]["hits"], 1)
+        self.assertTrue(all(1 <= number <= len(code.splitlines()) for number in rows))
 
     def test_humaneval_40_and_55(self):
         tasks = {item["task_id"]: item for item in json.loads(DATASET.read_text(encoding="utf-8"))}
