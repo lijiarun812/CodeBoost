@@ -126,6 +126,35 @@ py eval\reanalyze_repro.py   # → docs/表格_复现口径对比.md（旧口径
 py eval\make_table.py        # → docs/表格_论文vs复现.md（EffiLearner + PerfCodeGen）
 ```
 
+## 实验结果（当前）
+
+EffiBench 前 20 题（`--start 100`）、3 轮优化、论文判据（仅当 `mem_mbs` 更小才采纳）：
+
+| 模型 | %Correct（原始） | %Correct（剔除不可执行） | %Opt | Speedup | ET 降幅 | MU 降幅 |
+|---|---|---|---|---|---|---|
+| deepseek-v4-pro | 85.0% | 100.0% | 58.8% | 1.090× | +8.0% | -0.1% |
+| deepseek-flash | 75.0% | 100.0% | 66.7% | 1.218× | +16.4% | -0.1% |
+
+复现命令（结果可完全重跑）：
+
+```powershell
+py effilearner\effi_repro.py --provider deepseek --model deepseek-v4-pro `
+    --num 20 --start 100 --epochs 3 --accept-rule paper `
+    --profile off --send-thinking yes --thinking disabled `
+    --out results\matrix\deepseek-v4-pro
+
+py eval\paper_tables.py   # → docs/论文对照与差异分析.md（论文三张表对照 + 差异原因）
+```
+
+**已知局限（答辩会问，先写清）**：
+
+1. `MU`（论文 Table 1 的峰值内存列）在本批题上无信号：所有题 `peak_rss` 都贴着 20–21 MB 的解释器基线，与论文 80–91 MB 量级差 3 倍，需换大输入或更大规模的题；
+2. `TMU`（本实现的 `mem_mbs = ∫RSS dt`）与时间高度共线（r = 0.94–0.97），**不能作为独立的「空间收益」证据**，只作内部对照；
+3. 20 题里有 4 题的标准解本身跑不通（测试块与 `canonical_solution` 不匹配），任何模型都必然失败，因此 `%Correct` 需同时给两个口径；
+4. 早期版本曾出现「0% 采纳」，根因是逐行剖析不对称（基线不剖析、候选剖析，虚高 2.8×），已修复，证据见 `eval/timing_check.py`。
+
+完整对照表与差异归因见 [`docs/论文对照与差异分析.md`](docs/论文对照与差异分析.md)。
+
 ## 小组成员与分工
 
 | 成员 | 线路 | 角色 | 贡献率 |
