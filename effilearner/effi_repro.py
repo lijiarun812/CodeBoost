@@ -34,6 +34,9 @@ import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from eval import harness  # noqa: E402  # 新增口径只用它，论文口径保持原实现
 
 # ---------------------------------------------------------------------------
 # 子进程测量框架：在被测进程内部起采样线程，测量执行时间/内存积分/内存峰值
@@ -255,6 +258,31 @@ def measure(user_code, test_block, repeats, max_time, workdir,
     data = json.loads(marker.group(1))
     data["ok"] = True
     return data
+
+
+def new_metrics(code, test_block, args, workdir):
+    """并行新口径：E=12 去极值均值 + 双口径内存峰值。
+
+    **不参与论文判据**（论文判据仍是 mem_mbs / exec_time），只用于报告里的对照列，
+    用来暴露论文口径的缺陷（如「内存假 100% 下降」）。
+    """
+    m = harness.measure_code(
+        code, test_block, kind="test_block", entry="solution",
+        e_reps=harness.E_REPS, target_batch_s=args.target_time,
+        max_reps=args.max_repeats, stale_s=max(10.0, args.max_time),
+        workdir=str(workdir),
+    )
+    mem = m.get("mem") or {}
+    st = m.get("stats") or {}
+    return {
+        "status": m.get("status"),
+        "mean_trimmed_ms": m.get("mean_trimmed_ms"),
+        "median_ms": m.get("median_ms"),
+        "cv": st.get("cv"),
+        "peak_tracemalloc_mb": mem.get("peak_tracemalloc_mb"),
+        "peak_rss_mb": mem.get("peak_rss_mb"),
+        "reps": m.get("reps"),
+    }
 
 
 def calibrate_repeats(code, test_block, max_time, workdir,
@@ -568,6 +596,8 @@ def run(args):
         print("   baseline : mem=%.3f MB*s  time=%.4fs  peak=%.1f MB  (reps=%d, timeout=%ss)"
               % (base_m["mem_mbs"], base_m["exec_time"], base_m["peak_mb"], reps, args.max_time))
 
+        new_base = new_metrics(base_code, test_block, args, workdir)
+
         current_code = base_code
         current_m = base_m
         history = [dict(base_m, label="baseline")]
@@ -611,6 +641,8 @@ def run(args):
                     print("   epoch %d: 保持   (%s)" % (ep, reason))
                 history.append(dict(current_m, label="epoch%d" % ep))
 
+        new_final = new_metrics(current_code, test_block, args, workdir)
+
         result = {
             "problem_idx": pid,
             "task_name": name,
@@ -618,6 +650,8 @@ def run(args):
             "repeats": reps,
             "baseline": {k: base_m[k] for k in ("exec_time", "mem_mbs", "peak_mb")},
             "final": {k: current_m[k] for k in ("exec_time", "mem_mbs", "peak_mb")},
+            "new_baseline": new_base,
+            "new_final": new_final,
             "final_code": current_code,
             "history": history,
         }
@@ -625,7 +659,15 @@ def run(args):
         result["mem_reduction_pct"] = round(rm, 1)
         rt = (base_m["exec_time"] - current_m["exec_time"]) / base_m["exec_time"] * 100 if base_m["exec_time"] else 0.0
         result["time_reduction_pct"] = round(rt, 1)
+        nb_t, nf_t = new_base.get("mean_trimmed_ms"), new_final.get("mean_trimmed_ms")
+        nb_m, nf_m = new_base.get("peak_tracemalloc_mb"), new_final.get("peak_tracemalloc_mb")
+        result["new_time_reduction_pct"] = round((nb_t - nf_t) / nb_t * 100, 1) if nb_t and nf_t else None
+        result["new_mem_reduction_pct"] = round((nb_m - nf_m) / nb_m * 100, 1) if nb_m and nf_m else None
         print("   合计    : 内存 %+.1f%%   时间 %+.1f%%" % (rm, rt))
+        print("   新口径  : 内存 %s   时间 %s   (E=%d)"
+              % ("%+.1f%%" % result["new_mem_reduction_pct"] if result["new_mem_reduction_pct"] is not None else "n/a",
+                 "%+.1f%%" % result["new_time_reduction_pct"] if result["new_time_reduction_pct"] is not None else "n/a",
+                 harness.E_REPS))
         results.append(result)
 
     # 汇总
