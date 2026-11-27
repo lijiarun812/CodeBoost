@@ -1,0 +1,28 @@
+[
+  {
+    "file": "repro_deepseek_v4_flash_0731.json",
+    "model": "api:deepseek-v4-flash-0731",
+    "dataset_problems": 20,
+    "epochs": 3,
+    "accept_rule": "paper",
+    "n_ok": 19,
+    "n_bad": 1,
+    "paper_mem_avg": 23.1,
+    "paper_mem_median": 3.2,
+    "paper_time_avg": 21.4,
+    "paper_time_median": 9.7,
+    "new_mem_mean": -6.626315789473685,
+    "new_mem_median": 0.0,
+    "new_time_mean": 14.884210526315789,
+    "new_time_median": 5.0,
+    "n_fake_100": 0,
+    "n_mem_tie": 17,
+    "n_mem_pairs": 19,
+    "tm_level_mb": 0.001,
+    "n_new_mem": 19,
+    "paper_gt0_mem": 10,
+    "bad_reasons": {
+      "AssertionError": 1
+    }
+  }
+]

@@ -1,0 +1,1353 @@
+{
+  "mode": "api:deepseek-v4-flash-0731",
+  "num_problems": 20,
+  "num_ok": 19,
+  "epochs": 3,
+  "target_time": 0.25,
+  "accept_rule": "paper",
+  "max_repeats": 20000,
+  "results": [
+    {
+      "problem_idx": 3,
+      "task_name": "Longest Substring Without Repeating Characters",
+      "status": "ok",
+      "repeats": 13736,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.03841369994916022,
+        "mem_mbs": 0.6707297947259576,
+        "peak_mb": 19.6015625
+      },
+      "final": {
+        "exec_time": 0.03841369994916022,
+        "mem_mbs": 0.6707297947259576,
+        "peak_mb": 19.6015625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.003522784997767303,
+        "median_ms": 0.0036,
+        "cv": 0.1013,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.637,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.003480779998062644,
+        "median_ms": 0.0034,
+        "cv": 0.1035,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.738,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def lengthOfLongestSubstring(self, s: str) -> int:\n        char_map = {}\n        left = 0\n        max_len = 0\n        \n        for right in range(len(s)):\n            if s[right] in char_map and char_map[s[right]] >= left:\n                left = char_map[s[right]] + 1\n            char_map[s[right]] = right\n            max_len = max(max_len, right - left + 1)\n        \n        return max_len\n",
+      "history": [
+        {
+          "exec_time": 0.03841369994916022,
+          "mem_mbs": 0.6707297947259576,
+          "peak_mb": 19.6015625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.03841369994916022,
+          "mem_mbs": 0.6707297947259576,
+          "peak_mb": 19.6015625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.03841369994916022,
+          "mem_mbs": 0.6707297947259576,
+          "peak_mb": 19.6015625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.03841369994916022,
+          "mem_mbs": 0.6707297947259576,
+          "peak_mb": 19.6015625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 1.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 4,
+      "task_name": "Median of Two Sorted Arrays",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.03354500001296401,
+        "mem_mbs": 0.5306419835133056,
+        "peak_mb": 19.54296875
+      },
+      "final": {
+        "exec_time": 0.03354500001296401,
+        "mem_mbs": 0.5306419835133056,
+        "peak_mb": 19.54296875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0019427706240094267,
+        "median_ms": 0.0019,
+        "cv": 0.0891,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.688,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0019686387517140248,
+        "median_ms": 0.002,
+        "cv": 0.0467,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.691,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:\n        # Ensure nums1 is the smaller array\n        if len(nums1) > len(nums2):\n            nums1, nums2 = nums2, nums1\n        \n        m, n = len(nums1), len(nums2)\n        total = m + n\n        half = (total + 1) // 2\n        \n        left, right = 0, m\n        while left <= right:\n            i = (left + right) // 2\n            j = half - i\n            \n            # Get the left and right elements around the partition\n            nums1_left = nums1[i - 1] if i > 0 else float('-inf')\n            nums1_right = nums1[i] if i < m else float('inf')\n            nums2_left = nums2[j - 1] if j > 0 else float('-inf')\n            nums2_right = nums2[j] if j < n else float('inf')\n            \n            # Check if partition is correct\n            if nums1_left <= nums2_right and nums2_left <= nums1_right:\n                # Found correct partition\n                if total % 2 == 1:\n                    return max(nums1_left, nums2_left)\n                else:\n                    return (max(nums1_left, nums2_left) + min(nums1_right, nums2_right)) / 2\n            elif nums1_left > nums2_right:\n                # Move left in nums1\n                right = i - 1\n            else:\n                # Move right in nums1\n                left = i + 1\n        \n        # Should never reach here\n        raise ValueError(\"Input arrays are not sorted\")\n",
+      "history": [
+        {
+          "exec_time": 0.03354500001296401,
+          "mem_mbs": 0.5306419835133056,
+          "peak_mb": 19.54296875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.03354500001296401,
+          "mem_mbs": 0.5306419835133056,
+          "peak_mb": 19.54296875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.03354500001296401,
+          "mem_mbs": 0.5306419835133056,
+          "peak_mb": 19.54296875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.03354500001296401,
+          "mem_mbs": 0.5306419835133056,
+          "peak_mb": 19.54296875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -1.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 10,
+      "task_name": "Regular Expression Matching",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.08339889999479055,
+        "mem_mbs": 1.5797034837250976,
+        "peak_mb": 19.609375
+      },
+      "final": {
+        "exec_time": 0.05516839982010424,
+        "mem_mbs": 1.063938080736989,
+        "peak_mb": 19.359375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0042593907713359335,
+        "median_ms": 0.0042,
+        "cv": 0.1007,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.684,
+        "reps": 18425
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0030124206212349238,
+        "median_ms": 0.003,
+        "cv": 0.0597,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.77,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def isMatch(self, s: str, p: str) -> bool:\n        m, n = len(s), len(p)\n        \n        # Use a single 1D array to minimize memory usage\n        dp = [False] * (n + 1)\n        dp[0] = True\n        \n        # Handle patterns like a*, a*b*, etc. that can match empty string\n        for j in range(2, n + 1):\n            if p[j - 1] == '*':\n                dp[j] = dp[j - 2]\n        \n        # Process each character of s\n        for i in range(1, m + 1):\n            # Save the diagonal value (dp[j-1] from previous row) before overwriting\n            diag = dp[0]\n            dp[0] = False  # Empty pattern can't match non-empty string\n            \n            for j in range(1, n + 1):\n                # Save current dp[j] before overwriting (it's prev[j] for next iteration)\n                temp = dp[j]\n                \n                if p[j - 1] == '*':\n                    # Zero occurrences of preceding char\n                    dp[j] = dp[j - 2]\n                    # One or more occurrences if current char matches\n                    if p[j - 2] == '.' or p[j - 2] == s[i - 1]:\n                        dp[j] = dp[j] or temp  # temp is prev[j]\n                else:\n                    if p[j - 1] == '.' or p[j - 1] == s[i - 1]:\n                        dp[j] = diag  # diag is prev[j-1]\n                    else:\n                        dp[j] = False\n                \n                # Update diag to be prev[j] for the next iteration\n                diag = temp\n        \n        return dp[n]\n",
+      "history": [
+        {
+          "exec_time": 0.08339889999479055,
+          "mem_mbs": 1.5797034837250976,
+          "peak_mb": 19.609375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.06298449984751642,
+          "mem_mbs": 1.2340519376202792,
+          "peak_mb": 19.6640625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.05516839982010424,
+          "mem_mbs": 1.063938080736989,
+          "peak_mb": 19.359375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.05516839982010424,
+          "mem_mbs": 1.063938080736989,
+          "peak_mb": 19.359375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 32.6,
+      "time_reduction_pct": 33.8,
+      "new_time_reduction_pct": 29.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 11,
+      "task_name": "Container With Most Water",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.022868500091135502,
+        "mem_mbs": 0.3981614078347775,
+        "peak_mb": 19.37890625
+      },
+      "final": {
+        "exec_time": 0.02036770014092326,
+        "mem_mbs": 0.3792231060779159,
+        "peak_mb": 19.25390625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.001407596874923911,
+        "median_ms": 0.0014,
+        "cv": 0.08,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.652,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0011657631228445097,
+        "median_ms": 0.0012,
+        "cv": 0.1023,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.633,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def maxArea(self, height: List[int]) -> int:\n        left, right = 0, len(height) - 1\n        max_area = 0\n        \n        while left < right:\n            # Cache heights to avoid repeated list indexing\n            h_left = height[left]\n            h_right = height[right]\n            \n            # Calculate area using cached values\n            width = right - left\n            current_height = h_left if h_left < h_right else h_right\n            area = width * current_height\n            \n            # Update max_area only if needed (avoids function call overhead)\n            if area > max_area:\n                max_area = area\n            \n            # Move the pointer pointing to the shorter line\n            # Use cached values for comparison\n            if h_left < h_right:\n                left += 1\n            else:\n                right -= 1\n        \n        return max_area\n",
+      "history": [
+        {
+          "exec_time": 0.022868500091135502,
+          "mem_mbs": 0.3981614078347775,
+          "peak_mb": 19.37890625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.02036770014092326,
+          "mem_mbs": 0.3792231060779159,
+          "peak_mb": 19.25390625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.02036770014092326,
+          "mem_mbs": 0.3792231060779159,
+          "peak_mb": 19.25390625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.02036770014092326,
+          "mem_mbs": 0.3792231060779159,
+          "peak_mb": 19.25390625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 4.8,
+      "time_reduction_pct": 10.9,
+      "new_time_reduction_pct": 17.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 22,
+      "task_name": "Generate Parentheses",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.08680799999274313,
+        "mem_mbs": 1.6033707436226905,
+        "peak_mb": 19.6328125
+      },
+      "final": {
+        "exec_time": 0.08680799999274313,
+        "mem_mbs": 1.6033707436226905,
+        "peak_mb": 19.6328125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.004391799372388049,
+        "median_ms": 0.0044,
+        "cv": 0.0602,
+        "peak_tracemalloc_mb": 0.0068,
+        "peak_rss_mb": 20.938,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.004360951244598254,
+        "median_ms": 0.0043,
+        "cv": 0.0655,
+        "peak_tracemalloc_mb": 0.0068,
+        "peak_rss_mb": 20.949,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def generateParenthesis(self, n: int) -> List[str]:\n        result = []\n        \n        def backtrack(current: str, open_count: int, close_count: int):\n            # If we've used all pairs, add to result\n            if len(current) == 2 * n:\n                result.append(current)\n                return\n            \n            # Add an opening parenthesis if we haven't used all\n            if open_count < n:\n                backtrack(current + \"(\", open_count + 1, close_count)\n            \n            # Add a closing parenthesis if valid\n            if close_count < open_count:\n                backtrack(current + \")\", open_count, close_count + 1)\n        \n        backtrack(\"\", 0, 0)\n        return result\n",
+      "history": [
+        {
+          "exec_time": 0.08680799999274313,
+          "mem_mbs": 1.6033707436226905,
+          "peak_mb": 19.6328125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.08680799999274313,
+          "mem_mbs": 1.6033707436226905,
+          "peak_mb": 19.6328125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.08680799999274313,
+          "mem_mbs": 1.6033707436226905,
+          "peak_mb": 19.6328125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.08680799999274313,
+          "mem_mbs": 1.6033707436226905,
+          "peak_mb": 19.6328125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.7,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 26,
+      "task_name": "Remove Duplicates from Sorted Array",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.01743610017001629,
+        "mem_mbs": 0.2641803072037874,
+        "peak_mb": 19.42578125
+      },
+      "final": {
+        "exec_time": 0.015061800135299563,
+        "mem_mbs": 0.25577943490134203,
+        "peak_mb": 19.31640625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0009423381241504103,
+        "median_ms": 0.001,
+        "cv": 0.157,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.625,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0008954350021667778,
+        "median_ms": 0.0009,
+        "cv": 0.049,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.617,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def removeDuplicates(self, nums: List[int]) -> int:\n        k = 1\n        # Use local variable for nums to avoid attribute lookups\n        arr = nums\n        n = len(arr)\n        # Iterate from index 1 to end\n        for i in range(1, n):\n            # Compare with the last unique element\n            if arr[i] != arr[k - 1]:\n                arr[k] = arr[i]\n                k += 1\n        return k\n",
+      "history": [
+        {
+          "exec_time": 0.01743610017001629,
+          "mem_mbs": 0.2641803072037874,
+          "peak_mb": 19.42578125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.015317399986088276,
+          "mem_mbs": 0.26249521769113926,
+          "peak_mb": 19.328125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.015061800135299563,
+          "mem_mbs": 0.25577943490134203,
+          "peak_mb": 19.31640625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.015061800135299563,
+          "mem_mbs": 0.25577943490134203,
+          "peak_mb": 19.31640625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 3.2,
+      "time_reduction_pct": 13.6,
+      "new_time_reduction_pct": 5.0,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 28,
+      "task_name": "Find the Index of the First Occurrence in a String",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.002680499805137515,
+        "mem_mbs": 0.0,
+        "peak_mb": 19.33984375
+      },
+      "final": {
+        "exec_time": 0.002680499805137515,
+        "mem_mbs": 0.0,
+        "peak_mb": 19.33984375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.00022333062515826897,
+        "median_ms": 0.0002,
+        "cv": 0.1284,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.586,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0002136812501703389,
+        "median_ms": 0.0002,
+        "cv": 0.119,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.609,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def strStr(self, haystack: str, needle: str) -> int:\n        return haystack.find(needle)\n",
+      "history": [
+        {
+          "exec_time": 0.002680499805137515,
+          "mem_mbs": 0.0,
+          "peak_mb": 19.33984375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.002680499805137515,
+          "mem_mbs": 0.0,
+          "peak_mb": 19.33984375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.002680499805137515,
+          "mem_mbs": 0.0,
+          "peak_mb": 19.33984375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.002680499805137515,
+          "mem_mbs": 0.0,
+          "peak_mb": 19.33984375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 4.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 29,
+      "task_name": "Divide Two Integers",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.013767600059509277,
+        "mem_mbs": 0.25650137240336335,
+        "peak_mb": 19.34375
+      },
+      "final": {
+        "exec_time": 0.011879599886015058,
+        "mem_mbs": 0.13069088821339392,
+        "peak_mb": 19.6640625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0007582393722259439,
+        "median_ms": 0.0008,
+        "cv": 0.0941,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.652,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0007076293739373795,
+        "median_ms": 0.0007,
+        "cv": 0.06,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.652,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def divide(self, dividend: int, divisor: int) -> int:\n        # Handle overflow case\n        if dividend == -2**31 and divisor == -1:\n            return 2**31 - 1\n        \n        # Determine sign\n        negative = (dividend < 0) ^ (divisor < 0)\n        \n        # Work with absolute values\n        dividend, divisor = abs(dividend), abs(divisor)\n        \n        quotient = 0\n        # Subtract divisor multiples using bit shifts\n        while dividend >= divisor:\n            temp, multiple = divisor, 1\n            # Use shift directly instead of checking (temp << 1) each time\n            # This reduces the number of comparisons and shifts\n            while dividend >= (temp << 1):\n                temp <<= 1\n                multiple <<= 1\n            dividend -= temp\n            quotient += multiple\n        \n        return -quotient if negative else quotient\n",
+      "history": [
+        {
+          "exec_time": 0.013767600059509277,
+          "mem_mbs": 0.25650137240336335,
+          "peak_mb": 19.34375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.011868800036609173,
+          "mem_mbs": 0.1318268020186224,
+          "peak_mb": 19.47265625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.011879599886015058,
+          "mem_mbs": 0.13069088821339392,
+          "peak_mb": 19.6640625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.011879599886015058,
+          "mem_mbs": 0.13069088821339392,
+          "peak_mb": 19.6640625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 49.0,
+      "time_reduction_pct": 13.7,
+      "new_time_reduction_pct": 6.7,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 31,
+      "task_name": "Next Permutation",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.020450799958780408,
+        "mem_mbs": 0.26808470697233133,
+        "peak_mb": 19.5546875
+      },
+      "final": {
+        "exec_time": 0.020450799958780408,
+        "mem_mbs": 0.26808470697233133,
+        "peak_mb": 19.5546875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0011110637482488529,
+        "median_ms": 0.0011,
+        "cv": 0.079,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.656,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010562868788838388,
+        "median_ms": 0.0011,
+        "cv": 0.1231,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.691,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def nextPermutation(self, nums: List[int]) -> None:\n        \"\"\"\n        Do not return anything, modify nums in-place instead.\n        \"\"\"\n        i = len(nums) - 2\n        # Find the first decreasing element from the end\n        while i >= 0 and nums[i] >= nums[i + 1]:\n            i -= 1\n        \n        if i >= 0:\n            # Find the element just larger than nums[i] from the end\n            j = len(nums) - 1\n            while nums[j] <= nums[i]:\n                j -= 1\n            # Swap\n            nums[i], nums[j] = nums[j], nums[i]\n        \n        # Reverse the suffix\n        left, right = i + 1, len(nums) - 1\n        while left < right:\n            nums[left], nums[right] = nums[right], nums[left]\n            left += 1\n            right -= 1\n",
+      "history": [
+        {
+          "exec_time": 0.020450799958780408,
+          "mem_mbs": 0.26808470697233133,
+          "peak_mb": 19.5546875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.020450799958780408,
+          "mem_mbs": 0.26808470697233133,
+          "peak_mb": 19.5546875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.020450799958780408,
+          "mem_mbs": 0.26808470697233133,
+          "peak_mb": 19.5546875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.020450799958780408,
+          "mem_mbs": 0.26808470697233133,
+          "peak_mb": 19.5546875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 4.9,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 32,
+      "task_name": "Longest Valid Parentheses",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.02303340006619692,
+        "mem_mbs": 0.39873835472644714,
+        "peak_mb": 19.60546875
+      },
+      "final": {
+        "exec_time": 0.02303340006619692,
+        "mem_mbs": 0.39873835472644714,
+        "peak_mb": 19.60546875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0013442556228255853,
+        "median_ms": 0.0013,
+        "cv": 0.0664,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.629,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0012539643721538596,
+        "median_ms": 0.0013,
+        "cv": 0.0827,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.609,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def longestValidParentheses(self, s: str) -> int:\n        stack = [-1]  # base index for the start of a valid substring\n        max_len = 0\n        \n        for i, char in enumerate(s):\n            if char == '(':\n                stack.append(i)\n            else:\n                stack.pop()\n                if not stack:\n                    stack.append(i)\n                else:\n                    max_len = max(max_len, i - stack[-1])\n        \n        return max_len\n",
+      "history": [
+        {
+          "exec_time": 0.02303340006619692,
+          "mem_mbs": 0.39873835472644714,
+          "peak_mb": 19.60546875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.02303340006619692,
+          "mem_mbs": 0.39873835472644714,
+          "peak_mb": 19.60546875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.02303340006619692,
+          "mem_mbs": 0.39873835472644714,
+          "peak_mb": 19.60546875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.02303340006619692,
+          "mem_mbs": 0.39873835472644714,
+          "peak_mb": 19.60546875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 6.7,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 35,
+      "task_name": "Search Insert Position",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.012698099948465824,
+        "mem_mbs": 0.12995031167156412,
+        "peak_mb": 19.484375
+      },
+      "final": {
+        "exec_time": 0.012698099948465824,
+        "mem_mbs": 0.12995031167156412,
+        "peak_mb": 19.484375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0008790800027782097,
+        "median_ms": 0.0009,
+        "cv": 0.0901,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.613,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0008492524997564032,
+        "median_ms": 0.0008,
+        "cv": 0.0987,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.629,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def searchInsert(self, nums: list[int], target: int) -> int:\n        left, right = 0, len(nums)\n        \n        while left < right:\n            mid = (left + right) // 2\n            if nums[mid] < target:\n                left = mid + 1\n            else:\n                right = mid\n        \n        return left\n",
+      "history": [
+        {
+          "exec_time": 0.012698099948465824,
+          "mem_mbs": 0.12995031167156412,
+          "peak_mb": 19.484375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.012698099948465824,
+          "mem_mbs": 0.12995031167156412,
+          "peak_mb": 19.484375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.012698099948465824,
+          "mem_mbs": 0.12995031167156412,
+          "peak_mb": 19.484375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.012698099948465824,
+          "mem_mbs": 0.12995031167156412,
+          "peak_mb": 19.484375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 3.4,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 40,
+      "task_name": "Combination Sum II",
+      "status": "ok",
+      "repeats": 17942,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.15892119985073805,
+        "mem_mbs": 3.005503924551249,
+        "peak_mb": 19.55859375
+      },
+      "final": {
+        "exec_time": 0.15892119985073805,
+        "mem_mbs": 3.005503924551249,
+        "peak_mb": 19.55859375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.009656323432923405,
+        "median_ms": 0.0097,
+        "cv": 0.055,
+        "peak_tracemalloc_mb": 0.0082,
+        "peak_rss_mb": 20.945,
+        "reps": 16087
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.010084698749415111,
+        "median_ms": 0.0101,
+        "cv": 0.0426,
+        "peak_tracemalloc_mb": 0.0082,
+        "peak_rss_mb": 20.918,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def combinationSum2(self, candidates: List[int], target: int) -> List[List[int]]:\n        candidates.sort()\n        res = []\n        \n        def backtrack(start, target, path):\n            if target == 0:\n                res.append(path[:])\n                return\n            for i in range(start, len(candidates)):\n                # Skip duplicates\n                if i > start and candidates[i] == candidates[i-1]:\n                    continue\n                # If current candidate exceeds target, break (since sorted)\n                if candidates[i] > target:\n                    break\n                path.append(candidates[i])\n                backtrack(i + 1, target - candidates[i], path)\n                path.pop()\n        \n        backtrack(0, target, [])\n        return res\n",
+      "history": [
+        {
+          "exec_time": 0.15892119985073805,
+          "mem_mbs": 3.005503924551249,
+          "peak_mb": 19.55859375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.15892119985073805,
+          "mem_mbs": 3.005503924551249,
+          "peak_mb": 19.55859375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.15892119985073805,
+          "mem_mbs": 3.005503924551249,
+          "peak_mb": 19.55859375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.15892119985073805,
+          "mem_mbs": 3.005503924551249,
+          "peak_mb": 19.55859375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -4.4,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 44,
+      "task_name": "Wildcard Matching",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.06442940002307296,
+        "mem_mbs": 1.1848257974015723,
+        "peak_mb": 19.49609375
+      },
+      "final": {
+        "exec_time": 0.019131500041112304,
+        "mem_mbs": 0.24973612171743298,
+        "peak_mb": 19.578125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0035344087475095874,
+        "median_ms": 0.0035,
+        "cv": 0.063,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.695,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010264581243973224,
+        "median_ms": 0.001,
+        "cv": 0.074,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.652,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def isMatch(self, s: str, p: str) -> bool:\n        i = j = 0\n        star = -1\n        match = 0\n        \n        while i < len(s):\n            if j < len(p) and (p[j] == '?' or p[j] == s[i]):\n                i += 1\n                j += 1\n            elif j < len(p) and p[j] == '*':\n                star = j\n                match = i\n                j += 1\n            elif star != -1:\n                j = star + 1\n                match += 1\n                i = match\n            else:\n                return False\n        \n        while j < len(p) and p[j] == '*':\n            j += 1\n        \n        return j == len(p)\n",
+      "history": [
+        {
+          "exec_time": 0.06442940002307296,
+          "mem_mbs": 1.1848257974015723,
+          "peak_mb": 19.49609375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.04684239998459816,
+          "mem_mbs": 0.7943479433115499,
+          "peak_mb": 19.3515625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.04684239998459816,
+          "mem_mbs": 0.7943479433115499,
+          "peak_mb": 19.3515625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.019131500041112304,
+          "mem_mbs": 0.24973612171743298,
+          "peak_mb": 19.578125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 78.9,
+      "time_reduction_pct": 70.3,
+      "new_time_reduction_pct": 71.0,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 46,
+      "task_name": "Permutations",
+      "status": "ok",
+      "repeats": 5703,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.05388889997266233,
+        "mem_mbs": 0.9544840097905762,
+        "peak_mb": 19.8125
+      },
+      "final": {
+        "exec_time": 0.05388889997266233,
+        "mem_mbs": 0.9544840097905762,
+        "peak_mb": 19.8125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.009192868751415516,
+        "median_ms": 0.0089,
+        "cv": 0.0657,
+        "peak_tracemalloc_mb": 0.0092,
+        "peak_rss_mb": 20.914,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.009357809377252124,
+        "median_ms": 0.0093,
+        "cv": 0.0637,
+        "peak_tracemalloc_mb": 0.0092,
+        "peak_rss_mb": 20.902,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def permute(self, nums: List[int]) -> List[List[int]]:\n        result = []\n        \n        def backtrack(path, remaining):\n            if not remaining:\n                result.append(path[:])\n                return\n            \n            for i in range(len(remaining)):\n                # choose\n                path.append(remaining[i])\n                # explore\n                backtrack(path, remaining[:i] + remaining[i+1:])\n                # unchoose\n                path.pop()\n        \n        backtrack([], nums)\n        return result\n",
+      "history": [
+        {
+          "exec_time": 0.05388889997266233,
+          "mem_mbs": 0.9544840097905762,
+          "peak_mb": 19.8125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.05388889997266233,
+          "mem_mbs": 0.9544840097905762,
+          "peak_mb": 19.8125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.05388889997266233,
+          "mem_mbs": 0.9544840097905762,
+          "peak_mb": 19.8125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.05388889997266233,
+          "mem_mbs": 0.9544840097905762,
+          "peak_mb": 19.8125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -1.8,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 49,
+      "task_name": "Group Anagrams",
+      "status": "baseline_failed",
+      "error": "AssertionError"
+    },
+    {
+      "problem_idx": 51,
+      "task_name": "N",
+      "status": "ok",
+      "repeats": 11045,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.2287113000638783,
+        "mem_mbs": 4.425649487299779,
+        "peak_mb": 19.6875
+      },
+      "final": {
+        "exec_time": 0.15909750014543533,
+        "mem_mbs": 3.0802109589699285,
+        "peak_mb": 19.77734375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.022530907499853113,
+        "median_ms": 0.0225,
+        "cv": 0.0713,
+        "peak_tracemalloc_mb": 0.0103,
+        "peak_rss_mb": 21.031,
+        "reps": 10876
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.01767909872183528,
+        "median_ms": 0.0177,
+        "cv": 0.0989,
+        "peak_tracemalloc_mb": 0.0225,
+        "peak_rss_mb": 21.051,
+        "reps": 11284
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def solveNQueens(self, n: int) -> List[List[str]]:\n        result = []\n        cols = set()\n        diag1 = set()  # row - col\n        diag2 = set()  # row + col\n        board = [['.'] * n for _ in range(n)]\n\n        def backtrack(row: int):\n            if row == n:\n                result.append([\"\".join(r) for r in board])\n                return\n\n            for col in range(n):\n                d1 = row - col\n                d2 = row + col\n                if col in cols or d1 in diag1 or d2 in diag2:\n                    continue\n\n                board[row][col] = 'Q'\n                cols.add(col)\n                diag1.add(d1)\n                diag2.add(d2)\n\n                backtrack(row + 1)\n\n                board[row][col] = '.'\n                cols.remove(col)\n                diag1.remove(d1)\n                diag2.remove(d2)\n\n        backtrack(0)\n        return result\n",
+      "history": [
+        {
+          "exec_time": 0.2287113000638783,
+          "mem_mbs": 4.425649487299779,
+          "peak_mb": 19.6875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.15909750014543533,
+          "mem_mbs": 3.0802109589699285,
+          "peak_mb": 19.77734375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.15909750014543533,
+          "mem_mbs": 3.0802109589699285,
+          "peak_mb": 19.77734375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.15909750014543533,
+          "mem_mbs": 3.0802109589699285,
+          "peak_mb": 19.77734375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 30.4,
+      "time_reduction_pct": 30.4,
+      "new_time_reduction_pct": 21.5,
+      "new_mem_reduction_pct": -118.4
+    },
+    {
+      "problem_idx": 52,
+      "task_name": "N",
+      "status": "ok",
+      "repeats": 14285,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.14976709987968206,
+        "mem_mbs": 2.9280907778793335,
+        "peak_mb": 19.828125
+      },
+      "final": {
+        "exec_time": 0.1353005999699235,
+        "mem_mbs": 2.5632957180077938,
+        "peak_mb": 19.7890625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.010378331251558848,
+        "median_ms": 0.0105,
+        "cv": 0.0479,
+        "peak_tracemalloc_mb": 0.004,
+        "peak_rss_mb": 20.898,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.01108719750045566,
+        "median_ms": 0.011,
+        "cv": 0.052,
+        "peak_tracemalloc_mb": 0.0043,
+        "peak_rss_mb": 20.996,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def totalNQueens(self, n: int) -> int:\n        # Use bitmasks for columns and diagonals to reduce memory and speed up checks\n        # For n <= 9, we can use integers as bitmasks\n        full_mask = (1 << n) - 1\n        \n        def backtrack(row: int, cols: int, diag1: int, diag2: int) -> int:\n            if row == n:\n                return 1\n            \n            # Available columns: those not in cols, not in diag1 (row-col shifted), not in diag2 (row+col)\n            # For diag1: row - col ranges from -(n-1) to (n-1). Shift by (n-1) to make non-negative.\n            # For diag2: row + col ranges from 0 to 2n-2.\n            # We'll use bit positions: col -> bit col, diag1 -> bit (row-col + n-1), diag2 -> bit (row+col)\n            # But to avoid shifting each time, we can precompute masks or use direct bit operations.\n            \n            # Available columns = ~(cols | (diag1 >> (row - (n-1))) | (diag2 >> row)) & full_mask\n            # But diag1 bits are stored with offset (n-1), so for row, we need bits where row-col = d1 => col = row - d1\n            # Actually simpler: maintain diag1 as bits where bit index = (row - col + n-1). For current row, \n            # we need to check if col is attacked via diag1: bit (row - col + n-1) is set.\n            # Similarly diag2: bit (row + col) is set.\n            \n            # To get available columns efficiently:\n            # For each col, check if bit col in cols, bit (row-col+n-1) in diag1, bit (row+col) in diag2.\n            # But we can compute a mask of attacked columns:\n            # attacked = cols | (diag1 >> (n-1 - row)) | (diag2 >> row)  -- but need careful shifting.\n            \n            # Let's do it directly: \n            # diag1 bits: index = row - col + n-1 => col = row + n-1 - index\n            # So for a given row, the attacked columns from diag1 are those where bit (row - col + n-1) is set.\n            # We can shift diag1 right by (n-1 - row) to align with column bits? Let's test:\n            # If diag1 has bit at position (row - col + n-1), then shifting right by (n-1 - row) gives bit at position col.\n            # Because (row - col + n-1) - (n-1 - row) = 2*row - col. Not correct.\n            \n            # Better: precompute for each row the attacked columns from diag1 and diag2 using bit operations.\n            # For diag1: attacked_cols = 0\n            # For each col, if bit (row-col+n-1) in diag1, set bit col.\n            # This is equivalent to: for each set bit in diag1, compute col = row + n-1 - bit_index, and set that col.\n            # But we can do it with a loop over set bits, but that's O(n) anyway.\n            \n            # Since n <= 9, we can just loop over columns and check bits directly. That's fine.\n            # But we can optimize by using bit operations to get available columns without looping over all columns.\n            \n            # Let's use a different representation: \n            # cols: bit i set means column i occupied.\n            # diag1: bit i set means diagonal (row - col) = i - (n-1) occupied. So i = row - col + n-1.\n            # diag2: bit i set means diagonal (row + col) = i occupied.\n            \n            # For current row, we can compute attacked columns:\n            # From cols: directly cols bits.\n            # From diag1: for each set bit i in diag1, col = row + n-1 - i. So we can shift diag1 right by (n-1 - row) \n            # but that gives bits at positions col? Let's check: if diag1 has bit at i, then i = row - col + n-1 => col = row + n-1 - i.\n            # If we shift diag1 right by (n-1 - row), then bit at i moves to position i - (n-1 - row) = (row - col + n-1) - (n-1 - row) = 2*row - col. Not col.\n            # So that's not straightforward.\n            \n            # Alternative: use a different diagonal encoding: diag1 = row - col (can be negative), but we can offset by n-1.\n            # For bit operations, we can precompute for each row the mapping.\n            # But since n <= 9, a simple loop over columns is fine and still fast.\n            \n            # However, to reduce overhead, we can use bitmasks and precompute available columns using bit tricks.\n            # Let's use the standard approach: \n            # available = full_mask & ~(cols | (diag1 >> (row - (n-1))) | (diag2 >> row))\n            # But we need to ensure diag1 bits are stored with offset (n-1) so that bit index = row - col + n-1.\n            # Then for current row, the attacked columns from diag1 are those where bit (row - col + n-1) is set.\n            # We can get a mask of attacked columns by shifting diag1 right by (n-1 - row) and then masking? Let's test:\n            # Suppose n=4, row=1, diag1 has bit at index (1 - col + 3) = 4 - col. For col=0, index=4; col=1, index=3; col=2, index=2; col=3, index=1.\n            # If we shift diag1 right by (n-1 - row) = 2, then bit at index 4 moves to 2, bit at 3 moves to 1, bit at 2 moves to 0, bit at 1 moves to -1 (lost). \n            # That gives bits at positions 2,1,0 which correspond to cols? col=0 -> index4 -> after shift2 -> bit2, but col=0 should be bit0. So not matching.\n            # So that's wrong.\n            \n            # The correct mapping: for diag1, bit index = row - col + n-1. So for a given row, col = row + n-1 - index.\n            # To get attacked columns mask, we can iterate over set bits in diag1, but that's O(number of queens placed) which is at most n.\n            # Since n <= 9, it's fine.\n            \n            # But we can do better: use a different diagonal representation where diag1 = row + col? No, that's diag2.\n            # Actually, the standard bitmask solution uses:\n            # cols: bit i for column i\n            # diag1: bit (row - col + n-1) for main diagonal (top-left to bottom-right)\n            # diag2: bit (row + col) for anti-diagonal\n            # Then available columns = ~(cols | (diag1 >> (row - (n-1))) | (diag2 >> row)) & full_mask\n            # Let's verify: diag1 >> (row - (n-1))? For row=1, n=4, row-(n-1)= -2, shifting right by negative is undefined. So we need to shift left.\n            # Actually, we can store diag1 as bits where bit index = (row - col) + (n-1). Then for current row, \n            # the attacked columns from diag1 are those where (row - col + n-1) is set. \n            # We can compute a mask: for each set bit i in diag1, col = row + n-1 - i. \n            # This is equivalent to: mask = 0; for each i in set bits: mask |= 1 << (row + n-1 - i)\n            # That's O(n) per row.\n            \n            # Given n <= 9, the overhead of looping over columns is negligible. The original code uses sets which have overhead.\n            # So we can just use bitmasks and loop over columns, checking bits directly. That will be faster than sets.\n            \n            count = 0\n            # available columns: we can compute a mask of attacked columns\n            attacked = cols\n            # add diag1 attacks: for each set bit in diag1, compute col\n            # but we can just check per column in loop.\n            for col in range(n):\n                if (cols >> col) & 1:\n                    continue\n                d1 = row - col + n - 1\n                if (diag1 >> d1) & 1:\n                    continue\n                d2 = row + col\n                if (diag2 >> d2) & 1:\n                    continue\n                # place queen\n                count += backtrack(row + 1, \n                                   cols | (1 << col), \n                                   diag1 | (1 << d1), \n                                   diag2 | (1 << d2))\n            return count\n        \n        return backtrack(0, 0, 0, 0)\n",
+      "history": [
+        {
+          "exec_time": 0.14976709987968206,
+          "mem_mbs": 2.9280907778793335,
+          "peak_mb": 19.828125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.1353005999699235,
+          "mem_mbs": 2.5632957180077938,
+          "peak_mb": 19.7890625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.1353005999699235,
+          "mem_mbs": 2.5632957180077938,
+          "peak_mb": 19.7890625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.1353005999699235,
+          "mem_mbs": 2.5632957180077938,
+          "peak_mb": 19.7890625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 12.5,
+      "time_reduction_pct": 9.7,
+      "new_time_reduction_pct": -6.8,
+      "new_mem_reduction_pct": -7.5
+    },
+    {
+      "problem_idx": 55,
+      "task_name": "Jump Game",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.01666789990849793,
+        "mem_mbs": 0.27045254924087203,
+        "peak_mb": 19.34765625
+      },
+      "final": {
+        "exec_time": 0.011322899954393506,
+        "mem_mbs": 0.11902516811824171,
+        "peak_mb": 19.48046875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0009625656239222735,
+        "median_ms": 0.001,
+        "cv": 0.0659,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.648,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0007489750030799768,
+        "median_ms": 0.0007,
+        "cv": 0.0985,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.613,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def canJump(self, nums: List[int]) -> bool:\n        # Greedy: track the furthest reachable index from the left\n        farthest = 0\n        n = len(nums)\n        \n        # Early exit: if the array has only one element, we're already at the end\n        if n == 1:\n            return True\n        \n        # Iterate only up to the current farthest reachable position\n        # This avoids scanning indices that are unreachable\n        i = 0\n        while i <= farthest:\n            # Update the furthest reachable index\n            if i + nums[i] > farthest:\n                farthest = i + nums[i]\n                # If we can reach or pass the last index, success\n                if farthest >= n - 1:\n                    return True\n            i += 1\n        \n        # If the loop ends without reaching the end, it's impossible\n        return False\n",
+      "history": [
+        {
+          "exec_time": 0.01666789990849793,
+          "mem_mbs": 0.27045254924087203,
+          "peak_mb": 19.34765625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.011322899954393506,
+          "mem_mbs": 0.11902516811824171,
+          "peak_mb": 19.48046875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.011322899954393506,
+          "mem_mbs": 0.11902516811824171,
+          "peak_mb": 19.48046875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.011322899954393506,
+          "mem_mbs": 0.11902516811824171,
+          "peak_mb": 19.48046875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 56.0,
+      "time_reduction_pct": 32.1,
+      "new_time_reduction_pct": 22.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 56,
+      "task_name": "Merge Intervals",
+      "status": "ok",
+      "repeats": 19788,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.12830350012518466,
+        "mem_mbs": 2.4748700067502796,
+        "peak_mb": 19.5546875
+      },
+      "final": {
+        "exec_time": 0.07565349992364645,
+        "mem_mbs": 1.4641483633367898,
+        "peak_mb": 19.3671875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.005915258126333356,
+        "median_ms": 0.006,
+        "cv": 0.0842,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.73,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.004229249378840905,
+        "median_ms": 0.0043,
+        "cv": 0.0568,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.688,
+        "reps": 20000
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def merge(self, intervals: List[List[int]]) -> List[List[int]]:\n        if not intervals:\n            return []\n        \n        # Sort intervals by start time (in-place to avoid extra memory)\n        intervals.sort()\n        \n        merged = [intervals[0]]\n        \n        for start, end in intervals[1:]:\n            # If current interval overlaps with the last merged interval\n            if start <= merged[-1][1]:\n                # Merge by updating the end if needed\n                if end > merged[-1][1]:\n                    merged[-1][1] = end\n            else:\n                # No overlap, add as new interval\n                merged.append([start, end])\n        \n        return merged\n",
+      "history": [
+        {
+          "exec_time": 0.12830350012518466,
+          "mem_mbs": 2.4748700067502796,
+          "peak_mb": 19.5546875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.0854150999803096,
+          "mem_mbs": 1.5960118340235567,
+          "peak_mb": 19.37890625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.07565349992364645,
+          "mem_mbs": 1.4641483633367898,
+          "peak_mb": 19.3671875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.07565349992364645,
+          "mem_mbs": 1.4641483633367898,
+          "peak_mb": 19.3671875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 40.8,
+      "time_reduction_pct": 41.0,
+      "new_time_reduction_pct": 28.5,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 62,
+      "task_name": "Unique Paths",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "paper",
+      "baseline": {
+        "exec_time": 0.04541560006327927,
+        "mem_mbs": 0.7691420069595551,
+        "peak_mb": 19.37890625
+      },
+      "final": {
+        "exec_time": 0.010618400061503053,
+        "mem_mbs": 0.12837379274697014,
+        "peak_mb": 19.47265625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002495957502105739,
+        "median_ms": 0.0025,
+        "cv": 0.0503,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.668,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0006370187475113198,
+        "median_ms": 0.0006,
+        "cv": 0.0942,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 20.645,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def uniquePaths(self, m: int, n: int) -> int:\n        # Use math.comb for O(1) space and O(min(m,n)) time\n        # Total paths = C(m+n-2, m-1) = C(m+n-2, n-1)\n        # Choose the smaller dimension to minimize computation\n        from math import comb\n        return comb(m + n - 2, min(m - 1, n - 1))\n",
+      "history": [
+        {
+          "exec_time": 0.04541560006327927,
+          "mem_mbs": 0.7691420069595551,
+          "peak_mb": 19.37890625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.02879959996789694,
+          "mem_mbs": 0.5157967714976621,
+          "peak_mb": 19.46875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.010618400061503053,
+          "mem_mbs": 0.12837379274697014,
+          "peak_mb": 19.47265625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.010618400061503053,
+          "mem_mbs": 0.12837379274697014,
+          "peak_mb": 19.47265625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 83.3,
+      "time_reduction_pct": 76.6,
+      "new_time_reduction_pct": 74.5,
+      "new_mem_reduction_pct": 0.0
+    }
+  ],
+  "avg_baseline_mem_mbs": 1.16,
+  "avg_final_mem_mbs": 0.89,
+  "avg_mem_reduction_pct": 23.1,
+  "avg_baseline_time_s": 0.0632,
+  "avg_final_time_s": 0.0497,
+  "avg_time_reduction_pct": 21.4
+}
