@@ -41,7 +41,8 @@ for p in (str(ROOT), str(HERE)):
 
 from eval import metrics  # noqa: E402
 from eval.hotlines import hotspots, render as render_hotspots  # noqa: E402
-from eval.measure import measure  # noqa: E402
+from eval.measure import measure as measure_diag  # noqa: E402  # 仅诊断（拆用例/最慢用例），不产出报告数字
+from eval import harness  # noqa: E402  # 唯一权威口径（proto-2026.11）
 from upstream.sanitize import sanitize  # noqa: E402
 
 TEMPLATES = json.loads(
@@ -111,12 +112,13 @@ def _per_case_table(measure_res, limit=5):
 def _evidence_text(task, code, cur, args):
     """按 --evidence 拼证据包：最慢用例 / per-case 表 / 热点行。"""
     ev = args.evidence or ("all" if args.time_strategy == "fusion" else "slowest")
-    slow = cur.get("slowest") or {}
+    diag = _diag(task, code, args)          # 诊断数据只用于反馈，不进报告
+    slow = diag.get("slowest") or {}
     case_src = (slow.get("src") or "").strip()
     parts = ["Slowest test case:\n%s\nIt costs %.3f ms per execution."
              % (case_src, slow.get("ms") or 0.0)]
     if ev in ("table", "all"):
-        parts.append(_per_case_table(cur))
+        parts.append(_per_case_table(diag))
     if ev in ("hotlines", "all"):
         hot = hotspots(code, case_src, task["entry_point"], top=3,
                        max_time=min(10.0, args.max_time), workdir=args.workdir)
@@ -134,11 +136,11 @@ def time_instruction(strategy, task, code, cur, args, previous_measure=None):
                 .replace("[trigger]", TRIGGER)), "simple"
     if strategy == "effi3num":
         # EffiLearner 的 result-aware 档：只给 3 个汇总数字，不给用例也不给行级
-        overhead = ("The total memory usage during the code execution is: %s MB*s.\n"
-                    "The total execution time is: %.4f s.\n"
-                    "The maximum memory peak requirement is: %s MB.\n"
-                    % (_fmt(cur.get("mem_mbs"), "%.3f"),
-                       (cur.get("total_ms") or 0.0) / 1000.0,
+        overhead = ("The total execution time is: %.4f s.\n"
+                    "The peak Python heap allocation is: %s MB.\n"
+                    "The peak process RSS is: %s MB.\n"
+                    % ((cur.get("total_ms") or 0.0) / 1000.0,
+                       _fmt(cur.get("mem_mb_avg"), "%.3f"),
                        _fmt(cur.get("peak_mb"), "%.1f")))
         return ((TEMPLATES["time_simple_instruction"][0]["instruction"]
                  .replace("[regular_requirement]", REGULAR_REQUIREMENT)
@@ -151,8 +153,9 @@ def time_instruction(strategy, task, code, cur, args, previous_measure=None):
                 "then implement the optimization. Keep the behaviour identical.")
         return head + "\n\n" + ev_text + tail, ev_mode
     # feedback：PerfCodeGen 的“最慢用例 + 耗时”原始档
-    case = (cur.get("slowest") or {}).get("src", "")
-    ms = (cur.get("slowest") or {}).get("ms", 0.0)
+    slow = _diag(task, code, args).get("slowest") or {}
+    case = slow.get("src", "")
+    ms = slow.get("ms", 0.0)
     head = TEMPLATES["time_execution_feedback_with_testcase"][0]["instruction"].replace(
         "[regular_requirement]", REGULAR_REQUIREMENT).replace("[trigger]", TRIGGER)
     body = TEMPLATES["time_execution_feedback_with_testcase"][1]["instruction"].replace(
@@ -261,13 +264,52 @@ def to_program(raw, task):
 # 单题流水线
 # ---------------------------------------------------------------------------
 def _measure(code, task, args, runs=None):
-    return measure(code, task["test"], task["entry_point"], runs=runs or args.runs,
-                   target_time=args.target_time, max_repeats=args.max_repeats,
-                   max_time=args.max_time, workdir=args.workdir)
+    """权威测量：一律走 eval/harness（proto-2026.11），键名映射回本文件的旧字段。
+
+    旧口径（min-of-runs + RSS 时间积分）已废弃；`runs` 参数保留只为兼容调用点，
+    实际重复次数由 `--e-reps`（默认 E=12）控制。
+    """
+    m = harness.measure_code(
+        code, task["test"], kind=task.get("kind", "humaneval"),
+        entry=task.get("entry_point", "solution"),
+        e_reps=getattr(args, "e_reps", None) or harness.E_REPS,
+        target_batch_s=args.target_time,
+        max_reps=args.max_repeats,
+        stale_s=max(10.0, args.max_time),
+        workdir=args.workdir,
+    )
+    mem = m.get("mem") or {}
+    stats = m.get("stats") or {}
+    return {
+        "ok": m.get("status") == "ok",
+        "status": m.get("status"),
+        "error": m.get("error"),
+        "total_ms": m.get("mean_trimmed_ms"),   # 主口径：E=12 去极值均值
+        "median_ms": m.get("median_ms"),        # 辅口径：真中位数
+        "iqr_ms": stats.get("iqr"),
+        "cv": stats.get("cv"),
+        "raw_ms": m.get("raw_ms") or [],
+        "reps": m.get("reps"),
+        "downgraded": m.get("downgraded", False),
+        "mem_mbs": None,                        # 旧口径 MB*s 已废弃，保留键位防止下游 KeyError
+        "mem_mb_avg": mem.get("peak_tracemalloc_mb"),
+        "peak_mb": mem.get("peak_rss_mb"),
+    }
+
+
+def _diag(task, code, args):
+    """诊断用：拆单个用例、定位最慢用例源码，只用于拼反馈，数字不进报告。"""
+    return measure_diag(code, task["test"], task["entry_point"], runs=1,
+                        target_time=args.target_time, max_repeats=args.max_repeats,
+                        max_time=args.max_time, workdir=args.workdir)
 
 
 def _accepted(cand, cur, min_gain=0.05):
-    """Pareto 判据：时间至少快 min_gain，且（如果有内存数据）常驻内存不劣化超过 5%。"""
+    """Pareto 判据：时间至少快 min_gain，且（如果有内存数据）Python 堆峰值不劣化超过 5%。
+
+    cand/cur 的时间与内存都来自 eval/harness：total_ms = mean_trimmed_ms，
+    mem_mb_avg = peak_tracemalloc_mb。
+    """
     if not cand.get("ok") or not cand.get("total_ms"):
         return False, "wrong"
     if not cand["total_ms"] < cur["total_ms"] * (1.0 - min_gain):
@@ -424,7 +466,8 @@ def run_task(task, args, llm, out_path):
             "speedup": round(metrics.speedup(gt["total_ms"], final.get("total_ms")), 4),
             "opt": metrics.is_opt(gt["total_ms"], final.get("total_ms")),
             "mem_mb_avg": final.get("mem_mb_avg"),
-            "rel_mad": final.get("rel_mad"),
+            "peak_rss_mb": final.get("peak_mb"),
+            "cv": final.get("cv"),
             "code": current_code,
         }
         record["status"] = "ok"
@@ -432,7 +475,7 @@ def run_task(task, args, llm, out_path):
         record["final"] = {"correct": False, "ms": None, "speedup": 0.0, "opt": False}
         record["status"] = "failed"
 
-    record["rel_mad"] = (record["final"] or {}).get("rel_mad") or gt.get("rel_mad")
+    record["rel_mad"] = (record["final"] or {}).get("cv") or gt.get("cv")
     record["n_calls"] = llm.n_calls
     record["wall_s"] = round(time.time() - t0, 2)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -484,7 +527,8 @@ def main(argv=None):
     p.add_argument("--list-providers", action="store_true")
     p.add_argument("--temperature", type=float, default=0.7)
     p.add_argument("--max-tokens", type=int, default=4096)
-    p.add_argument("--runs", type=int, default=3, help="最终测量取样次数（中位数）")
+    p.add_argument("--runs", type=int, default=3, help="（已废弃，仅兼容旧命令）重复次数由 --e-reps 控制")
+    p.add_argument("--e-reps", type=int, default=0, help="每档重复批数，0 表示用 harness 默认 E=12")
     p.add_argument("--target-time", type=float, default=0.25)
     p.add_argument("--max-repeats", type=int, default=20000)
     p.add_argument("--max-time", type=float, default=20.0)

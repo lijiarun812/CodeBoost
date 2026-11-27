@@ -320,8 +320,9 @@ class _Run(object):
 
 def run_child(program, stale_s=STALE_S, budget_s=60.0, workdir=None):
     """跑一个子进程，返回 _Run（含 result / status / error / killed）。"""
-    wd = Path(workdir) if workdir else Path(tempfile.gettempdir())
-    path = wd / ("hb_%d_%d.py" % (os.getpid(), int(time.time() * 1e6)))
+    wd = Path(workdir).resolve() if workdir else Path(tempfile.gettempdir())
+    wd.mkdir(parents=True, exist_ok=True)
+    path = (wd / ("hb_%d_%d.py" % (os.getpid(), int(time.time() * 1e6)))).resolve()
     try:
         path.write_text(program, encoding="utf-8")
     except OSError:
