@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """统一测量 harness：全组唯一的“尺子”（对应 docs/优化计划.md 第 8.2 节）。
 
 设计要点（与中期旧尺子的差别）：
@@ -39,6 +39,14 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+try:  # 作为脚本运行 / 作为包导入两种方式都能拿到 inputs
+    from eval import inputs as _inputs
+except Exception:  # noqa: BLE001
+    try:
+        import inputs as _inputs
+    except Exception:  # noqa: BLE001
+        _inputs = None
+
 PROTOCOL_VERSION = "v1"
 E_REPS = 12
 TRIM = 2
@@ -107,6 +115,7 @@ TEST = __TEST__
 KIND = __KIND__
 ENTRY = __ENTRY__
 REPS = __REPS__
+MODE = __MODE__
 MAX_MEM = __MAX_MEM__
 
 
@@ -135,25 +144,16 @@ def main():
         emit({"ok": False, "error": "%s: %s" % (type(e).__name__, str(e)[:300])})
         return
 
-    unit = compile(TEST, "<test>", "exec")
-    hb(stage="check")
     ns = dict(g)
-    try:
-        exec(unit, ns)
-    except Exception as e:
-        emit({"ok": False, "status": "incorrect",
-              "error": "%s: %s" % (type(e).__name__, str(e)[:300])})
-        return
 
-    # 两种测法：humaneval 需要显式调用 check(candidate)；其余直接重复 exec 测试块
     if KIND == "humaneval":
-        check = ns.get("check")
-        cand = ns.get(ENTRY) or g.get(ENTRY)
-        if check is None or cand is None:
-            emit({"ok": False, "status": "incorrect",
-                  "error": "missing check()/entry_point=%s" % ENTRY})
-            return
+        hb(stage="check")
         try:
+            exec(compile(TEST, "<test>", "exec"), ns)
+            check = ns.get("check")
+            cand = ns.get(ENTRY) or g.get(ENTRY)
+            if check is None or cand is None:
+                raise NameError("missing check()/entry_point=%s" % ENTRY)
             check(cand)
         except Exception as e:
             emit({"ok": False, "status": "incorrect",
@@ -163,8 +163,22 @@ def main():
         def run_unit():
             check(cand)
     else:
+        # 关键：把测试块包成函数再调用，而不是每次 exec(代码对象)。
+        # 否则 exec 的建帧/字典查找开销会盖过真实计算（小用例上能放大 5–10 倍）。
+        wrapped = "def _codeboost_unit():\n" + "\n".join(
+            ("    " + ln) if ln.strip() else ln for ln in TEST.splitlines())
+        hb(stage="check")
+        try:
+            exec(compile(wrapped, "<test>", "exec"), ns)
+            unit_fn = ns["_codeboost_unit"]
+            unit_fn()
+        except Exception as e:
+            emit({"ok": False, "status": "incorrect",
+                  "error": "%s: %s" % (type(e).__name__, str(e)[:300])})
+            return
+
         def run_unit():
-            exec(unit, ns)
+            unit_fn()
 
     hb(stage="warmup")
     run_unit()
@@ -185,7 +199,10 @@ def main():
 
     th = threading.Thread(target=sampler, daemon=True)
     th.start()
-    if tracemalloc is not None:
+    # 关键：tracemalloc 会为每次分配插桩，实测能把小用例放慢 3–6 倍。
+    # 所以时间与内存分两次测：mode="time" 不开 tracemalloc（干净计时），
+    # mode="mem" 只取分配峰值（不计时）。
+    if MODE == "mem" and tracemalloc is not None:
         tracemalloc.start()
     hb(stage="run", reps=REPS)
     step = max(1, REPS // 20)
@@ -196,13 +213,14 @@ def main():
             hb(stage="run", done=i, reps=REPS)
     elapsed = time.perf_counter() - t0
     peak_tm = None
-    if tracemalloc is not None:
+    if MODE == "mem" and tracemalloc is not None:
         _, peak_tm = tracemalloc.get_traced_memory()
         tracemalloc.stop()
     stop[0] = True
     th.join(timeout=0.5)
     emit({
         "ok": True,
+        "mode": MODE,
         "batch_s": elapsed,
         "reps": REPS,
         "peak_tracemalloc_mb": (peak_tm / 1048576.0) if peak_tm is not None else None,
@@ -278,7 +296,7 @@ def manifest(model="", model_version="", temperature=0.2, seed=42, dataset_path=
 # ---------------------------------------------------------------------------
 # 子进程执行 + 心跳看门狗
 # ---------------------------------------------------------------------------
-def _build_child(code, test, kind, reps, max_mem, entry="solution"):
+def _build_child(code, test, kind, reps, max_mem, entry="solution", mode="time"):
     if kind == "test_block":  # EffiBench：补上官方那套 import 前缀
         code = PREAMBLE + "\n" + code
     return (_CHILD
@@ -286,6 +304,7 @@ def _build_child(code, test, kind, reps, max_mem, entry="solution"):
             .replace("__TEST__", repr(test))
             .replace("__KIND__", repr(kind))
             .replace("__ENTRY__", repr(entry))
+            .replace("__MODE__", repr(mode))
             .replace("__REPS__", str(int(reps)))
             .replace("__MAX_MEM__", repr(float(max_mem))))
 
@@ -414,7 +433,7 @@ def measure_code(code, test, kind="assert", e_reps=E_REPS, trim=TRIM,
 
     stale_floor = stale_s if stale_s else STALE_S
     budget = max(5.0, 20.0 * target_batch_s)
-    values, tm, rss = [], [], []
+    values, rss = [], []
     downgraded = False
     for i in range(e_reps):
         run = run_child(_build_child(code, test, kind, reps, max_mem, entry),
@@ -438,8 +457,6 @@ def measure_code(code, test, kind="assert", e_reps=E_REPS, trim=TRIM,
                         "error": res.get("error") or run.error, "down": False, "reps": reps}
         r = run.result
         values.append(r["batch_s"] / float(r["reps"]) * 1000.0)
-        if r.get("peak_tracemalloc_mb") is not None:
-            tm.append(r["peak_tracemalloc_mb"])
         if r.get("peak_rss_mb") is not None:
             rss.append(r["peak_rss_mb"])
         if r.get("over_max_mem"):
@@ -448,9 +465,21 @@ def measure_code(code, test, kind="assert", e_reps=E_REPS, trim=TRIM,
         if progress:
             progress(i + 1, e_reps)
 
+    # 内存单独测一次：tracemalloc 插桩会显著拖慢执行，绝不能在计时的那几批里开着
+    peak_tm = None
+    mem_run = run_child(_build_child(code, test, kind, max(1, min(reps, 5)), max_mem, entry, "mem"),
+                        stale_s=stale_floor, budget_s=budget, workdir=workdir)
+    if mem_run.result and mem_run.result.get("ok"):
+        peak_tm = mem_run.result.get("peak_tracemalloc_mb")
+        if mem_run.result.get("peak_rss_mb") is not None:
+            rss.append(mem_run.result["peak_rss_mb"])
+        if mem_run.result.get("over_max_mem"):
+            return {"status": "resource_exceeded",
+                    "error": "rss > %.0f MB" % max_mem, "down": True, "reps": reps}
+
     desc = describe(values)
     mem = {
-        "peak_tracemalloc_mb": round(max(tm), 4) if tm else None,
+        "peak_tracemalloc_mb": round(peak_tm, 4) if peak_tm is not None else None,
         "peak_rss_mb": round(max(rss), 3) if rss else None,
     }
     return {
@@ -486,6 +515,7 @@ def load_tasks(dataset, path, ids=None, limit=None):
                 "task_name": item.get("task_name", ""),
                 "code": item.get("canonical_solution", ""),
                 "test": item.get("small_test_cases", ""),
+                "generator": item.get("test_case_generator", ""),
                 "entry_point": "solution",
             })
     else:  # HumanEval 小样：prompt + canonical_solution + def check(candidate)
@@ -511,13 +541,47 @@ def load_tasks(dataset, path, ids=None, limit=None):
 # ---------------------------------------------------------------------------
 # 对外主接口
 # ---------------------------------------------------------------------------
-def measure_task(task, code=None, method="base", dataset_path=None, **kw):
-    """测一个 Task，返回符合 schema 的 Result。"""
+def measure_task(task, code=None, method="base", dataset_path=None,
+                 tier_plan=None, min_ms=2.0, **kw):
+    """测一个 Task，返回符合 schema 的 Result。
+
+    tier_plan: 由 eval/inputs.py 给出的档位列表；给多档时按 min_ms 自动升档，
+    每次尝试都记进 time.tiers，避免“只用一档就下结论”。
+    """
     use_code = code if code is not None else task["code"]
     run_id = datetime.now().strftime("%Y%m%d-%H%M%S-") + task["task_id"].replace("/", "_")
     started = datetime.now().isoformat(timespec="seconds")
-    m = measure_code(use_code, task["test"], kind=task.get("kind", "assert"),
-                     entry=task.get("entry_point", "solution"), **kw)
+    plan = tier_plan or [{"tier": "t1", "n": None, "gen": "native",
+                          "args_hash": None, "test": task["test"]}]
+    attempts, final = [], None
+    for i, cand in enumerate(plan):
+        m = measure_code(use_code, cand["test"], kind=task.get("kind", "assert"),
+                         entry=task.get("entry_point", "solution"), **kw)
+        final = m
+        attempts.append({
+            "tier": cand.get("tier"),
+            "n": cand.get("n"),
+            "gen": cand.get("gen"),
+            "args_hash": cand.get("args_hash"),
+            "status": m.get("status"),
+            "median_ms": round(m["median_ms"], 4) if m.get("status") == "ok" else None,
+            "iqr": m["stats"]["iqr"] if m.get("status") == "ok" else None,
+            "cv": m["stats"]["cv"] if m.get("status") == "ok" else None,
+            "reps": m.get("reps"),
+            "downgraded": m.get("downgraded", False),
+        })
+        if m.get("status") != "ok":
+            # native 测试块本身可能有缺陷（EffiBench/100 就是把 list 传给 TreeNode），
+            # 这种情况下换生成档再试一次是有意义的；真改错的代码在生成档照样会失败。
+            if m.get("status") == "incorrect" and i < len(plan) - 1:
+                continue
+            break
+        too_fast = m["median_ms"] < min_ms
+        if too_fast and i < len(plan) - 1:
+            continue  # 升档
+        break
+
+    m = final
     status = m.get("status", "ok")
     if status == "ok":
         time_block = {
@@ -526,12 +590,11 @@ def measure_task(task, code=None, method="base", dataset_path=None, **kw):
             "iqr": m["stats"]["iqr"],
             "cv": m["stats"]["cv"],
             "raw_ms": m["raw_ms"],
-            "tiers": [{"tier": "t1", "n": None, "median_ms": round(m["median_ms"], 4),
-                       "iqr": m["stats"]["iqr"], "cv": m["stats"]["cv"], "reps": m["reps"]}],
+            "tiers": attempts,
         }
     else:
         time_block = {"median_ms": None, "mean_trimmed_ms": None, "iqr": None,
-                      "cv": None, "raw_ms": [], "tiers": []}
+                      "cv": None, "raw_ms": [], "tiers": attempts}
     mem_block = m.get("mem") or {"peak_tracemalloc_mb": None, "peak_rss_mb": None}
     return {
         "run_id": run_id,
@@ -623,6 +686,9 @@ def main(argv=None):
     ap.add_argument("--code", choices=["canonical", "none"], default="canonical")
     ap.add_argument("--code-file", default="")
     ap.add_argument("--e-reps", type=int, default=E_REPS)
+    ap.add_argument("--tier", choices=["native", "auto", "t2", "t3"], default="native",
+                    help="输入阶梯：native 用数据集自带用例；auto 从 native 起，<2ms 自动升 t2/t3")
+    ap.add_argument("--min-ms", type=float, default=2.0, help="低于该耗时即视为噪声地板，触发升档")
     ap.add_argument("--target-batch-s", type=float, default=TARGET_BATCH_S)
     ap.add_argument("--out-dir", default="results/golden")
     ap.add_argument("--selftest", action="store_true")
@@ -657,8 +723,12 @@ def main(argv=None):
     results = []
     for i, task in enumerate(tasks, 1):
         print("[%d/%d] %s" % (i, len(tasks), task["task_id"]))
-        res = measure_task(task, code=code_override, dataset_path=path,
-                           e_reps=args.e_reps, target_batch_s=args.target_batch_s)
+        tier_plan = None
+        if args.tier != "native" and _inputs is not None:
+            tier_plan = _inputs.auto_plan(task) if args.tier == "auto" else _inputs.tiers(task, args.tier)
+        res = measure_task(task, code=code_override, dataset_path=path, tier_plan=tier_plan,
+                           min_ms=args.min_ms, e_reps=args.e_reps,
+                           target_batch_s=args.target_batch_s)
         results.append(res)
         if res["status"] == "ok":
             print("    status=ok  median=%.4f ms  cv=%.3f  tm=%.2f MB  rss=%.1f MB"
@@ -680,5 +750,8 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+
 
 

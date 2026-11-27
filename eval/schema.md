@@ -1,4 +1,4 @@
-# eval/schema.md（v1 草案，待与组长 v0 合并冻结）
+﻿# eval/schema.md（v1 草案，待与组长 v0 合并冻结）
 
 > 目的：全组所有实验的「一道题长什么样」和「一次实验记录长什么样」以本文件为唯一准绳。
 > 任何字段变更必须升 `protocol_version`，并跑一遍 `python eval/harness.py --selftest` 与 12 题体检表。
@@ -38,7 +38,7 @@
 | `kind` | `humaneval`（用 `check(candidate)`）或 `test_block`（自包含测试块，EffiBench 用） | B |
 | `entry_point` | 被测函数/类实例名（Humaneval 是函数名，EffiBench 是 `solution`） | B |
 | `code` / `test` | 可直接 `exec` 的源码字符串 | B |
-| `inputs[]` | 输入阶梯；`null`/`native` 表示不放大 | B |
+| `inputs[]` | 输入阶梯；`null`/`native` 表示不放大。**档位由 A 的 `eval/inputs.py` 生成**（native → gen200 → gen1000，EffiBench 用题目自带的 `test_case_generator` 放大用例数），B 负责把结果写进题库 | B |
 | `difficulty` | **B 用 `calibrate_task()` 拿到数值后自己回填；A 不维护题库** | **B** |
 
 ## 二、Result（一次实验记录）
@@ -67,7 +67,12 @@
     "iqr": 0.62,
     "cv": 0.042,
     "raw_ms": [13.1, 13.4, 13.2],
-    "tiers": [{"tier": "t1", "n": null, "median_ms": 13.3311, "iqr": 0.62, "cv": 0.042, "reps": 19}]
+    "tiers": [
+      {"tier": "t1", "n": null, "gen": "native", "args_hash": "sha256:...",
+       "status": "ok", "median_ms": 0.0124, "iqr": 0.0004, "cv": 0.025, "reps": 9832},
+      {"tier": "t2", "n": 200, "gen": "seed:20261127", "args_hash": "sha256:...",
+       "status": "ok", "median_ms": 17.3, "iqr": 0.9, "cv": 0.028, "reps": 14}
+    ]
   },
   "mem": {
     "peak_tracemalloc_mb": 0.0031,
@@ -86,7 +91,7 @@
 | `method` | `base` / `vanilla` / `f1`(总耗时) / `f2`(最慢用例) / `f3`(热点行) / `ours`(热点区域) | 全员 |
 | `manifest` | **缺一项不进汇总**；`dataset_hash` 由 harness 对数据集文件算 sha256 前 16 位 | A 生成，复现线填 model |
 | `status` | 五类，判定顺序见下 | A |
-| `time` | 主口径 `mean_trimmed_ms`（E=12 去极值）；`median_ms` 同值保留兼容；`raw_ms` 必须留 | A |
+| `time` | 主口径 `mean_trimmed_ms`（E=12 去极值）；`median_ms` 同值保留兼容；`raw_ms` 必须留；`tiers[]` 记录每次升档尝试（含 `tier/n/gen/args_hash/status/reps`），**升档逻辑：t1 中位 < 2ms 或 t1 报 incorrect 且有后续档时自动升档** | A |
 | `mem` | **双口径**：Python 分配峰值 + 进程 RSS 峰值；**禁止使用 mem_mbs 时间积分** | A |
 | `speedup` / `mem_ratio` | 相对参照（GT 或 base）的比值，由汇总脚本填 | 复现线 / D |
 | `downgraded` | 是否因超时被降档重试过 | A |
@@ -126,3 +131,4 @@ results/golden/golden_<timestamp>.json              # 12 题体检表
 ## 六、冻结流程
 
 1. A 提本文件 → 2. 组长 review（≤3 条修改）→ 3. 改完打 `protocol_version = v1` 冻结 → 4. B/C/D 只读引用，要改字段必须提 issue 并升版本号。
+
