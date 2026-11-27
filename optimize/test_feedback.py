@@ -30,7 +30,7 @@ class FeedbackTests(unittest.TestCase):
         self.timing = {"ok": True, "status": "ok", "mode": "line_profiler",
                        "tool": "line_profiler", "tool_version": "test-double", "unit": "ms",
                        "source_sha256": hashlib.sha256(self.code.encode()).hexdigest(),
-                       "items": [{"line": 3, "hits": 10, "cumulative_ms": 2.0,
+                       "items": [{"line": 3, "hits": 10, "line_time_ms": 2.0,
                                   "src": "        print(value)"}]}
 
     def build(self, arm, **kwargs):
@@ -78,9 +78,10 @@ class FeedbackTests(unittest.TestCase):
         )
         self.assertEqual(result["requested_method"], "ours")
         self.assertEqual(result["requested_arm"], "f4")
-        self.assertIsNone(result["method"])
+        self.assertEqual(result["method"], "f1")
         self.assertEqual(result["effective_method"], "f1")
-        self.assertTrue(result["schema_mapping_pending"])
+        self.assertFalse(result["schema_mapping_pending"])
+        self.assertEqual(result["degrade_reason"], "no_hotspot")
         self.assertFalse(result["eligible_for_requested_method"])
 
     def test_f1_uses_supplied_whole_task_time(self):
@@ -95,13 +96,149 @@ class FeedbackTests(unittest.TestCase):
 
     def test_f4_line_numbers_source_and_scope(self):
         result = self.build("f4", radius=1)
-        self.assertIn("2.000000 ms cumulative", result["feedback"])
+        self.assertIn("占本次已剖析行时间之和的比例 100.0%", result["feedback"])
+        self.assertNotIn("逐行耗时相对占比", result["feedback"])
+        self.assertNotIn("% of profiled lines", result["feedback"])
+        self.assertNotIn("2.000000 ms", result["feedback"])
         self.assertEqual(result["diagnostics"]["hotspot_mode"], "line_profiler")
         self.assertIn("   3:         print(value)", result["feedback"])
         self.assertIn("for value in values:", result["feedback"])
         self.assertIn("def solve(values):", result["feedback"])
         self.assertEqual(result["diagnostics"]["regions"],
                          [{"start": 2, "end": 4, "hits": [3]}])
+
+    def test_timing_timeout_scales_with_slowest_case(self):
+        slow = {"status": "ok", "mode": "block_split", "cases": [
+            {"idx": 0, "ms": 1500.0, "src": "assert candidate([1]) == 1"}],
+            "slowest": {"idx": 0, "ms": 1500.0, "src": "assert candidate([1]) == 1"}}
+        with patch("optimize.feedback.profile_case", return_value={
+            "ok": False, "status": "timeout", "reason": "timed out",
+        }) as profile:
+            result = build_feedback("f4", self.task, self.code,
+                                    diagnostic=slow, hot=self.hot)
+        self.assertEqual(profile.call_args.kwargs["timeout_s"], 30.0)
+        self.assertEqual(result["diagnostics"]["slow_ms"], 1500.0)
+        self.assertEqual(result["diagnostics"]["case_mode"], "block_split")
+        self.assertEqual(result["diagnostics"]["case_count"], 1)
+        self.assertEqual(result["diagnostics"]["diagnostic_timeout_s"], 30.0)
+        self.assertEqual(result["diagnostics"]["diagnostic_timeout_cap_s"], 60.0)
+        self.assertEqual(result["degrade_reason"], "no_hotspot")
+        self.assertFalse(result["can_write_result"])
+
+    def test_f3_and_f4_timeout_share_a_hard_cap(self):
+        slow = {"status": "ok", "slowest": {
+            "idx": 0, "ms": 5000.0, "src": "assert candidate([1]) == 1"}}
+        with patch("optimize.feedback.hotspots", return_value=self.hot) as hotspot:
+            f3 = build_feedback("f3", self.task, self.code, diagnostic=slow)
+        self.assertEqual(hotspot.call_args.kwargs["max_time"], 60.0)
+        self.assertEqual(f3["diagnostics"]["slow_ms"], 5000.0)
+        self.assertEqual(f3["diagnostics"]["diagnostic_timeout_s"], 60.0)
+        with patch("optimize.feedback.profile_case", return_value={
+            "ok": False, "status": "timeout", "reason": "diagnostic timeout",
+        }) as profile:
+            f4 = build_feedback("f4", self.task, self.code,
+                                diagnostic=slow, hot=self.hot)
+        self.assertEqual(profile.call_args.kwargs["timeout_s"], 60.0)
+        self.assertEqual(f4["diagnostics"]["diagnostic_timeout_s"], 60.0)
+        with self.assertRaisesRegex(ValueError, "at most 60 seconds"):
+            build_feedback("f3", self.task, self.code, line_timeout_s=61.0,
+                           diagnostic=slow, hot=self.hot)
+
+    def test_diagnostic_failure_does_not_change_official_harness_status(self):
+        official_result = {"status": "ok", "time": {"mean_trimmed_ms": 5.0}}
+        result = build_feedback(
+            "f4", self.task, self.code,
+            total_ms=official_result["time"]["mean_trimmed_ms"],
+            diagnostic=self.diag, hot=self.hot,
+            line_timing={"ok": False, "status": "code_error",
+                         "reason": "probe environment failed"},
+        )
+        self.assertEqual(official_result["status"], "ok")
+        self.assertEqual(result["diagnostics"]["line_timing"]["status"], "code_error")
+        self.assertNotIn("status", result)
+        self.assertNotIn("result_status_hint", result["diagnostics"]["line_timing"])
+        self.assertEqual(result["degrade_reason"], "no_hotspot")
+
+    def test_f3_diagnostic_timeout_falls_to_f2_without_formal_status(self):
+        with patch("optimize.feedback.hotspots", return_value={
+            "ok": False, "reason": "timeout(10s)", "mode": "none",
+        }) as hotspot:
+            result = build_feedback("f3", self.task, self.code,
+                                    diagnostic=self.diag)
+        self.assertEqual(hotspot.call_args.kwargs["max_time"], 10.0)
+        self.assertEqual(result["method"], "f2")
+        self.assertEqual(result["degrade_reason"], "fallback_f2")
+        self.assertEqual(result["diagnostics"]["effective"], "f2")
+        self.assertNotIn("status", result)
+
+    def test_small_case_skips_timing_and_uses_hits(self):
+        small = {"status": "ok", "mode": "block_split", "cases": [
+            {"idx": 0, "ms": 0.3, "src": "assert candidate([1]) == 1"}],
+            "slowest": {"idx": 0, "ms": 0.3, "src": "assert candidate([1]) == 1"}}
+        with patch("optimize.feedback.profile_case") as profile:
+            result = build_feedback("f4", self.task, self.code,
+                                    diagnostic=small, hot=self.hot)
+        profile.assert_not_called()
+        self.assertEqual(result["effective_method"], "f4_line_hits")
+        self.assertEqual(result["diagnostics"]["hotspot_mode"], "line_hits")
+        self.assertEqual(result["diagnostics"]["line_timing"]["status"], "case_too_small")
+        self.assertEqual(result["degrade_reason"], "no_hotspot")
+        self.assertFalse(result["can_write_result"])
+        self.assertNotIn("占本次已剖析行时间之和的比例", result["feedback"])
+
+    def test_test_block_passes_shared_prelude_to_hotspots(self):
+        from eval.harness import PREAMBLE
+        task = {**self.task, "kind": "test_block"}
+        with patch("optimize.feedback.hotspots", return_value=self.hot) as hotspot:
+            result = build_feedback("f3", task, self.code, diagnostic=self.diag)
+        self.assertEqual(hotspot.call_args.kwargs["prelude"], PREAMBLE)
+        self.assertEqual(result["diagnostics"]["hotspot_mode"], "line_hits")
+
+    def test_effibench_shaped_block_split_and_typing_prelude(self):
+        code = ("class Solution:\n"
+                "    def solve(self, values: List[int]) -> int:\n"
+                "        return sum(values)\n")
+        task = {"task_id": "local/effi", "kind": "test_block", "dataset": "effibench",
+                "description": "Sum a list of integers.", "entry_point": "solution",
+                "test": "assert solution.solve([1]) == 1\n"
+                        "assert solution.solve([1, 2, 3]) == 6\n"}
+        result = build_feedback("f4", task, code)
+        meta = result["diagnostics"]
+        self.assertEqual(meta["case_mode"], "block_split")
+        self.assertEqual(meta["case_count"], 2)
+        self.assertIn(meta["case"]["src"], task["test"].splitlines())
+        self.assertEqual(meta["hotspot_mode"], "line_hits")
+        self.assertEqual(result["effective_method"], "f4_line_hits")
+        self.assertEqual(result["degrade_reason"], "no_hotspot")
+        self.assertFalse(result["can_write_result"])
+
+    def test_timing_context_cutoff_returns_real_line_hits(self):
+        code = "def solve(values):\n" + "\n".join("    value = 1" for _ in range(40))
+        timing = {**self.timing,
+                  "source_sha256": hashlib.sha256(code.encode()).hexdigest(),
+                  "items": [{"line": 20, "hits": 1, "line_time_ms": 3.0,
+                             "src": "    value = 1"}]}
+        hot = {"ok": True, "items": [{"line": 20, "hits": 50}]}
+        result = build_feedback("f4", self.task, code, diagnostic=self.diag,
+                                line_timing=timing, hot=hot, max_chars=300)
+        self.assertEqual(result["effective_method"], "f3")
+        self.assertEqual(result["diagnostics"]["hotspot_mode"], "line_hits")
+        self.assertEqual(result["degrade_reason"], "budget_exceeded")
+        self.assertIn("L20: 50 hits", result["feedback"])
+        self.assertNotIn("占本次已剖析行时间之和的比例", result["feedback"])
+
+    def test_repeated_source_rows_do_not_fake_retained_hotspot_range(self):
+        code = "def solve():\n" + "\n".join("    value = 1" for _ in range(40))
+        hot = {"ok": True, "items": [{"line": 3, "hits": 50},
+                                     {"line": 35, "hits": 20}]}
+        result = build_feedback(
+            "f4", self.task, code, diagnostic=self.diag, hot=hot,
+            line_timing={"ok": False, "status": "missing_dependency",
+            "reason": "not installed"}, radius=1, max_chars=280,
+        )
+        self.assertTrue(result["diagnostics"]["truncated"])
+        self.assertEqual(result["diagnostics"]["retained_hot_lines"], [3])
+        self.assertEqual(result["diagnostics"]["retained_source_ranges"], [(2, 4)])
 
     def test_f4_timing_failure_uses_line_hits_without_false_timing(self):
         for status in ("missing_dependency", "timeout", "code_error", "line_mismatch"):
@@ -118,9 +255,11 @@ class FeedbackTests(unittest.TestCase):
                 self.assertIsNone(result["method"])
                 self.assertTrue(result["schema_mapping_pending"])
                 self.assertEqual(result["diagnostics"]["hotspot_mode"], "line_hits")
+                self.assertNotIn("result_status_hint", result["diagnostics"]["line_timing"])
+                self.assertNotIn("status", result)
                 self.assertIn("line_timing_failed: " + status, result["diagnostics"]["reasons"])
                 self.assertIn("L3: 10 hits", result["feedback"])
-                self.assertNotIn("ms cumulative", result["feedback"])
+                self.assertNotIn("占本次已剖析行时间之和的比例", result["feedback"])
 
     def test_f4_rejects_stale_line_timing(self):
         stale = {**self.timing, "source_sha256": "wrong"}

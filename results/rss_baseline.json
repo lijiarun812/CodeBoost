@@ -1,0 +1,4 @@
+{
+  "peak_rss_mb": 20.523,
+  "how": "harness.measure_code(class Solution: f(x)->x, kind=test_block, e_reps=2)"
+}

@@ -35,11 +35,29 @@ import collections, json, sys
 CODE = __CODE__
 CASE = __CASE__
 ENTRY = __ENTRY__
+PRELUDE = __PRELUDE__
 
+# 前导代码（`from typing import *` 这类）单独编译成自己的运行单元，
+# 这样用户代码仍然从第 1 行开始，行号不会因为拼接而错位。
 _g = {"__name__": "__codeboost_hot__"}
+if PRELUDE:
+    _pre = {"__name__": "__codeboost_prelude__"}
+    exec(compile(PRELUDE, "<prelude>", "exec"), _pre)
+    _g.update(_pre)
 exec(compile(CODE, "<user_code>", "exec"), _g)
-if "candidate" not in _g:
-    _g["candidate"] = _g.get(ENTRY)
+# EffiBench 的测试块引用**实例** `solution`，而代码里是 `class Solution`；
+# 这里按 entry 解析出可调用对象并实例化，三类名字都绑上（缺哪个补哪个）。
+_entry = _g.get(ENTRY)
+if _entry is None and isinstance(_g.get(ENTRY[:1].upper() + ENTRY[1:]), type):
+    _entry = _g.get(ENTRY[:1].upper() + ENTRY[1:])
+if _entry is None:
+    _entry = _g.get("Solution")
+if isinstance(_entry, type):
+    _entry = _entry()
+if _entry is not None:
+    _g.setdefault(ENTRY, _entry)
+    _g.setdefault("candidate", _entry)
+    _g.setdefault("solution", _entry)
 
 _src_lines = CODE.splitlines()
 _hits = collections.Counter()
@@ -73,11 +91,12 @@ print("__CODEBOOST__" + json.dumps({
 '''
 
 
-def _run(code, case_src, entry_point, max_time, workdir):
+def _run(code, case_src, entry_point, max_time, workdir, prelude=""):
     program = (_PROGRAM
                .replace("__CODE__", repr(code))
                .replace("__CASE__", repr(case_src))
-               .replace("__ENTRY__", repr(entry_point)))
+               .replace("__ENTRY__", repr(entry_point))
+               .replace("__PRELUDE__", repr(prelude or "")))
     wd = Path(workdir) if workdir else Path(tempfile.gettempdir())
     path = wd / ("hot_%d_%d.py" % (os.getpid(), int(time.time() * 1e6)))
     try:
@@ -113,9 +132,13 @@ def _run(code, case_src, entry_point, max_time, workdir):
 
 
 def hotspots(code, case_src, entry_point="solution", top=3,
-             max_time=10.0, workdir=None):
-    """返回执行次数最多的 top 行（附带源码文本），用于拼证据包。"""
-    res = _run(code, case_src, entry_point, max_time, workdir)
+             max_time=10.0, workdir=None, prelude=""):
+    """返回执行次数最多的 top 行（附带源码文本），用于拼证据包。
+
+    `prelude`：与 harness 相同的前导代码（EffiBench 用 `harness.PREAMBLE`），
+    让「诊断时的执行环境」和「被测时的执行环境」一致，否则行号可能对应一次没跑通的执行。
+    """
+    res = _run(code, case_src, entry_point, max_time, workdir, prelude=prelude)
     if not res.get("ok"):
         return res
     total = res.get("total_line_events") or 0

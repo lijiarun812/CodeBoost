@@ -1,0 +1,170 @@
+[
+  {
+    "idx": 3,
+    "task": "Longest Substring Without Re",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.316
+  },
+  {
+    "idx": 4,
+    "task": "Median of Two Sorted Arrays",
+    "status": "ok",
+    "peak_tm_mb": 0.1621,
+    "rss_mb": 21.16
+  },
+  {
+    "idx": 10,
+    "task": "Regular Expression Matching",
+    "status": "ok",
+    "peak_tm_mb": 0.0033,
+    "rss_mb": 21.547
+  },
+  {
+    "idx": 11,
+    "task": "Container With Most Water",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.457
+  },
+  {
+    "idx": 22,
+    "task": "Generate Parentheses",
+    "status": "ok",
+    "peak_tm_mb": 1.3675,
+    "rss_mb": 29.016
+  },
+  {
+    "idx": 26,
+    "task": "Remove Duplicates from Sorte",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.086
+  },
+  {
+    "idx": 28,
+    "task": "Find the Index of the First ",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.465
+  },
+  {
+    "idx": 29,
+    "task": "Divide Two Integers",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.371
+  },
+  {
+    "idx": 31,
+    "task": "Next Permutation",
+    "status": "incorrect",
+    "peak_tm_mb": null,
+    "rss_mb": null
+  },
+  {
+    "idx": 32,
+    "task": "Longest Valid Parentheses",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.34
+  },
+  {
+    "idx": 35,
+    "task": "Search Insert Position",
+    "status": "ok",
+    "peak_tm_mb": 0.0751,
+    "rss_mb": 63.176
+  },
+  {
+    "idx": 40,
+    "task": "Combination Sum II",
+    "status": "ok",
+    "peak_tm_mb": 0.1437,
+    "rss_mb": 21.965
+  },
+  {
+    "idx": 250,
+    "task": "Count Univalue Subtrees",
+    "status": "incorrect",
+    "peak_tm_mb": null,
+    "rss_mb": null
+  },
+  {
+    "idx": 252,
+    "task": "Meeting Rooms",
+    "status": "ok",
+    "peak_tm_mb": 0.0013,
+    "rss_mb": 21.496
+  },
+  {
+    "idx": 254,
+    "task": "Factor Combinations",
+    "status": "ok",
+    "peak_tm_mb": 0.2822,
+    "rss_mb": 25.02
+  },
+  {
+    "idx": 256,
+    "task": "Paint House",
+    "status": "ok",
+    "peak_tm_mb": 0.0104,
+    "rss_mb": 23.867
+  },
+  {
+    "idx": 260,
+    "task": "Single Number III",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.594
+  },
+  {
+    "idx": 264,
+    "task": "Ugly Number II",
+    "status": "ok",
+    "peak_tm_mb": 0.0629,
+    "rss_mb": 21.465
+  },
+  {
+    "idx": 265,
+    "task": "Paint House II",
+    "status": "ok",
+    "peak_tm_mb": 0.0021,
+    "rss_mb": 21.383
+  },
+  {
+    "idx": 267,
+    "task": "Palindrome Permutation II",
+    "status": "ok",
+    "peak_tm_mb": 0.1936,
+    "rss_mb": 21.531
+  },
+  {
+    "idx": 268,
+    "task": "Missing Number",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.133
+  },
+  {
+    "idx": 269,
+    "task": "Alien Dictionary",
+    "status": "ok",
+    "peak_tm_mb": 0.0078,
+    "rss_mb": 21.41
+  },
+  {
+    "idx": 270,
+    "task": "Closest Binary Search Tree V",
+    "status": "ok",
+    "peak_tm_mb": 0.0013,
+    "rss_mb": 21.785
+  },
+  {
+    "idx": 274,
+    "task": "H",
+    "status": "ok",
+    "peak_tm_mb": 0.001,
+    "rss_mb": 21.754
+  }
+]
