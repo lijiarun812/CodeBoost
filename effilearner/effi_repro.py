@@ -759,6 +759,10 @@ def run(args):
                                     "label": "epoch%d" % ep})
                     continue
 
+                # 判据之外的独立测量：默认只测最终版；all 表示每轮候选也测新口径
+                if args.new_metrics_scope == "all":
+                    cand_m["new"] = new_metrics(cand_code, test_block, args, workdir)
+
                 # 接受判据：默认按论文（仅 mem_mbs 更小才保留），weighted 复现中期口径
                 if args.accept_rule == "paper":
                     accept = cand_m["mem_mbs"] < current_m["mem_mbs"]
@@ -775,6 +779,9 @@ def run(args):
                           % (ep, detail, cand_m["exec_time"], cand_m["peak_mb"]))
                 else:
                     print("   epoch %d: 保持   (%s)" % (ep, "判据未改善: " + detail))
+                if args.new_metrics_scope == "all":
+                    history.append(dict(cand_m, label="epoch%d_cand" % ep,
+                                        accepted=bool(accept)))
                 history.append(dict(current_m, label="epoch%d" % ep))
 
         new_final = new_metrics(current_code, test_block, args, workdir)
@@ -908,6 +915,8 @@ def main():
     p.add_argument("--accept-rule", choices=["paper", "weighted"], default="paper",
                    help="接受判据：paper=仅 mem_mbs 更小才保留（忠实论文，默认）；"
                         "weighted=时间/内存加权评分（复现中期口径）")
+    p.add_argument("--new-metrics-scope", choices=["final", "all"], default="final",
+                   help="新口径测量范围：final=只测最终版（默认）；all=每轮候选也测")
     p.add_argument("--target-time", type=float, default=0.25, help="自动校准的目标单次测量时长(秒)")
     p.add_argument("--max-repeats", type=int, default=20000, help="重复次数上限(放大测量信号)")
     p.add_argument("--max-time", type=int, default=30,

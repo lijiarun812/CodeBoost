@@ -1,0 +1,1231 @@
+{
+  "mode": "api:deepseek-v4-pro",
+  "num_problems": 20,
+  "num_ok": 17,
+  "num_baseline_failed": 3,
+  "error_distribution": {
+    "assertion": 3,
+    "cand:syntax": 2
+  },
+  "epochs": 3,
+  "target_time": 0.25,
+  "accept_rule": "weighted",
+  "max_repeats": 20000,
+  "results": [
+    {
+      "problem_idx": 252,
+      "task_name": "Meeting Rooms",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.031657600000471575,
+        "mem_mbs": 0.6657345069994705,
+        "peak_mb": 22.25390625
+      },
+      "final": {
+        "exec_time": 0.031657600000471575,
+        "mem_mbs": 0.6657345069994705,
+        "peak_mb": 22.25390625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0017309650000242982,
+        "median_ms": 0.0017,
+        "cv": 0.0167,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.543,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0017301056249607427,
+        "median_ms": 0.0017,
+        "cv": 0.0131,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.551,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def canAttendMeetings(self, intervals):\n        # Sort intervals by start time\n        intervals.sort(key=lambda x: x[0])\n        \n        # Check for any overlap\n        for i in range(1, len(intervals)):\n            if intervals[i][0] < intervals[i - 1][1]:\n                return False\n        return True\n",
+      "history": [
+        {
+          "exec_time": 0.031657600000471575,
+          "mem_mbs": 0.6657345069994705,
+          "peak_mb": 22.25390625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.031657600000471575,
+          "mem_mbs": 0.6657345069994705,
+          "peak_mb": 22.25390625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.031657600000471575,
+          "mem_mbs": 0.6657345069994705,
+          "peak_mb": 22.25390625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.031657600000471575,
+          "mem_mbs": 0.6657345069994705,
+          "peak_mb": 22.25390625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.0,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 254,
+      "task_name": "Factor Combinations",
+      "status": "baseline_failed",
+      "error": "AssertionError",
+      "error_type": "assertion"
+    },
+    {
+      "problem_idx": 256,
+      "task_name": "Paint House",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.054541199999221135,
+        "mem_mbs": 0.9845862728856432,
+        "peak_mb": 22.3515625
+      },
+      "final": {
+        "exec_time": 0.054541199999221135,
+        "mem_mbs": 0.9845862728856432,
+        "peak_mb": 22.3515625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0029283706250225806,
+        "median_ms": 0.0029,
+        "cv": 0.0438,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.551,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002860827500057894,
+        "median_ms": 0.0029,
+        "cv": 0.0269,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.582,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def minCost(self, costs):\n        if not costs:\n            return 0\n        \n        n = len(costs)\n        # dp[i][j] = minimum cost to paint house i with color j\n        dp = [[0] * 3 for _ in range(n)]\n        dp[0] = costs[0]\n        \n        for i in range(1, n):\n            dp[i][0] = costs[i][0] + min(dp[i-1][1], dp[i-1][2])\n            dp[i][1] = costs[i][1] + min(dp[i-1][0], dp[i-1][2])\n            dp[i][2] = costs[i][2] + min(dp[i-1][0], dp[i-1][1])\n        \n        return min(dp[-1])\n",
+      "history": [
+        {
+          "exec_time": 0.054541199999221135,
+          "mem_mbs": 0.9845862728856432,
+          "peak_mb": 22.3515625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.054541199999221135,
+          "mem_mbs": 0.9845862728856432,
+          "peak_mb": 22.3515625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.054541199999221135,
+          "mem_mbs": 0.9845862728856432,
+          "peak_mb": 22.3515625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.054541199999221135,
+          "mem_mbs": 0.9845862728856432,
+          "peak_mb": 22.3515625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 2.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 260,
+      "task_name": "Single Number III",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.0374560999989626,
+        "mem_mbs": 0.782537067359371,
+        "peak_mb": 22.2421875
+      },
+      "final": {
+        "exec_time": 0.0374560999989626,
+        "mem_mbs": 0.782537067359371,
+        "peak_mb": 22.2421875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002060853750026581,
+        "median_ms": 0.0021,
+        "cv": 0.0164,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.516,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002042349999965154,
+        "median_ms": 0.002,
+        "cv": 0.0167,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.551,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def singleNumber(self, nums):\n        # Step 1: XOR all numbers to get xor of the two unique numbers\n        xor = 0\n        for num in nums:\n            xor ^= num\n        \n        # Step 2: Find a set bit in xor (rightmost set bit)\n        diff = xor & (-xor)\n        \n        # Step 3: Divide numbers into two groups and XOR separately\n        a, b = 0, 0\n        for num in nums:\n            if num & diff:\n                a ^= num\n            else:\n                b ^= num\n        \n        return [a, b]\n",
+      "history": [
+        {
+          "exec_time": 0.0374560999989626,
+          "mem_mbs": 0.782537067359371,
+          "peak_mb": 22.2421875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "ok": false,
+          "error": "SyntaxError: unmatched '}'",
+          "error_type": "syntax",
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.0374560999989626,
+          "mem_mbs": 0.782537067359371,
+          "peak_mb": 22.2421875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "ok": false,
+          "error": "SyntaxError: unmatched '}'",
+          "error_type": "syntax",
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.9,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 264,
+      "task_name": "Ugly Number II",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.04828040000211331,
+        "mem_mbs": 1.0808332305153812,
+        "peak_mb": 22.57421875
+      },
+      "final": {
+        "exec_time": 0.04828040000211331,
+        "mem_mbs": 1.0808332305153812,
+        "peak_mb": 22.57421875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0025931068750196574,
+        "median_ms": 0.0026,
+        "cv": 0.0133,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.496,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.002586918125030024,
+        "median_ms": 0.0026,
+        "cv": 0.0131,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.523,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def nthUglyNumber(self, n: int) -> int:\n        ugly = [1]\n        i2 = i3 = i5 = 0\n        while len(ugly) < n:\n            next2, next3, next5 = ugly[i2] * 2, ugly[i3] * 3, ugly[i5] * 5\n            next_ugly = min(next2, next3, next5)\n            ugly.append(next_ugly)\n            if next_ugly == next2:\n                i2 += 1\n            if next_ugly == next3:\n                i3 += 1\n            if next_ugly == next5:\n                i5 += 1\n        return ugly[-1]\n",
+      "history": [
+        {
+          "exec_time": 0.04828040000211331,
+          "mem_mbs": 1.0808332305153812,
+          "peak_mb": 22.57421875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.04828040000211331,
+          "mem_mbs": 1.0808332305153812,
+          "peak_mb": 22.57421875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.04828040000211331,
+          "mem_mbs": 1.0808332305153812,
+          "peak_mb": 22.57421875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.04828040000211331,
+          "mem_mbs": 1.0808332305153812,
+          "peak_mb": 22.57421875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 265,
+      "task_name": "Paint House II",
+      "status": "ok",
+      "repeats": 16629,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.06828600000153529,
+        "mem_mbs": 1.225434851573084,
+        "peak_mb": 22.2265625
+      },
+      "final": {
+        "exec_time": 0.06828600000153529,
+        "mem_mbs": 1.225434851573084,
+        "peak_mb": 22.2265625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.004343223124942596,
+        "median_ms": 0.0043,
+        "cv": 0.0173,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.57,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.004298804375025611,
+        "median_ms": 0.0043,
+        "cv": 0.0091,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.602,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def minCostII(self, costs):\n        if not costs or not costs[0]:\n            return 0\n        \n        n, k = len(costs), len(costs[0])\n        \n        # Initialize dp with the first row\n        prev_dp = costs[0][:]\n        prev_min = min(prev_dp)\n        prev_min_index = prev_dp.index(prev_min)\n        prev_second_min = min(v for i, v in enumerate(prev_dp) if i != prev_min_index)\n        \n        for i in range(1, n):\n            curr_dp = [0] * k\n            curr_min = float('inf')\n            curr_min_index = -1\n            curr_second_min = float('inf')\n            \n            for j in range(k):\n                if j != prev_min_index:\n                    curr_dp[j] = costs[i][j] + prev_min\n                else:\n                    curr_dp[j] = costs[i][j] + prev_second_min\n                \n                if curr_dp[j] < curr_min:\n                    curr_second_min = curr_min\n                    curr_min = curr_dp[j]\n                    curr_min_index = j\n                elif curr_dp[j] < curr_second_min:\n                    curr_second_min = curr_dp[j]\n            \n            prev_dp, prev_min, prev_min_index, prev_second_min = curr_dp, curr_min, curr_min_index, curr_second_min\n        \n        return prev_min\n",
+      "history": [
+        {
+          "exec_time": 0.06828600000153529,
+          "mem_mbs": 1.225434851573084,
+          "peak_mb": 22.2265625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.06828600000153529,
+          "mem_mbs": 1.225434851573084,
+          "peak_mb": 22.2265625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.06828600000153529,
+          "mem_mbs": 1.225434851573084,
+          "peak_mb": 22.2265625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.06828600000153529,
+          "mem_mbs": 1.225434851573084,
+          "peak_mb": 22.2265625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 1.0,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 267,
+      "task_name": "Palindrome Permutation II",
+      "status": "baseline_failed",
+      "error": "AssertionError",
+      "error_type": "assertion"
+    },
+    {
+      "problem_idx": 268,
+      "task_name": "Missing Number",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.01708610000059707,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.52734375
+      },
+      "final": {
+        "exec_time": 0.01708610000059707,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.52734375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010107631250093618,
+        "median_ms": 0.001,
+        "cv": 0.0122,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.523,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0010231487499368086,
+        "median_ms": 0.001,
+        "cv": 0.0138,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.484,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def missingNumber(self, nums):\n        n = len(nums)\n        total_sum = n * (n + 1) // 2\n        actual_sum = sum(nums)\n        return total_sum - actual_sum\n",
+      "history": [
+        {
+          "exec_time": 0.01708610000059707,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.52734375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.01708610000059707,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.52734375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.01708610000059707,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.52734375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.01708610000059707,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.52734375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -1.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 269,
+      "task_name": "Alien Dictionary",
+      "status": "ok",
+      "repeats": 9351,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.11860760000126902,
+        "mem_mbs": 2.6037571333635796,
+        "peak_mb": 22.28515625
+      },
+      "final": {
+        "exec_time": 0.11860760000126902,
+        "mem_mbs": 2.6037571333635796,
+        "peak_mb": 22.28515625
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.012126789475856527,
+        "median_ms": 0.0121,
+        "cv": 0.0138,
+        "peak_tracemalloc_mb": 0.0024,
+        "peak_rss_mb": 23.629,
+        "reps": 12343
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.012335116442680401,
+        "median_ms": 0.0123,
+        "cv": 0.0259,
+        "peak_tracemalloc_mb": 0.0024,
+        "peak_rss_mb": 23.617,
+        "reps": 12796
+      },
+      "final_code": "from collections import defaultdict, deque\nfrom typing import List\n\nclass Solution:\n    def alienOrder(self, words: List[str]) -> str:\n        # Step 1: Build graph\n        adj = defaultdict(set)\n        indegree = {char: 0 for word in words for char in word}\n        \n        for i in range(len(words) - 1):\n            w1, w2 = words[i], words[i + 1]\n            min_len = min(len(w1), len(w2))\n            # Check for invalid case: prefix problem\n            if len(w1) > len(w2) and w1[:min_len] == w2[:min_len]:\n                return \"\"\n            for c1, c2 in zip(w1, w2):\n                if c1 != c2:\n                    if c2 not in adj[c1]:\n                        adj[c1].add(c2)\n                        indegree[c2] += 1\n                    break\n        \n        # Step 2: Topological sort (Kahn's algorithm)\n        queue = deque([c for c in indegree if indegree[c] == 0])\n        order = []\n        \n        while queue:\n            c = queue.popleft()\n            order.append(c)\n            for neighbor in adj[c]:\n                indegree[neighbor] -= 1\n                if indegree[neighbor] == 0:\n                    queue.append(neighbor)\n        \n        if len(order) < len(indegree):\n            return \"\"  # Cycle detected\n        return \"\".join(order)\n",
+      "history": [
+        {
+          "exec_time": 0.11860760000126902,
+          "mem_mbs": 2.6037571333635796,
+          "peak_mb": 22.28515625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.11860760000126902,
+          "mem_mbs": 2.6037571333635796,
+          "peak_mb": 22.28515625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.11860760000126902,
+          "mem_mbs": 2.6037571333635796,
+          "peak_mb": 22.28515625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.11860760000126902,
+          "mem_mbs": 2.6037571333635796,
+          "peak_mb": 22.28515625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -1.7,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 270,
+      "task_name": "Closest Binary Search Tree Value",
+      "status": "ok",
+      "repeats": 14312,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.07479599999714992,
+        "mem_mbs": 1.627351412096047,
+        "peak_mb": 22.26171875
+      },
+      "final": {
+        "exec_time": 0.07479599999714992,
+        "mem_mbs": 1.627351412096047,
+        "peak_mb": 22.26171875
+      },
+      "new_baseline": {
+        "status": "incorrect",
+        "mean_trimmed_ms": null,
+        "median_ms": null,
+        "cv": null,
+        "peak_tracemalloc_mb": null,
+        "peak_rss_mb": null,
+        "reps": null
+      },
+      "new_final": {
+        "status": "incorrect",
+        "mean_trimmed_ms": null,
+        "median_ms": null,
+        "cv": null,
+        "peak_tracemalloc_mb": null,
+        "peak_rss_mb": null,
+        "reps": null
+      },
+      "final_code": "class Solution:\n    def closestValue(self, root, target):\n        closest = root.val\n        while root:\n            if abs(root.val - target) < abs(closest - target) or (\n                abs(root.val - target) == abs(closest - target) and root.val < closest\n            ):\n                closest = root.val\n            if target < root.val:\n                root = root.left\n            else:\n                root = root.right\n        return closest\n",
+      "history": [
+        {
+          "exec_time": 0.07479599999714992,
+          "mem_mbs": 1.627351412096047,
+          "peak_mb": 22.26171875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.07479599999714992,
+          "mem_mbs": 1.627351412096047,
+          "peak_mb": 22.26171875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.07479599999714992,
+          "mem_mbs": 1.627351412096047,
+          "peak_mb": 22.26171875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.07479599999714992,
+          "mem_mbs": 1.627351412096047,
+          "peak_mb": 22.26171875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": null,
+      "new_mem_reduction_pct": null
+    },
+    {
+      "problem_idx": 274,
+      "task_name": "H",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.024361299998417962,
+        "mem_mbs": 0.4109505425988047,
+        "peak_mb": 22.28125
+      },
+      "final": {
+        "exec_time": 0.024361299998417962,
+        "mem_mbs": 0.4109505425988047,
+        "peak_mb": 22.28125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0013027968749838692,
+        "median_ms": 0.0013,
+        "cv": 0.0098,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.527,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0013038031250061977,
+        "median_ms": 0.0013,
+        "cv": 0.0147,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.504,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def hIndex(self, citations):\n        citations.sort(reverse=True)\n        h = 0\n        for i, c in enumerate(citations):\n            if c >= i + 1:\n                h = i + 1\n            else:\n                break\n        return h\n",
+      "history": [
+        {
+          "exec_time": 0.024361299998417962,
+          "mem_mbs": 0.4109505425988047,
+          "peak_mb": 22.28125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.024361299998417962,
+          "mem_mbs": 0.4109505425988047,
+          "peak_mb": 22.28125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.024361299998417962,
+          "mem_mbs": 0.4109505425988047,
+          "peak_mb": 22.28125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.024361299998417962,
+          "mem_mbs": 0.4109505425988047,
+          "peak_mb": 22.28125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.1,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 275,
+      "task_name": "H",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.016347700002370402,
+        "mem_mbs": 0.2633751679601346,
+        "peak_mb": 22.5078125
+      },
+      "final": {
+        "exec_time": 0.016347700002370402,
+        "mem_mbs": 0.2633751679601346,
+        "peak_mb": 22.5078125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0009718974999714192,
+        "median_ms": 0.001,
+        "cv": 0.0143,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.516,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0009776381249821497,
+        "median_ms": 0.001,
+        "cv": 0.0151,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.527,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def hIndex(self, citations):\n        n = len(citations)\n        left, right = 0, n - 1\n        while left <= right:\n            mid = (left + right) // 2\n            if citations[mid] >= n - mid:\n                right = mid - 1\n            else:\n                left = mid + 1\n        return n - left\n",
+      "history": [
+        {
+          "exec_time": 0.016347700002370402,
+          "mem_mbs": 0.2633751679601346,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.016347700002370402,
+          "mem_mbs": 0.2633751679601346,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.016347700002370402,
+          "mem_mbs": 0.2633751679601346,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.016347700002370402,
+          "mem_mbs": 0.2633751679601346,
+          "peak_mb": 22.5078125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.6,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 285,
+      "task_name": "Inorder Successor in BST",
+      "status": "ok",
+      "repeats": 15723,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.07269799999994575,
+        "mem_mbs": 1.506820765402459,
+        "peak_mb": 22.625
+      },
+      "final": {
+        "exec_time": 0.07269799999994575,
+        "mem_mbs": 1.506820765402459,
+        "peak_mb": 22.625
+      },
+      "new_baseline": {
+        "status": "incorrect",
+        "mean_trimmed_ms": null,
+        "median_ms": null,
+        "cv": null,
+        "peak_tracemalloc_mb": null,
+        "peak_rss_mb": null,
+        "reps": null
+      },
+      "new_final": {
+        "status": "incorrect",
+        "mean_trimmed_ms": null,
+        "median_ms": null,
+        "cv": null,
+        "peak_tracemalloc_mb": null,
+        "peak_rss_mb": null,
+        "reps": null
+      },
+      "final_code": "class TreeNode:\n    def __init__(self, x):\n        self.val = x\n        self.left = None\n        self.right = None\n\nclass Solution:\n    def inorderSuccessor(self, root: TreeNode, p: TreeNode) -> TreeNode:\n        successor = None\n        while root:\n            if p.val < root.val:\n                successor = root\n                root = root.left\n            else:\n                root = root.right\n        return successor\n",
+      "history": [
+        {
+          "exec_time": 0.07269799999994575,
+          "mem_mbs": 1.506820765402459,
+          "peak_mb": 22.625,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.07269799999994575,
+          "mem_mbs": 1.506820765402459,
+          "peak_mb": 22.625,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.07269799999994575,
+          "mem_mbs": 1.506820765402459,
+          "peak_mb": 22.625,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.07269799999994575,
+          "mem_mbs": 1.506820765402459,
+          "peak_mb": 22.625,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": null,
+      "new_mem_reduction_pct": null
+    },
+    {
+      "problem_idx": 287,
+      "task_name": "Find the Duplicate Number",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.01386590000038268,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.51953125
+      },
+      "final": {
+        "exec_time": 0.01386590000038268,
+        "mem_mbs": 0.0,
+        "peak_mb": 22.51953125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.000849224374996993,
+        "median_ms": 0.0008,
+        "cv": 0.0134,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.531,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0008502681249865418,
+        "median_ms": 0.0009,
+        "cv": 0.0146,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.617,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def findDuplicate(self, nums):\n        # Phase 1: Detect intersection point in the cycle\n        slow = nums[0]\n        fast = nums[0]\n        \n        while True:\n            slow = nums[slow]\n            fast = nums[nums[fast]]\n            if slow == fast:\n                break\n        \n        # Phase 2: Find the entrance to the cycle\n        slow = nums[0]\n        while slow != fast:\n            slow = nums[slow]\n            fast = nums[fast]\n        \n        return slow\n",
+      "history": [
+        {
+          "exec_time": 0.01386590000038268,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.01386590000038268,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.01386590000038268,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.01386590000038268,
+          "mem_mbs": 0.0,
+          "peak_mb": 22.51953125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.1,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 301,
+      "task_name": "Remove Invalid Parentheses",
+      "status": "ok",
+      "repeats": 10563,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.1544575999978406,
+        "mem_mbs": 3.3552847359099687,
+        "peak_mb": 22.5546875
+      },
+      "final": {
+        "exec_time": 0.1544575999978406,
+        "mem_mbs": 3.3552847359099687,
+        "peak_mb": 22.5546875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.014899401863472564,
+        "median_ms": 0.0149,
+        "cv": 0.008,
+        "peak_tracemalloc_mb": 0.0106,
+        "peak_rss_mb": 23.832,
+        "reps": 10679
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.014734838679904013,
+        "median_ms": 0.0147,
+        "cv": 0.0059,
+        "peak_tracemalloc_mb": 0.0106,
+        "peak_rss_mb": 23.816,
+        "reps": 10817
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def removeInvalidParentheses(self, s: str) -> List[str]:\n        # First, find out how many misplaced parentheses we have\n        left_remove, right_remove = 0, 0\n        for char in s:\n            if char == '(':\n                left_remove += 1\n            elif char == ')':\n                if left_remove > 0:\n                    left_remove -= 1\n                else:\n                    right_remove += 1\n\n        result = set()\n\n        def dfs(index, left_count, right_count, left_remove, right_remove, path):\n            if index == len(s):\n                if left_remove == 0 and right_remove == 0:\n                    result.add(path)\n                return\n\n            char = s[index]\n\n            if char == '(' and left_remove > 0:\n                # Option to remove this '('\n                dfs(index + 1, left_count, right_count, left_remove - 1, right_remove, path)\n            elif char == ')' and right_remove > 0:\n                # Option to remove this ')'\n                dfs(index + 1, left_count, right_count, left_remove, right_remove - 1, path)\n\n            # Option to keep the current char\n            if char == '(':\n                dfs(index + 1, left_count + 1, right_count, left_remove, right_remove, path + char)\n            elif char == ')':\n                if left_count > right_count:\n                    dfs(index + 1, left_count, right_count + 1, left_remove, right_remove, path + char)\n            else:\n                dfs(index + 1, left_count, right_count, left_remove, right_remove, path + char)\n\n        dfs(0, 0, 0, left_remove, right_remove, \"\")\n        return list(result)\n",
+      "history": [
+        {
+          "exec_time": 0.1544575999978406,
+          "mem_mbs": 3.3552847359099687,
+          "peak_mb": 22.5546875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.1544575999978406,
+          "mem_mbs": 3.3552847359099687,
+          "peak_mb": 22.5546875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.1544575999978406,
+          "mem_mbs": 3.3552847359099687,
+          "peak_mb": 22.5546875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.1544575999978406,
+          "mem_mbs": 3.3552847359099687,
+          "peak_mb": 22.5546875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 1.1,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 306,
+      "task_name": "Additive Number",
+      "status": "baseline_failed",
+      "error": "AssertionError",
+      "error_type": "assertion"
+    },
+    {
+      "problem_idx": 309,
+      "task_name": "Best Time to Buy and Sell Stock with Cooldown",
+      "status": "ok",
+      "repeats": 20000,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.025259800000640098,
+        "mem_mbs": 0.4605607476488345,
+        "peak_mb": 22.30859375
+      },
+      "final": {
+        "exec_time": 0.025259800000640098,
+        "mem_mbs": 0.4605607476488345,
+        "peak_mb": 22.30859375
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0014234812500262706,
+        "median_ms": 0.0014,
+        "cv": 0.008,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.488,
+        "reps": 20000
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.001424813125026958,
+        "median_ms": 0.0014,
+        "cv": 0.0087,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.566,
+        "reps": 20000
+      },
+      "final_code": "class Solution:\n    def maxProfit(self, prices):\n        if not prices:\n            return 0\n        \n        n = len(prices)\n        hold = -prices[0]  # Max profit if we buy/hold a stock\n        sold = 0           # Max profit if we just sold a stock\n        rest = 0           # Max profit if we are in cooldown/rest\n        \n        for i in range(1, n):\n            prev_sold = sold\n            sold = hold + prices[i]      # Sell stock\n            hold = max(hold, rest - prices[i])  # Buy stock after cooldown\n            rest = max(rest, prev_sold)  # Cooldown after selling\n        \n        return max(sold, rest)\n",
+      "history": [
+        {
+          "exec_time": 0.025259800000640098,
+          "mem_mbs": 0.4605607476488345,
+          "peak_mb": 22.30859375,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.025259800000640098,
+          "mem_mbs": 0.4605607476488345,
+          "peak_mb": 22.30859375,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.025259800000640098,
+          "mem_mbs": 0.4605607476488345,
+          "peak_mb": 22.30859375,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.025259800000640098,
+          "mem_mbs": 0.4605607476488345,
+          "peak_mb": 22.30859375,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -0.1,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 312,
+      "task_name": "Burst Balloons",
+      "status": "ok",
+      "repeats": 14177,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.12699050000082934,
+        "mem_mbs": 2.815567906642265,
+        "peak_mb": 22.54296875
+      },
+      "final": {
+        "exec_time": 0.12699050000082934,
+        "mem_mbs": 2.815567906642265,
+        "peak_mb": 22.54296875
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.00917596631533377,
+        "median_ms": 0.0092,
+        "cv": 0.0111,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.555,
+        "reps": 16506
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.009145090500952647,
+        "median_ms": 0.0092,
+        "cv": 0.0083,
+        "peak_tracemalloc_mb": 0.001,
+        "peak_rss_mb": 23.551,
+        "reps": 17265
+      },
+      "final_code": "from typing import List\n\nclass Solution:\n    def maxCoins(self, nums: List[int]) -> int:\n        # Add 1 at both ends to handle out-of-bounds cases\n        nums = [1] + nums + [1]\n        n = len(nums)\n        dp = [[0] * n for _ in range(n)]\n        \n        # Build up solutions for increasing lengths\n        for length in range(2, n):\n            for left in range(0, n - length):\n                right = left + length\n                for i in range(left + 1, right):\n                    # Last balloon to burst in this interval\n                    coins = nums[left] * nums[i] * nums[right]\n                    coins += dp[left][i] + dp[i][right]\n                    dp[left][right] = max(dp[left][right], coins)\n        \n        return dp[0][n - 1]\n",
+      "history": [
+        {
+          "exec_time": 0.12699050000082934,
+          "mem_mbs": 2.815567906642265,
+          "peak_mb": 22.54296875,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.12699050000082934,
+          "mem_mbs": 2.815567906642265,
+          "peak_mb": 22.54296875,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.12699050000082934,
+          "mem_mbs": 2.815567906642265,
+          "peak_mb": 22.54296875,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.12699050000082934,
+          "mem_mbs": 2.815567906642265,
+          "peak_mb": 22.54296875,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.3,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 314,
+      "task_name": "Binary Tree Vertical Order Traversal",
+      "status": "ok",
+      "repeats": 6726,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.14427129999967292,
+        "mem_mbs": 3.056704009362825,
+        "peak_mb": 22.578125
+      },
+      "final": {
+        "exec_time": 0.14427129999967292,
+        "mem_mbs": 3.056704009362825,
+        "peak_mb": 22.578125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0204755486170275,
+        "median_ms": 0.0218,
+        "cv": 0.1657,
+        "peak_tracemalloc_mb": 0.0045,
+        "peak_rss_mb": 23.617,
+        "reps": 7086
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.021126032570138027,
+        "median_ms": 0.0215,
+        "cv": 0.1464,
+        "peak_tracemalloc_mb": 0.0045,
+        "peak_rss_mb": 23.672,
+        "reps": 8474
+      },
+      "final_code": "from collections import defaultdict, deque\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\n    @staticmethod\n    def from_list(lst):\n        if not lst:\n            return None\n        nodes = [None if val is None else TreeNode(val) for val in lst]\n        kids = nodes[::-1]\n        root = kids.pop()\n        for node in nodes:\n            if node:\n                if kids:\n                    node.left = kids.pop()\n                if kids:\n                    node.right = kids.pop()\n        return root\n\nclass Solution:\n    def verticalOrder(self, root):\n        if not root:\n            return []\n        \n        column_table = defaultdict(list)\n        queue = deque([(root, 0)])\n        \n        while queue:\n            node, column = queue.popleft()\n            column_table[column].append(node.val)\n            \n            if node.left:\n                queue.append((node.left, column - 1))\n            if node.right:\n                queue.append((node.right, column + 1))\n        \n        return [column_table[x] for x in sorted(column_table.keys())]\n",
+      "history": [
+        {
+          "exec_time": 0.14427129999967292,
+          "mem_mbs": 3.056704009362825,
+          "peak_mb": 22.578125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.14427129999967292,
+          "mem_mbs": 3.056704009362825,
+          "peak_mb": 22.578125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.14427129999967292,
+          "mem_mbs": 3.056704009362825,
+          "peak_mb": 22.578125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.14427129999967292,
+          "mem_mbs": 3.056704009362825,
+          "peak_mb": 22.578125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": -3.2,
+      "new_mem_reduction_pct": 0.0
+    },
+    {
+      "problem_idx": 315,
+      "task_name": "Count of Smaller Numbers After Self",
+      "status": "ok",
+      "repeats": 12931,
+      "accept_rule": "weighted",
+      "baseline": {
+        "exec_time": 0.09107850000145845,
+        "mem_mbs": 1.914156587126378,
+        "peak_mb": 22.26953125
+      },
+      "final": {
+        "exec_time": 0.09107850000145845,
+        "mem_mbs": 1.914156587126378,
+        "peak_mb": 22.26953125
+      },
+      "new_baseline": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.007232082771469936,
+        "median_ms": 0.0072,
+        "cv": 0.0163,
+        "peak_tracemalloc_mb": 0.0011,
+        "peak_rss_mb": 23.582,
+        "reps": 16316
+      },
+      "new_final": {
+        "status": "ok",
+        "mean_trimmed_ms": 0.0072205478300259,
+        "median_ms": 0.0072,
+        "cv": 0.0083,
+        "peak_tracemalloc_mb": 0.0011,
+        "peak_rss_mb": 23.527,
+        "reps": 17834
+      },
+      "final_code": "class Solution:\n    def countSmaller(self, nums):\n        # Coordinate compression\n        sorted_unique = sorted(set(nums))\n        rank = {val: idx + 1 for idx, val in enumerate(sorted_unique)}\n        \n        def update(index, value, bit, size):\n            while index <= size:\n                bit[index] += value\n                index += index & -index\n        \n        def query(index, bit):\n            total = 0\n            while index > 0:\n                total += bit[index]\n                index -= index & -index\n            return total\n        \n        n = len(nums)\n        bit = [0] * (len(sorted_unique) + 1)\n        counts = [0] * n\n        \n        # Traverse from right to left\n        for i in range(n - 1, -1, -1):\n            r = rank[nums[i]]\n            counts[i] = query(r - 1, bit)\n            update(r, 1, bit, len(sorted_unique))\n        \n        return counts\n",
+      "history": [
+        {
+          "exec_time": 0.09107850000145845,
+          "mem_mbs": 1.914156587126378,
+          "peak_mb": 22.26953125,
+          "ok": true,
+          "label": "baseline"
+        },
+        {
+          "exec_time": 0.09107850000145845,
+          "mem_mbs": 1.914156587126378,
+          "peak_mb": 22.26953125,
+          "ok": true,
+          "label": "epoch1"
+        },
+        {
+          "exec_time": 0.09107850000145845,
+          "mem_mbs": 1.914156587126378,
+          "peak_mb": 22.26953125,
+          "ok": true,
+          "label": "epoch2"
+        },
+        {
+          "exec_time": 0.09107850000145845,
+          "mem_mbs": 1.914156587126378,
+          "peak_mb": 22.26953125,
+          "ok": true,
+          "label": "epoch3"
+        }
+      ],
+      "mem_reduction_pct": 0.0,
+      "time_reduction_pct": 0.0,
+      "new_time_reduction_pct": 0.2,
+      "new_mem_reduction_pct": 0.0
+    }
+  ],
+  "avg_baseline_mem_mbs": 1.34,
+  "avg_final_mem_mbs": 1.34,
+  "avg_mem_reduction_pct": 0.0,
+  "avg_baseline_time_s": 0.0659,
+  "avg_final_time_s": 0.0659,
+  "avg_time_reduction_pct": 0.0
+}
