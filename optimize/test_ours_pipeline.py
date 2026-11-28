@@ -86,6 +86,32 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(self.task, task_before)
         self.assertFalse(output["formal_result_written"])
 
+    def test_f4_and_f3_diagnose_the_selected_frozen_test(self):
+        task = copy.deepcopy(self.task)
+        selected = {**self.frozen, "test": "assert candidate(2) == 2"}
+        task["test"] = "assert candidate(1) == 1"
+        task["inputs"] = [selected]
+        seen = []
+
+        def recording_feedback(method, task_view, code, **kwargs):
+            seen.append((method, task_view["test"], task_view["code"]))
+            return {"prompt": method + ":" + task_view["test"],
+                    "feedback": "diagnostic", "method": None if method == "f4" else "f3",
+                    "requested_method": "ours" if method == "f4" else "f3",
+                    "effective_method": method, "degrade_reason": None,
+                    "can_write_result": False, "diagnostics": {}}
+
+        harness = FakeHarness({"base": {}, "candidate-v1": {"time_ms": 80}})
+        run_offline_loop(
+            task, selected, mode="time-only", feedback_method="f4",
+            generate_candidate=lambda *args: "candidate-v1",
+            measure_task_fn=harness, feedback_builder=recording_feedback,
+        )
+        self.assertEqual([x[0] for x in seen], ["f4", "f3"])
+        self.assertTrue(all(x[1] == selected["test"] and x[2] == task["code"] for x in seen))
+        self.assertEqual(task["test"], "assert candidate(1) == 1")
+        self.assertTrue(all(call["tier_plan"] == [selected] for call in harness.calls))
+
     def test_pair_mismatch_is_rejected(self):
         output, _ = self.run_case(
             "joint", {"base": {}, "candidate-v1": {

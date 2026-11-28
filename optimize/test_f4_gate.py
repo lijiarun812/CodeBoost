@@ -71,6 +71,9 @@ class F4GateIntegrationTests(unittest.TestCase):
         self.assertEqual(row["gate"]["suggested_method"], "diagnostic")
         self.assertTrue(row["gate"]["c_feedback_complete"])
         self.assertIsNone(row["feedback"]["method"])
+        self.assertIsNone(row["feedback"]["degrade_reason"])
+        self.assertEqual(row["feedback"]["effective_method"], "f4")
+        self.assertEqual(row["formal_block_reason"], "G6_non_formal_task")
         self.assertFalse(row["feedback"]["can_write_result"])
         self.assertEqual(row["feedback"]["diagnostics"]["profiler_overhead_ratio"], 2.4)
         self.assertNotEqual(row["prompt_hashes"]["f3"], row["prompt_hashes"]["f4"])
@@ -272,9 +275,17 @@ class F4GateIntegrationTests(unittest.TestCase):
         # claim that the real benchmark has been frozen or measured.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            manifest_path = root / "mock_b_frozen_tasks.json"
-            manifest_path.write_text(json.dumps({"tasks": [self.task]}), encoding="utf-8")
+            manifest_path = root / "mock_b_frozen_tasks.jsonl"
+            manifest_path.write_text(json.dumps(self.task) + "\n", encoding="utf-8")
             approved = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+            bank_manifest_path = root / "bank_manifest.json"
+            bank_manifest_path.write_text(json.dumps({
+                "dataset": self.task["dataset"], "protocol_version": "proto-2026.11",
+                "counts": {"valid_tasks": 1}, "output": manifest_path.name,
+                "status": "frozen", "task_bank_sha256": approved,
+                "frozen_task_ids": [self.task["task_id"]],
+            }), encoding="utf-8")
+            approved_bank_manifest = hashlib.sha256(bank_manifest_path.read_bytes()).hexdigest()
             source = FakeHarness({"base": {}, "candidate-v1": {
                 "time_ms": 80, "heap_mb": 8}})
 
@@ -309,6 +320,8 @@ class F4GateIntegrationTests(unittest.TestCase):
                     prompt_version="feedback-v1", environment_id="offline-env",
                     generation_parameters={"temperature": 0.2},
                     frozen_manifest_path=manifest_path, approved_frozen_sha256=digest,
+                    bank_manifest_path=bank_manifest_path,
+                    approved_bank_manifest_sha256=approved_bank_manifest,
                     measure_task_fn=measure_fn, feedback_builder=builder,
                     ensure_rss_baseline_fn=lambda: {"status": "ok", "value": 95.0,
                                                     "reason": "mock", "meta": {}},

@@ -325,8 +325,9 @@ class OfflineRunnerTests(unittest.TestCase):
             digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
             valid = verify_frozen_task(self.task, self.frozen,
                                        manifest_path=manifest, approved_sha256=digest)
-            self.assertTrue(valid["verified"])
-            self.assertEqual(valid["reason"], "matched_pinned_b_task_and_input")
+            self.assertTrue(valid["content_matched"])
+            self.assertFalse(valid["verified"])
+            self.assertEqual(valid["reason"], "legacy_json_fixture_diagnostic_only")
             self.assertFalse(verify_frozen_task(self.task, self.frozen,
                 manifest_path=manifest, approved_sha256="0" * 64)["verified"])
             wrong = {**self.frozen, "args_hash": "different"}
@@ -337,6 +338,93 @@ class OfflineRunnerTests(unittest.TestCase):
             self.assertEqual(verify_frozen_task(claimed, self.frozen,
                 manifest_path=manifest, approved_sha256=digest)["reason"],
                 "frozen_task_content_mismatch")
+
+    def test_jsonl_bank_and_provisional_list_never_open_formal_gate(self):
+        task = {**self.task, "dataset": "effibench", "kind": "test_block",
+                "entry_point": "solution"}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bank = root / "effibench_tasks.jsonl"
+            bank.write_text(json.dumps(task) + "\n", encoding="utf-8")
+            bank_sha = hashlib.sha256(bank.read_bytes()).hexdigest()
+            summary = root / "bank_manifest.json"
+            summary.write_text(json.dumps({"dataset": "effibench",
+                "protocol_version": "proto-2026.11", "counts": {"valid_tasks": 1},
+                "output": "results\\bank\\effibench_tasks.jsonl"}), encoding="utf-8")
+            provisional = root / "space_resolved_provisional.json"
+            provisional.write_text(json.dumps([{"task_id": task["task_id"]}]),
+                                   encoding="utf-8")
+            found = verify_frozen_task(
+                task, self.frozen, manifest_path=bank, approved_sha256=bank_sha,
+                bank_manifest_path=summary, provisional_list_path=provisional)
+            self.assertTrue(found["content_matched"])
+            self.assertTrue(found["summary_consistent"])
+            self.assertTrue(found["provisional"])
+            self.assertFalse(found["verified"])
+            self.assertEqual(found["reason"], "provisional_task")
+            self.assertEqual(found["manifest_sha256"], bank_sha)
+            wrong = {**self.frozen, "args_hash": "wrong"}
+            self.assertEqual(verify_frozen_task(task, wrong, manifest_path=bank,
+                approved_sha256=bank_sha, bank_manifest_path=summary,
+                provisional_list_path=provisional)["reason"],
+                "frozen_tier_hash_not_unique_or_missing")
+
+            summary.write_text(json.dumps({"dataset": "effibench",
+                "protocol_version": "proto-2026.11", "counts": {"valid_tasks": 2},
+                "output": "effibench_tasks.jsonl"}), encoding="utf-8")
+            self.assertEqual(verify_frozen_task(task, self.frozen,
+                manifest_path=bank, approved_sha256=bank_sha,
+                bank_manifest_path=summary)["reason"],
+                "bank_manifest_summary_mismatch")
+
+            frozen_summary = {"dataset": "effibench", "protocol_version": "proto-2026.11",
+                "counts": {"valid_tasks": 1}, "output": "effibench_tasks.jsonl",
+                "status": "frozen", "task_bank_sha256": bank_sha,
+                "frozen_task_ids": [task["task_id"]]}
+            summary.write_text(json.dumps(frozen_summary), encoding="utf-8")
+            summary_sha = hashlib.sha256(summary.read_bytes()).hexdigest()
+            still_provisional = verify_frozen_task(task, self.frozen,
+                manifest_path=bank, approved_sha256=bank_sha,
+                bank_manifest_path=summary,
+                approved_bank_manifest_sha256=summary_sha,
+                provisional_list_path=provisional)
+            self.assertEqual(still_provisional["reason"], "provisional_task")
+            self.assertFalse(still_provisional["verified"])
+            frozen = verify_frozen_task(task, self.frozen,
+                manifest_path=bank, approved_sha256=bank_sha,
+                bank_manifest_path=summary,
+                approved_bank_manifest_sha256=summary_sha)
+            self.assertTrue(frozen["verified"])
+            self.assertEqual(frozen["reason"], "matched_pinned_b_jsonl_and_frozen_manifest")
+
+    def test_b_frozen_json_snapshot_requires_both_approved_hashes(self):
+        bank_dir = Path(__file__).resolve().parents[1] / "results" / "bank"
+        tasks_path = bank_dir / "frozen_tasks.json"
+        manifest_path = bank_dir / "frozen_manifest.json"
+        task = json.loads(tasks_path.read_text(encoding="utf-8"))[0]
+        frozen = next(item for item in task["inputs"] if item["tier"] == "t2")
+        task_sha = "94804c11bf488f78d989c4ddcad1f00057422125e95774279af187ad29d48371"
+        manifest_sha = "a58e1b11263687f10e670a6bf6dc6d9391a90b4c8ca77a630151ce73b088f325"
+        self.assertEqual(hashlib.sha256(tasks_path.read_bytes()).hexdigest(), task_sha)
+        self.assertEqual(hashlib.sha256(manifest_path.read_bytes()).hexdigest(), manifest_sha)
+        kwargs = {"manifest_path": tasks_path, "approved_sha256": task_sha,
+                  "bank_manifest_path": manifest_path,
+                  "approved_bank_manifest_sha256": manifest_sha}
+        record = verify_frozen_task(task, frozen, **kwargs)
+        self.assertTrue(record["verified"])
+        self.assertEqual(record["format"], "frozen_json")
+        self.assertEqual(record["reason"], "matched_pinned_b_frozen_json_and_manifest")
+        self.assertEqual(record["task_id"], task["task_id"])
+        self.assertEqual(record["args_hash"], frozen["args_hash"])
+        self.assertEqual(verify_frozen_task(task, frozen, **{
+            **kwargs, "approved_bank_manifest_sha256": None})["reason"],
+            "frozen_digests_unapproved")
+        self.assertEqual(verify_frozen_task(task, frozen, **{
+            **kwargs, "approved_bank_manifest_sha256": "0" * 64})["reason"],
+            "bank_manifest_hash_mismatch")
+        self.assertEqual(verify_frozen_task(task, {**frozen, "args_hash": "wrong"},
+                                            **kwargs)["reason"],
+                         "frozen_tier_hash_not_unique_or_missing")
 
 
 if __name__ == "__main__":

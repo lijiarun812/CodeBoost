@@ -1,0 +1,60 @@
+{
+  "schema_version": "unified-control-draft-v1",
+  "run_enabled": false,
+  "formal_results_enabled": false,
+  "task_bank": {
+    "frozen_tasks_path": null,
+    "frozen_manifest_path": null,
+    "approved_tasks_sha256": null,
+    "approved_manifest_sha256": null,
+    "frozen_task_tiers": []
+  },
+  "model": {
+    "provider": null,
+    "model_id": null,
+    "actual_version": null,
+    "temperature": 0.2,
+    "seed": 42,
+    "max_tokens": 2048,
+    "thinking": false,
+    "generations_per_task_arm": 2,
+    "request_timeout_s": 90,
+    "max_total_calls": null,
+    "max_total_tokens": null,
+    "max_total_cost_usd": null
+  },
+  "prompt": {
+    "common_template": "optimize.prompts.render_prompt",
+    "version": null,
+    "initial_code": "Task.code",
+    "description": "Task.description",
+    "arms": {
+      "G0": {"feedback": "historical_empty", "shared_harness_builder": null},
+      "G1": {"feedback": "historical_total_ns", "shared_harness_builder": null},
+      "G2": {"feedback": "historical_total_plus_slowest_ns", "shared_harness_builder": null},
+      "G3": {"feedback": "historical_total_slowest_trace_profile_ns", "shared_harness_builder": null},
+      "F0": {"feedback": "empty", "shared_harness_builder": "optimize.feedback.build_feedback:f0"},
+      "F1": {"feedback": "whole_task_mean_trimmed_ms", "shared_harness_builder": "optimize.feedback.build_feedback:f1"},
+      "F2": {"feedback": "slowest_case_ms", "shared_harness_builder": "optimize.feedback.build_feedback:f2"},
+      "F3": {"feedback": "slowest_case_and_line_hits", "shared_harness_builder": "optimize.feedback.build_feedback:f3"},
+      "F4": {"feedback": "region_profiled_percent_and_program_space", "shared_harness_builder": "optimize.feedback.build_feedback:f4"}
+    }
+  },
+  "measurement": {
+    "harness": "eval.harness.measure_task",
+    "protocol_version": "proto-2026.11",
+    "tier_plan": "one_frozen_tier_per_task",
+    "pairing": ["task_id", "tier", "args_hash"],
+    "correctness": "same_frozen_test_plus_independent_holdout_pending",
+    "time_metric": "mean_trimmed_ms",
+    "heap_metric": "peak_tracemalloc_mb",
+    "rss_role": "resource_gate_only",
+    "diagnostic_line_time_in_result": false
+  },
+  "decision": {
+    "time_only": "optimize.acceptance.decide_acceptance",
+    "mem_only": "optimize.acceptance.decide_acceptance",
+    "joint_ours": "eval.space.pareto_accept:v1.1",
+    "ours_feedback_arm": "F4"
+  }
+}

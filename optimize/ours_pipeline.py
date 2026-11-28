@@ -112,6 +112,9 @@ def run_offline_loop(
         raise ValueError("rounds must be a positive integer")
     plan = _frozen_plan(task, frozen_input)
     expected_pair = (task["task_id"], plan["tier"], plan["args_hash"])
+    # Feedback's per-case diagnosis must see the same frozen test that the
+    # harness measures. Task.test can still be the smaller native tier.
+    feedback_task = {**dict(task), "test": plan["test"]}
     kwargs = dict(measurement_kwargs or {})
     if {"task", "code", "method", "tier_plan"} & kwargs.keys():
         raise ValueError("measurement_kwargs cannot override task/code/method/tier_plan")
@@ -174,7 +177,7 @@ def run_offline_loop(
             break
         time = current_measure.get("time") or {}
         feedback = feedback_builder(
-            feedback_method, task, current_code,
+            feedback_method, feedback_task, current_code,
             total_ms=time.get("mean_trimmed_ms"),
             space_result=current_measure,
             rss_baseline_mb=rss_baseline_mb,
@@ -188,7 +191,7 @@ def run_offline_loop(
             prompt_hashes["f4"] = hashlib.sha256(feedback["prompt"].encode("utf-8")).hexdigest()
             try:
                 f3_feedback = feedback_builder(
-                    "f3", task, current_code,
+                    "f3", feedback_task, current_code,
                     total_ms=time.get("mean_trimmed_ms"),
                     space_result=current_measure,
                     rss_baseline_mb=rss_baseline_mb,

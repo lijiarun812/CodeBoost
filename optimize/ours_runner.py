@@ -2,8 +2,9 @@
 
 Formal Result writes are disabled by default. The batch entry checks A's RSS
 baseline through eval.rss_baseline.ensure(); generation, measurement, and
-writers remain injectable. F4 stays diagnostic-only unless C completeness and
-A's executable gate both pass; writes remain disabled by default.
+writers remain injectable. F4 stays diagnostic-only unless B's frozen bank,
+C completeness, and A's executable gate all pass. Writes remain disabled by
+default.
 """
 
 from __future__ import annotations
@@ -71,6 +72,9 @@ def run_offline_ours(
     generation_parameters: Mapping[str, Any] | None = None,
     frozen_manifest_path: str | Path | None = None,
     approved_frozen_sha256: str | None = None,
+    bank_manifest_path: str | Path | None = None,
+    approved_bank_manifest_sha256: str | None = None,
+    provisional_list_path: str | Path | None = None,
     ensure_rss_baseline_fn: Callable[[], dict] = ensure_rss_baseline,
     measure_task_fn: Callable[..., dict] = measure_task,
     feedback_builder: Callable[..., dict] = build_feedback,
@@ -85,6 +89,8 @@ def run_offline_ours(
 
     The default writes nothing. `allow_formal_results` is for a later approved
     runner; tests may exercise its gate with writers rooted in a temp directory.
+    A JSONL task bank additionally requires B's frozen subset metadata and
+    independently approved hashes of both files before formal_task is true.
     """
     for label, value in (("model", model), ("model_version", model_version),
                          ("prompt_version", prompt_version),
@@ -95,7 +101,10 @@ def run_offline_ours(
         raise ValueError("allow_formal_results requires an injected write_result")
     frozen_verification = verify_frozen_task(
         task, frozen_input, manifest_path=frozen_manifest_path,
-        approved_sha256=approved_frozen_sha256)
+        approved_sha256=approved_frozen_sha256,
+        bank_manifest_path=bank_manifest_path,
+        approved_bank_manifest_sha256=approved_bank_manifest_sha256,
+        provisional_list_path=provisional_list_path)
     rss_baseline_record, rss_baseline_mb = _rss_baseline(
         ensure_rss_baseline_fn, environment_id)
     measure_kwargs = dict(measurement_kwargs or {})
@@ -171,10 +180,17 @@ def run_offline_ours(
             elif effective in ("f4", "f4_line_hits"):
                 # The candidate saw an F4 diagnostic prompt. Do not relabel it
                 # as a formal F3 result; record the suggested rerun method.
+                gate_codes = {item.get("code") for item in gate["failures"]}
+                # G6 is a task provenance gate, not a failed hotspot diagnosis.
+                # Keep the actual F4 feedback intact while forbidding a write.
+                g6_only = effective == "f4" and c_complete and gate_codes == {"G6"}
                 feedback.update({"method": None, "can_write_result": False,
-                                 "degrade_reason": ("budget_exceeded" if
+                                 "degrade_reason": (None if g6_only else
+                                     "budget_exceeded" if
                                      "space_feedback_omitted_by_length_limit" in diagnostics.get("reasons", [])
                                      else "no_hotspot")})
+                if g6_only:
+                    row["formal_block_reason"] = "G6_non_formal_task"
                 row["suggested_rerun_method"] = gate["suggested_method"]
             elif not gate["passed"]:
                 feedback["can_write_result"] = False
