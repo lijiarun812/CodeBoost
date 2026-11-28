@@ -119,20 +119,26 @@ def run_offline_ours(
             diagnostics = feedback.get("diagnostics") or {}
             effective = feedback.get("effective_method")
             proposed_method = "ours" if effective == "f4" else feedback.get("method")
+            # B's frozen task list and input hash have not been verified here.
+            # A task_id or caller-provided Task alone cannot establish formality.
+            formal_task = False
             gate = check_f4_gate(
                 diagnostics=diagnostics, feedback=row.get("feedback_text", ""),
                 result_status=measurement.get("status"),
                 harness_status=row.get("candidate_status"),
                 prompt_hash_f3=hashes.get("f3"),
                 prompt_hash_f4=hashes.get("f4"),
+                formal_task=formal_task,
                 method=proposed_method,
             )
+            gate["formal_task"] = formal_task
+            gate["formal_task_verification"] = "b_frozen_task_and_input_hash_not_verified"
             if not hashes.get("f3") or not hashes.get("f4"):
                 gate["passed"] = False
                 gate["failures"].append({"code": "G5", "detail":
                                          "same-code F3/F4 prompt hash unavailable: "
                                          + str(row.get("prompt_hash_error"))})
-                gate["suggested_method"] = "f3" if diagnostics.get("hotspot_mode") != "none" else "f2"
+                gate["suggested_method"] = "diagnostic"
             c_complete = diagnostics.get("feedback_complete") is True
             gate["c_feedback_complete"] = c_complete
             row["gate"] = gate

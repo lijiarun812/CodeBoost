@@ -202,11 +202,37 @@
     }
   },
   "f4_gate": {
-    "passed": true,
-    "failures": [],
-    "suggested_method": "ours"
+    "passed": false,
+    "failures": [
+      {
+        "code": "G6",
+        "detail": "非正式题目（formal_task=False）不得写 method=ours"
+      }
+    ],
+    "suggested_method": "diagnostic"
   },
-  "offline_gate_eligible_only": true,
-  "limitation": "A gate pass here is diagnostic evidence only: this is a constructed task, not a formal benchmark item or model-generated candidate.",
-  "generated_at_local": "2026-11-28T11:40:31"
+  "offline_gate_eligible_only": false,
+  "limitation": "G1-G5 diagnostic evidence only; G6 rejects the constructed diagnostic/loop200k case. This is not a frozen benchmark item, formal Ours Result, model candidate, or performance-gain comparison.",
+  "generated_at_local": "2026-11-28T11:40:31",
+  "gate_invocation": {
+    "formal_task": false,
+    "formal_task_verification": "not_in_B_frozen_task_list_or_input_hash_verification",
+    "proposed_method": "ours",
+    "result_status": "ok",
+    "harness_status": "ok"
+  },
+  "rss_diagnostic": {
+    "python_executable": "E:\\gpt_documents\\2026-11-27\\e-ai-codeboost\\work\\uv-python\\cpython-3.11.18-windows-x86_64-none\\python.exe",
+    "psutil_status": "unavailable",
+    "rss_status": "psutil_unavailable",
+    "reason": "psutil_import_unavailable_in_harness_python",
+    "peak_rss_mb": null,
+    "memory_round_status": "unknown",
+    "missing_harness_fields": [
+      "memory_round_status",
+      "memory_round_error",
+      "rss_sampler_status",
+      "rss_sample_count"
+    ]
+  }
 }

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from eval.gate import check
 from optimize.feedback import build_feedback
+from optimize.gate_report import rss_evidence
 from optimize.ours_runner import run_offline_ours
 from optimize.test_ours_pipeline import FakeHarness, _task
 
@@ -56,14 +59,17 @@ class F4GateIntegrationTests(unittest.TestCase):
         self.assertFalse(output["formal_result_written"])
         return output, harness
 
-    def test_complete_f4_passes_gate_without_writing_result(self):
+    def test_complete_constructed_f4_is_blocked_by_g6(self):
         output, harness = self.run_case(self.builder())
         row = output["rounds"][0]
         self.assertEqual(row["decision"], "accept")
-        self.assertTrue(row["gate"]["passed"], row["gate"]["failures"])
+        self.assertFalse(row["gate"]["passed"])
+        self.assertEqual({x["code"] for x in row["gate"]["failures"]}, {"G6"})
+        self.assertFalse(row["gate"]["formal_task"])
+        self.assertEqual(row["gate"]["suggested_method"], "diagnostic")
         self.assertTrue(row["gate"]["c_feedback_complete"])
-        self.assertEqual(row["feedback"]["method"], "ours")
-        self.assertTrue(row["feedback"]["can_write_result"])
+        self.assertIsNone(row["feedback"]["method"])
+        self.assertFalse(row["feedback"]["can_write_result"])
         self.assertEqual(row["feedback"]["diagnostics"]["profiler_overhead_ratio"], 2.4)
         self.assertNotEqual(row["prompt_hashes"]["f3"], row["prompt_hashes"]["f4"])
         self.assertIn("Case execution time: 2.5000 ms", row["feedback_text"])
@@ -71,14 +77,14 @@ class F4GateIntegrationTests(unittest.TestCase):
         self.assertNotIn("ms", row["feedback_text"].split("Hot lines", 1)[1])
         self.assertEqual(harness.calls[1]["method"], "diagnostic")
 
-    def test_below_floor_space_uses_na_and_can_pass_gate(self):
+    def test_below_floor_space_uses_na_but_g6_blocks_ours(self):
         output, _ = self.run_case(self.builder(), heap_mb=0.001,
                                   candidate_heap_mb=0.001)
         row = output["rounds"][0]
         self.assertEqual(row["feedback"]["diagnostics"]["space_status"], "below_floor")
         self.assertIn("n/a（本题空间不可分辨", row["feedback_text"])
-        self.assertTrue(row["gate"]["passed"], row["gate"]["failures"])
-        self.assertEqual(row["feedback"]["method"], "ours")
+        self.assertEqual({x["code"] for x in row["gate"]["failures"]}, {"G6"})
+        self.assertIsNone(row["feedback"]["method"])
 
     def test_missing_program_peak_is_explicit_na(self):
         output, _ = self.run_case(self.builder(), heap_mb=None,
@@ -86,7 +92,7 @@ class F4GateIntegrationTests(unittest.TestCase):
         row = output["rounds"][0]
         self.assertEqual(row["feedback"]["diagnostics"]["space_status"], "unmeasured")
         self.assertIn("peak_tracemalloc_mb：n/a", row["feedback_text"])
-        self.assertTrue(row["gate"]["passed"], row["gate"]["failures"])
+        self.assertIn("G6", {x["code"] for x in row["gate"]["failures"]})
         self.assertFalse(output["formal_result_written"])
 
     def test_small_case_is_f3_not_applicable_and_never_ours(self):
@@ -112,7 +118,7 @@ class F4GateIntegrationTests(unittest.TestCase):
         self.assertIn("G1", {item["code"] for item in row["gate"]["failures"]})
         self.assertFalse(row["feedback"]["can_write_result"])
         self.assertIsNone(row["feedback"]["method"])
-        self.assertEqual(row["suggested_rerun_method"], "f3")
+        self.assertEqual(row["suggested_rerun_method"], "diagnostic")
 
     def test_incorrect_candidate_cannot_become_writable_ours(self):
         harness = FakeHarness({"base": {}, "candidate-v1": {"status": "incorrect"}})
@@ -168,7 +174,8 @@ class F4GateIntegrationTests(unittest.TestCase):
 
         output, _ = self.run_case(false_complete)
         row = output["rounds"][0]
-        self.assertTrue(row["gate"]["passed"])
+        self.assertFalse(row["gate"]["passed"])
+        self.assertIn("G6", {x["code"] for x in row["gate"]["failures"]})
         self.assertFalse(row["gate"]["c_feedback_complete"])
         self.assertFalse(row["feedback"]["can_write_result"])
         self.assertIsNone(row["feedback"]["method"])
@@ -197,7 +204,8 @@ class F4GateIntegrationTests(unittest.TestCase):
             feedback=row["feedback_text"], result_status="incorrect",
             harness_status=row["candidate_measurement"]["status"],
             prompt_hash_f3=row["prompt_hashes"]["f3"],
-            prompt_hash_f4=row["prompt_hashes"]["f4"], method="ours",
+            prompt_hash_f4=row["prompt_hashes"]["f4"],
+            formal_task=False, method="ours",
         )
         self.assertFalse(report["passed"])
         self.assertIn("G4", {item["code"] for item in report["failures"]})
@@ -221,6 +229,57 @@ class F4GateIntegrationTests(unittest.TestCase):
         self.assertIn("G4", {item["code"] for item in replay["rounds"][0]["gate"]["failures"]})
         self.assertFalse(replay["rounds"][0]["feedback"]["can_write_result"])
         self.assertEqual(writes, [])
+
+    def test_rss_reason_distinguishes_missing_psutil_from_unknown_sampling(self):
+        result = {"mem": {"peak_rss_mb": None}}
+        unavailable = rss_evidence(result, psutil_available=False,
+                                   python_executable="harness-python")
+        self.assertEqual(unavailable["rss_status"], "psutil_unavailable")
+        self.assertEqual(unavailable["memory_round_status"], "unknown")
+        available = rss_evidence(result, psutil_available=True,
+                                 python_executable="harness-python")
+        self.assertEqual(available["rss_status"], "rss_not_obtained")
+        self.assertIn("cause_unknown", available["reason"])
+        self.assertIsNone(available["peak_rss_mb"])
+
+    def test_claimed_formal_task_id_cannot_bypass_g6_or_write_ours(self):
+        task = {**self.task, "formal_task": True, "dataset": "humaneval"}
+        writes = []
+        output = run_offline_ours(
+            task, self.frozen, mode="joint", feedback_method="f4",
+            generate_candidate=lambda *args: "candidate-v1",
+            model="mock", model_version="offline", prompt_version="gate-v1",
+            environment_id="offline-env",
+            measure_task_fn=FakeHarness({"base": {}, "candidate-v1": {
+                "time_ms": 80, "heap_mb": 8}}),
+            feedback_builder=self.builder(),
+            ensure_rss_baseline_fn=lambda: {"status": "ok", "value": 95.0,
+                                            "reason": "mock", "meta": {}},
+            write_result=writes.append, allow_formal_results=True,
+        )
+        row = output["rounds"][0]
+        self.assertEqual({x["code"] for x in row["gate"]["failures"]}, {"G6"})
+        self.assertEqual(row["gate"]["suggested_method"], "diagnostic")
+        self.assertFalse(row["feedback"]["can_write_result"])
+        self.assertIsNone(row["feedback"]["method"])
+        self.assertEqual(output["formal_results_written"], 0)
+        self.assertEqual(writes, [])
+
+    def test_committed_measured_report_is_utf8_without_bom_and_diagnostic(self):
+        path = Path(__file__).resolve().parents[1] / "results" / "gate_f4.json"
+        self.assertNotEqual(path.read_bytes()[:3], b"\xef\xbb\xbf")
+        with path.open(encoding="utf-8") as stream:
+            report = json.load(stream)
+        self.assertEqual(report["task"]["task_id"], "diagnostic/loop200k")
+        self.assertFalse(report["classification"]["frozen_benchmark_sample"])
+        self.assertFalse(report["classification"]["formal_ours_result"])
+        self.assertIsNone(report["raw_harness_result"]["mem"]["peak_rss_mb"])
+        self.assertFalse(report["f4_gate"]["passed"])
+        self.assertFalse(report["gate_invocation"]["formal_task"])
+        self.assertEqual(report["rss_diagnostic"]["rss_status"],
+                         "psutil_unavailable")
+        self.assertEqual(report["f4_gate"]["suggested_method"], "diagnostic")
+        self.assertIn("G6", {x["code"] for x in report["f4_gate"]["failures"]})
 
 
 if __name__ == "__main__":
