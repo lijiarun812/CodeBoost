@@ -22,16 +22,16 @@
     "tm_level_mb": 0.001,
     "n_new_mem": 19,
     "paper_gt0_mem": 10,
-    "rss_baseline": 20.523,
+    "rss_baseline": 20.668,
     "mu_red_mean": -0.04157154729883762,
     "mu_red_median": 0.0,
-    "mu_delta_mean": -6.162865448705076,
-    "mu_delta_median": 0.0,
+    "mu_delta_mean": -46.925014990702785,
+    "mu_delta_median": -4.074074074075112,
     "mu_n": 19,
     "mu_resolved": 0,
     "mu_peak_median": 20.668,
     "tmu_vs_time_r": 0.9361946949588984,
-    "mu_vs_time_r": 0.37816746468966167,
+    "mu_vs_time_r": -0.006640181268968782,
     "bad_reasons": {
       "AssertionError": 1
     }
@@ -59,16 +59,16 @@
     "tm_level_mb": 0.001,
     "n_new_mem": 15,
     "paper_gt0_mem": 14,
-    "rss_baseline": 20.523,
+    "rss_baseline": 20.668,
     "mu_red_mean": -0.05093994642384711,
     "mu_red_median": 0.0,
-    "mu_delta_mean": -3.277066821795498,
+    "mu_delta_mean": -62.743645243656246,
     "mu_delta_median": 0.0,
     "mu_n": 15,
     "mu_resolved": 0,
     "mu_peak_median": 20.656,
     "tmu_vs_time_r": 0.9672998236279723,
-    "mu_vs_time_r": -0.19750821249464753,
+    "mu_vs_time_r": -0.42473579466872163,
     "bad_reasons": {
       "AssertionError": 3
     }

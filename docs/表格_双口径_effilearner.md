@@ -13,8 +13,8 @@
 
 | 模型 | 题数 | MU = peak_rss 均值/中位降幅 | MU − 空载基线 均值降幅 | 基线 RSS | 可分辨题数 |
 |---|---|---|---|---|---|
-| deepseek-v4-flash-0731（repro_dual） | 19 | -0.0% / +0.0% | n/a（无 ≥5 MB 的题） | 20.5 MB | 0/19 |
-| deepseek-v4-flash-0731（repro_dual_postfix） | 15 | -0.1% / +0.0% | n/a（无 ≥5 MB 的题） | 20.5 MB | 0/15 |
+| deepseek-v4-flash-0731（repro_dual） | 19 | -0.0% / +0.0% | n/a（无 ≥5 MB 的题） | 20.7 MB | 0/19 |
+| deepseek-v4-flash-0731（repro_dual_postfix） | 15 | -0.1% / +0.0% | n/a（无 ≥5 MB 的题） | 20.7 MB | 0/15 |
 
 > 「MU − 空载基线」= `max(0, peak_rss − baseline)`；只有该值 ≥ 5 MB 的题才算**可分辨**（RSS 采样噪声约 ±0.5 MB，小题扣完基线只剩噪声）。
 
@@ -43,7 +43,7 @@
 
 | 模型 | r(TMU降幅, 时间降幅) | r(MU−基线降幅, 时间降幅) | 判读 |
 |---|---|---|---|
-| deepseek-v4-flash-0731（repro_dual） | 0.936 | 0.378 | TMU 与时间高度共线 → 不能当空间指标 |
-| deepseek-v4-flash-0731（repro_dual_postfix） | 0.967 | -0.198 | TMU 与时间高度共线 → 不能当空间指标 |
+| deepseek-v4-flash-0731（repro_dual） | 0.936 | -0.007 | TMU 与时间高度共线 → 不能当空间指标 |
+| deepseek-v4-flash-0731（repro_dual_postfix） | 0.967 | -0.425 | TMU 与时间高度共线 → 不能当空间指标 |
 
 新口径基线 CV：中位 6.6%，范围 2.9%–15.7%（34 题），噪声地板 1+2CV ≈ 1.13×。

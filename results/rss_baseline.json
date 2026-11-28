@@ -1,4 +1,11 @@
 {
-  "peak_rss_mb": 20.523,
-  "how": "harness.measure_code(class Solution: f(x)->x, kind=test_block, e_reps=2)"
+  "peak_rss_mb": 20.668,
+  "meta": {
+    "host": "樂",
+    "python": "3.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "protocol_version": "proto-2026.11",
+    "how": "harness.measure_code(kind=test_block, entry=solution, e_reps=2, 最小程序)",
+    "measured_at": "2026-11-28T10:32:56"
+  }
 }
