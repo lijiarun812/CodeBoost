@@ -11,6 +11,8 @@ from unittest.mock import patch
 
 from eval import rss_baseline
 from optimize.feedback import build_feedback
+from optimize.frozen_task import verify_frozen_task
+from optimize.model_adapter import CandidateResponse
 from optimize.ours_runner import run_offline_ours
 from optimize.test_ours_pipeline import FakeHarness, _task
 
@@ -246,6 +248,95 @@ class OfflineRunnerTests(unittest.TestCase):
             self.assertFalse(formal_path.exists())
             self.assertEqual(output["rounds"][0]["feedback"]["method"], "f1")
             self.assertEqual(output["formal_results_written"], 0)
+
+    def test_structured_mock_generation_records_actual_version_and_parameters(self):
+        response = CandidateResponse(
+            code="candidate-v1", model="provider-returned-model",
+            actual_model_version="provider-returned-v2",
+            parameters={"temperature": 0.15, "max_tokens": 512},
+        )
+        harness = FakeHarness({"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}})
+        output = run_offline_ours(
+            self.task, self.frozen, mode="joint", feedback_method="f1",
+            generate_candidate=lambda *args: response,
+            model="requested-model", model_version="requested-v1",
+            prompt_version="prompt-v3", environment_id="offline-env",
+            generation_parameters={"temperature": 0.2},
+            measure_task_fn=harness,
+            ensure_rss_baseline_fn=lambda: dict(self.rss_info),
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["generation"]["candidate_code"], "candidate-v1")
+        self.assertEqual(row["model_version"], "provider-returned-v2")
+        self.assertEqual(row["actual_model_version"], "provider-returned-v2")
+        self.assertEqual(row["model_version_source"], "provider_response")
+        self.assertEqual(row["declared_model_version"], "requested-v1")
+        self.assertEqual(row["prompt_version"], "prompt-v3")
+        self.assertEqual(row["generation"]["parameters"]["max_tokens"], 512)
+        self.assertEqual(row["generation_parameters_requested"], {"temperature": 0.2})
+        self.assertEqual(harness.calls[0]["kwargs"]["model_version"], "requested-v1")
+        self.assertEqual(harness.calls[1]["kwargs"]["model_version"], "provider-returned-v2")
+        self.assertEqual(harness.calls[1]["kwargs"]["model"], "provider-returned-model")
+        self.assertEqual(harness.calls[1]["kwargs"]["temperature"], 0.15)
+        self.assertFalse(output["formal_result_written"])
+
+    def test_provider_declared_failure_reason_is_retained_without_measurement(self):
+        harness = FakeHarness({"base": {}})
+        outcome = CandidateResponse(
+            code=None, model="mock-provider", actual_model_version="v2",
+            parameters={"temperature": 0.2}, failure_reason="rate_limit")
+        output = run_offline_ours(
+            self.task, self.frozen, mode="joint", feedback_method="f1",
+            generate_candidate=lambda *args: outcome,
+            model="mock-provider", model_version="requested-v1",
+            prompt_version="p1", environment_id="offline-env",
+            measure_task_fn=harness,
+            ensure_rss_baseline_fn=lambda: dict(self.rss_info),
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["generation"]["failure_reason"], "rate_limit")
+        self.assertEqual(row["actual_model_version"], "v2")
+        self.assertEqual(row["reason"], "generation_failed")
+        self.assertEqual(len(harness.calls), 1)
+
+    def test_generation_error_is_diagnostic_and_skips_candidate_measurement(self):
+        harness = FakeHarness({"base": {}})
+        output = run_offline_ours(
+            self.task, self.frozen, mode="joint", feedback_method="f1",
+            generate_candidate=lambda *args: (_ for _ in ()).throw(TimeoutError("do not log secret")),
+            model="mock", model_version="v1", prompt_version="p1",
+            environment_id="offline-env", measure_task_fn=harness,
+            ensure_rss_baseline_fn=lambda: dict(self.rss_info),
+        )
+        row = output["rounds"][0]
+        self.assertEqual(row["reason"], "generation_failed")
+        self.assertEqual(row["generation"]["status"], "api_failed")
+        self.assertEqual(row["generation"]["failure_reason"],
+                         "generator_exception:TimeoutError")
+        self.assertNotIn("secret", str(row))
+        self.assertIsNone(row["candidate_code"])
+        self.assertEqual(len(harness.calls), 1)
+        self.assertFalse(output["formal_result_written"])
+
+    def test_pinned_b_manifest_requires_digest_and_matching_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = Path(directory) / "b_frozen_tasks.json"
+            manifest.write_text(json.dumps({"tasks": [self.task]}), encoding="utf-8")
+            digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
+            valid = verify_frozen_task(self.task, self.frozen,
+                                       manifest_path=manifest, approved_sha256=digest)
+            self.assertTrue(valid["verified"])
+            self.assertEqual(valid["reason"], "matched_pinned_b_task_and_input")
+            self.assertFalse(verify_frozen_task(self.task, self.frozen,
+                manifest_path=manifest, approved_sha256="0" * 64)["verified"])
+            wrong = {**self.frozen, "args_hash": "different"}
+            self.assertEqual(verify_frozen_task(self.task, wrong,
+                manifest_path=manifest, approved_sha256=digest)["reason"],
+                "frozen_tier_hash_not_unique_or_missing")
+            claimed = {**self.task, "formal_task": True, "code": "different code"}
+            self.assertEqual(verify_frozen_task(claimed, self.frozen,
+                manifest_path=manifest, approved_sha256=digest)["reason"],
+                "frozen_task_content_mismatch")
 
 
 if __name__ == "__main__":

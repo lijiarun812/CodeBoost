@@ -14,6 +14,7 @@ from eval.harness import measure_task
 from eval.space import pareto_accept
 from optimize.acceptance import AcceptanceConfig, Mode, decide_acceptance
 from optimize.feedback import build_feedback
+from optimize.model_adapter import CandidateGenerator, generation_record
 
 
 def _feedback_projection(feedback: Mapping[str, Any]) -> dict:
@@ -83,7 +84,7 @@ def run_offline_loop(
     *,
     mode: Mode,
     feedback_method: str,
-    generate_candidate: Callable[[str, str, int], str],
+    generate_candidate: CandidateGenerator,
     measure_task_fn: Callable[..., dict] = measure_task,
     feedback_builder: Callable[..., dict] = build_feedback,
     config: AcceptanceConfig = AcceptanceConfig(),
@@ -93,7 +94,8 @@ def run_offline_loop(
 ) -> dict:
     """Connect feedback, mock candidate, shared measurement, and acceptance.
 
-    generate_candidate(prompt, current_code, round_index) returns full code.
+    generate_candidate(prompt, current_code, round_index) returns full code
+    or a CandidateResponse containing provider-returned model metadata.
     measure_task_fn has eval.harness.measure_task's signature. Every call
     receives the same one-element tier_plan, with no candidate-specific tier
     escalation. The return value contains decisions, not formal Results.
@@ -198,13 +200,34 @@ def run_offline_loop(
             except Exception as exc:
                 prompt_hash_error = f"{type(exc).__name__}: {exc}"
         formal_eligible = feedback_meta["can_write_result"]
-        candidate_code = generate_candidate(feedback["prompt"], current_code, index)
+        try:
+            generation = generation_record(
+                generate_candidate(feedback["prompt"], current_code, index))
+        except Exception as exc:
+            # The exception class is enough to explain the failed call without
+            # copying a provider error body that may contain credentials.
+            generation = {"status": "api_failed", "candidate_code": None,
+                          "model": None, "actual_model_version": None,
+                          "parameters": {},
+                          "failure_reason": f"generator_exception:{type(exc).__name__}"}
+        candidate_code = generation["candidate_code"]
+        if generation["status"] not in ("ok", "legacy_code_only"):
+            output["rounds"].append({
+                "round": index, "decision": "reject", "reason": "generation_failed",
+                "acceptance_rule": output["acceptance_rule"],
+                "source_code": current_code, "prompt": feedback["prompt"],
+                "prompt_hashes": prompt_hashes, "candidate_code": candidate_code,
+                "generation": generation, "feedback": feedback_meta,
+                "formal_result_written": False,
+            })
+            continue
         if not isinstance(candidate_code, str) or not candidate_code.strip():
             output["rounds"].append({
                 "round": index, "decision": "reject", "reason": "empty_candidate",
                 "acceptance_rule": output["acceptance_rule"],
                 "source_code": current_code, "prompt": feedback["prompt"],
-                "feedback": feedback_meta,
+                "feedback": feedback_meta, "generation": generation,
+                "candidate_code": candidate_code, "formal_result_written": False,
             })
             continue
         if candidate_code == current_code:
@@ -212,15 +235,23 @@ def run_offline_loop(
                 "round": index, "decision": "reject", "reason": "unchanged_candidate",
                 "acceptance_rule": output["acceptance_rule"],
                 "source_code": current_code, "prompt": feedback["prompt"],
-                "feedback": feedback_meta,
+                "feedback": feedback_meta, "generation": generation,
+                "candidate_code": candidate_code, "formal_result_written": False,
             })
             continue
         # "diagnostic" is intentionally outside the frozen method enum. Its
         # in-memory Result must never be persisted while C's F4 is incomplete.
         actual_method = feedback_meta["method"] if formal_eligible else "diagnostic"
+        candidate_kwargs = dict(kwargs)
+        if generation["status"] == "ok":
+            candidate_kwargs["model"] = generation["model"]
+            candidate_kwargs["model_version"] = generation["actual_model_version"]
+            for manifest_key in ("temperature", "seed"):
+                if manifest_key in generation["parameters"]:
+                    candidate_kwargs[manifest_key] = generation["parameters"][manifest_key]
         candidate_measure = measure_task_fn(
             task, code=candidate_code, method=actual_method,
-            tier_plan=[dict(plan)], **kwargs
+            tier_plan=[dict(plan)], **candidate_kwargs
         )
         retest_record = baseline_retest
         if mode == "joint":
@@ -248,7 +279,7 @@ def run_offline_loop(
                 else:
                     candidate_measure = measure_task_fn(
                         task, code=candidate_code, method=actual_method,
-                        tier_plan=[dict(plan)], **kwargs,
+                        tier_plan=[dict(plan)], **candidate_kwargs,
                     )
                 after = current_measure if side == "baseline" else candidate_measure
                 retest_record = {"side": side, "reason": decision.get("retest_reason"),
@@ -274,6 +305,7 @@ def run_offline_loop(
             "prompt_hashes": prompt_hashes,
             "prompt_hash_error": prompt_hash_error,
             "candidate_code": candidate_code,
+            "generation": generation,
             "candidate_status": candidate_measure.get("status"),
             "decision": decision["decision"],
             "reason": decision.get("reason") or "; ".join(decision.get("reasons", [])),

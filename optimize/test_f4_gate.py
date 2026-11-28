@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from eval.gate import check
 from optimize.feedback import build_feedback
 from optimize.gate_report import rss_evidence
+from optimize.model_adapter import CandidateResponse
 from optimize.ours_runner import run_offline_ours
 from optimize.test_ours_pipeline import FakeHarness, _task
 
@@ -264,6 +266,113 @@ class F4GateIntegrationTests(unittest.TestCase):
         self.assertIsNone(row["feedback"]["method"])
         self.assertEqual(output["formal_results_written"], 0)
         self.assertEqual(writes, [])
+
+    def test_temp_formal_writer_requires_pinned_b_pair_and_complete_gate(self):
+        # A temporary schema-shaped B fixture is an interface test, not a
+        # claim that the real benchmark has been frozen or measured.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = root / "mock_b_frozen_tasks.json"
+            manifest_path.write_text(json.dumps({"tasks": [self.task]}), encoding="utf-8")
+            approved = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+            source = FakeHarness({"base": {}, "candidate-v1": {
+                "time_ms": 80, "heap_mb": 8}})
+
+            def measured(task, **kwargs):
+                result = source(task, **kwargs)
+                result.update({
+                    "run_id": "offline-mock-run", "dataset": task["dataset"],
+                    "started_at": "2026-11-28T00:00:00", "error": None,
+                    "manifest": {"model": kwargs["model"],
+                                 "model_version": kwargs["model_version"],
+                                 "temperature": 0.2, "seed": 42,
+                                 "dataset_hash": "mock-fixture", "harness_commit": "mock",
+                                 "protocol_version": "proto-2026.11"},
+                    "speedup": None, "mem_ratio": None,
+                    "downgraded": False, "protocol_version": "proto-2026.11",
+                    "code_source": "candidate" if kwargs.get("code") else "canonical",
+                })
+                result["time"].update({"median_ms": result["time"]["mean_trimmed_ms"],
+                                       "iqr": 0.0, "raw_ms": [result["time"]["mean_trimmed_ms"]]})
+                return result
+
+            def run(builder, *, digest=approved, filename="formal.json",
+                    measure_fn=measured, generator=None):
+                path = root / filename
+                diagnostic_path = root / (filename + ".diagnostic.json")
+                output = run_offline_ours(
+                    self.task, self.frozen, mode="joint", feedback_method="f4",
+                    generate_candidate=generator or (lambda *args: CandidateResponse(
+                        "candidate-v1", "mock-provider", "returned-v7",
+                        {"temperature": 0.2})),
+                    model="requested-provider", model_version="requested-v1",
+                    prompt_version="feedback-v1", environment_id="offline-env",
+                    generation_parameters={"temperature": 0.2},
+                    frozen_manifest_path=manifest_path, approved_frozen_sha256=digest,
+                    measure_task_fn=measure_fn, feedback_builder=builder,
+                    ensure_rss_baseline_fn=lambda: {"status": "ok", "value": 95.0,
+                                                    "reason": "mock", "meta": {}},
+                    write_diagnostic=lambda record: diagnostic_path.write_text(
+                        json.dumps(record), encoding="utf-8"),
+                    write_result=lambda record: path.write_text(json.dumps(record), encoding="utf-8"),
+                    allow_formal_results=True,
+                )
+                self.assertTrue(diagnostic_path.exists())
+                self.assertEqual(json.loads(diagnostic_path.read_text(encoding="utf-8"))["kind"],
+                                 "diagnostic_demo")
+                return output, path
+
+            good, formal_path = run(self.builder())
+            self.assertTrue(good["frozen_task_verification"]["verified"])
+            self.assertTrue(good["rounds"][0]["gate"]["passed"])
+            self.assertEqual(good["formal_results_written"], 1)
+            formal = json.loads(formal_path.read_text(encoding="utf-8"))
+            self.assertEqual((formal["method"], formal["requested_method"],
+                              formal["degrade_reason"]), ("ours", "ours", None))
+            self.assertEqual(formal["manifest"]["model_version"], "returned-v7")
+            self.assertEqual(formal["time"]["tiers"][-1]["args_hash"],
+                             self.frozen["args_hash"])
+
+            unpinned, path = run(self.builder(), digest="0" * 64,
+                                 filename="hash_mismatch.json")
+            self.assertFalse(path.exists())
+            self.assertIn("G6", {f["code"] for f in unpinned["rounds"][0]["gate"]["failures"]})
+
+            downgraded, path = run(self.builder(slow_ms=0.3), filename="downgraded.json")
+            self.assertFalse(path.exists())
+            self.assertFalse(downgraded["rounds"][0]["feedback"]["can_write_result"])
+
+            original = self.builder()
+            def identical_prompts(method, task, code, **kwargs):
+                fb = original("f3", task, code, **kwargs)
+                if method == "f4":
+                    fb.update({"requested_method": "ours", "effective_method": "f4",
+                               "method": None, "can_write_result": False})
+                    fb["diagnostics"].update({"hotspot_mode": "line_profiler",
+                        "case_ms": 2.5, "profiler_overhead_ratio": 2.4,
+                        "space_status": "measured", "feedback_complete": True,
+                        "line_timing": {"numbers_in": "hits_only"}})
+                return fb
+            bad_gate, path = run(identical_prompts, filename="gate_failed.json")
+            self.assertFalse(path.exists())
+            self.assertIn("G5", {f["code"] for f in bad_gate["rounds"][0]["gate"]["failures"]})
+
+            legacy, path = run(self.builder(), filename="legacy_code_only.json",
+                               generator=lambda *args: "candidate-v1")
+            self.assertFalse(path.exists())
+            self.assertTrue(legacy["rounds"][0]["gate"]["passed"])
+            self.assertIn("actual_model_response_unavailable",
+                          legacy["rounds"][0]["formal_write_blockers"])
+
+            def wrong_pair(task, **kwargs):
+                result = measured(task, **kwargs)
+                if kwargs.get("code"):
+                    result["time"]["tiers"][-1]["args_hash"] = "wrong-hash"
+                return result
+            mismatched, path = run(self.builder(), filename="pair_mismatch.json",
+                                   measure_fn=wrong_pair)
+            self.assertFalse(path.exists())
+            self.assertEqual(mismatched["rounds"][0]["reason"], "pair_mismatch")
 
     def test_committed_measured_report_is_utf8_without_bom_and_diagnostic(self):
         path = Path(__file__).resolve().parents[1] / "results" / "gate_f4.json"

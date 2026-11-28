@@ -11,6 +11,7 @@ from __future__ import annotations
 import math
 import socket
 import sys
+from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from eval.gate import check as check_f4_gate
@@ -18,7 +19,9 @@ from eval.harness import PROTOCOL_VERSION, measure_task
 from eval.rss_baseline import ensure as ensure_rss_baseline
 from optimize.acceptance import AcceptanceConfig, Mode
 from optimize.feedback import build_feedback
-from optimize.ours_pipeline import run_offline_loop
+from optimize.frozen_task import verify_frozen_task
+from optimize.model_adapter import CandidateGenerator
+from optimize.ours_pipeline import _pair_reason, run_offline_loop
 
 
 def _rss_baseline(ensure_fn: Callable[[], dict], environment_id: str) -> tuple[dict, float | None]:
@@ -60,11 +63,14 @@ def run_offline_ours(
     *,
     mode: Mode,
     feedback_method: str,
-    generate_candidate: Callable[[str, str, int], str],
+    generate_candidate: CandidateGenerator,
     model: str,
     model_version: str,
     prompt_version: str,
     environment_id: str,
+    generation_parameters: Mapping[str, Any] | None = None,
+    frozen_manifest_path: str | Path | None = None,
+    approved_frozen_sha256: str | None = None,
     ensure_rss_baseline_fn: Callable[[], dict] = ensure_rss_baseline,
     measure_task_fn: Callable[..., dict] = measure_task,
     feedback_builder: Callable[..., dict] = build_feedback,
@@ -87,6 +93,9 @@ def run_offline_ours(
             raise ValueError(f"{label} is required")
     if allow_formal_results and write_result is None:
         raise ValueError("allow_formal_results requires an injected write_result")
+    frozen_verification = verify_frozen_task(
+        task, frozen_input, manifest_path=frozen_manifest_path,
+        approved_sha256=approved_frozen_sha256)
     rss_baseline_record, rss_baseline_mb = _rss_baseline(
         ensure_rss_baseline_fn, environment_id)
     measure_kwargs = dict(measurement_kwargs or {})
@@ -103,6 +112,8 @@ def run_offline_ours(
     output.update({"model": model, "model_version": model_version,
                    "prompt_version": prompt_version,
                    "environment_id": environment_id,
+                   "generation_parameters_requested": dict(generation_parameters or {}),
+                   "frozen_task_verification": frozen_verification,
                    "rss_baseline_record": rss_baseline_record,
                    "rss_gate_status": ("eligible" if rss_baseline_mb is not None
                                        else "skipped"),
@@ -110,8 +121,16 @@ def run_offline_ours(
                                                else "n/a"),
                    "formal_results_written": 0})
     for row in output["rounds"]:
-        row.update({"model": model, "model_version": model_version,
-                    "prompt_version": prompt_version})
+        generation = row.get("generation") or {}
+        row.update({"model": generation.get("model") or model,
+                    "model_version": generation.get("actual_model_version") or model_version,
+                    "actual_model_version": generation.get("actual_model_version"),
+                    "model_version_source": ("provider_response" if generation.get("actual_model_version")
+                                             else "declared_only"),
+                    "declared_model": model,
+                    "declared_model_version": model_version,
+                    "prompt_version": prompt_version,
+                    "generation_parameters_requested": dict(generation_parameters or {})})
         feedback = row["feedback"]
         measurement = row.get("candidate_measurement")
         if feedback_method.lower() == "f4" and isinstance(measurement, Mapping):
@@ -119,9 +138,7 @@ def run_offline_ours(
             diagnostics = feedback.get("diagnostics") or {}
             effective = feedback.get("effective_method")
             proposed_method = "ours" if effective == "f4" else feedback.get("method")
-            # B's frozen task list and input hash have not been verified here.
-            # A task_id or caller-provided Task alone cannot establish formality.
-            formal_task = False
+            formal_task = frozen_verification["verified"]
             gate = check_f4_gate(
                 diagnostics=diagnostics, feedback=row.get("feedback_text", ""),
                 result_status=measurement.get("status"),
@@ -132,13 +149,15 @@ def run_offline_ours(
                 method=proposed_method,
             )
             gate["formal_task"] = formal_task
-            gate["formal_task_verification"] = "b_frozen_task_and_input_hash_not_verified"
+            gate["formal_task_verification"] = frozen_verification["reason"]
             if not hashes.get("f3") or not hashes.get("f4"):
                 gate["passed"] = False
                 gate["failures"].append({"code": "G5", "detail":
                                          "same-code F3/F4 prompt hash unavailable: "
                                          + str(row.get("prompt_hash_error"))})
-                gate["suggested_method"] = "diagnostic"
+                gate["suggested_method"] = ("f3" if formal_task and
+                    diagnostics.get("hotspot_mode") != "none" else
+                    "f2" if formal_task else "diagnostic")
             c_complete = diagnostics.get("feedback_complete") is True
             gate["c_feedback_complete"] = c_complete
             row["gate"] = gate
@@ -159,10 +178,37 @@ def run_offline_ours(
                 row["suggested_rerun_method"] = gate["suggested_method"]
             elif not gate["passed"]:
                 feedback["can_write_result"] = False
-        if (allow_formal_results and row.get("decision") == "accept"
-                and feedback["can_write_result"]
-                and isinstance(measurement, Mapping)
-                and measurement.get("status") == "ok"):
+        blockers = []
+        if not allow_formal_results:
+            blockers.append("formal_write_disabled")
+        if not frozen_verification["verified"]:
+            blockers.append("frozen_task_unverified")
+        if feedback_method.lower() != "f4" or feedback.get("method") != "ours":
+            blockers.append("not_complete_ours")
+        if feedback.get("requested_method") != "ours" or feedback.get("degrade_reason") is not None:
+            blockers.append("degraded_or_wrong_requested_method")
+        if not feedback.get("can_write_result") or not (row.get("gate") or {}).get("passed"):
+            blockers.append("feedback_or_gate_blocked")
+        if row.get("decision") != "accept" or not isinstance(measurement, Mapping) or measurement.get("status") != "ok":
+            blockers.append("candidate_not_accepted_ok")
+        if generation.get("status") != "ok":
+            blockers.append("actual_model_response_unavailable")
+        if isinstance(measurement, Mapping):
+            expected = (task["task_id"], frozen_input["tier"], frozen_input["args_hash"])
+            if _pair_reason(row.get("baseline_measurement") or {}, measurement, expected):
+                blockers.append("frozen_result_pair_mismatch")
+            manifest = measurement.get("manifest") or {}
+            if (not isinstance(manifest, Mapping) or
+                    manifest.get("model") != generation.get("model") or
+                    manifest.get("model_version") != generation.get("actual_model_version")):
+                blockers.append("actual_model_manifest_mismatch")
+            if isinstance(manifest, Mapping) and any(
+                    manifest.get(key) != generation.get("parameters", {}).get(key)
+                    for key in ("temperature", "seed")
+                    if key in generation.get("parameters", {})):
+                blockers.append("generation_parameters_manifest_mismatch")
+        row["formal_write_blockers"] = blockers
+        if not blockers:
             formal = dict(measurement)
             formal["method"] = feedback["method"]
             formal["requested_method"] = feedback["requested_method"]
