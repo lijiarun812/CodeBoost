@@ -404,9 +404,9 @@ class PipelineTests(unittest.TestCase):
                 feedback = output["rounds"][0]["feedback"]
                 self.assertEqual(feedback["requested_method"], "ours")
                 self.assertEqual(feedback["effective_method"],
-                                 "f4" if variant == "full" else "f4_line_hits")
-                self.assertIsNone(feedback["method"])
-                self.assertTrue(feedback["schema_mapping_pending"])
+                                 "f4" if variant == "full" else "f3")
+                self.assertEqual(feedback["method"], None if variant == "full" else "f3")
+                self.assertEqual(feedback["schema_mapping_pending"], variant == "full")
                 self.assertFalse(feedback["eligible_for_requested_method"])
                 self.assertFalse(feedback["can_write_result"])
                 self.assertIsInstance(feedback["diagnostics"], dict)
@@ -438,9 +438,9 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual((feedback["method"], feedback["requested_method"],
                           feedback["effective_method"], feedback["degrade_reason"]),
                          ("f2", "ours", "f2", "fallback_f2"))
-        self.assertTrue(feedback["can_write_result"])
+        self.assertFalse(feedback["can_write_result"])
         self.assertFalse(feedback["eligible_for_requested_method"])
-        self.assertEqual(harness.calls[1]["method"], "f2")
+        self.assertEqual(harness.calls[1]["method"], "diagnostic")
         self.assertEqual(feedback["diagnostics"]["space"]["status"],
                          "omitted_after_feedback_downgrade")
         self.assertNotIn("peak_tracemalloc_mb", output["rounds"][0]["prompt"])
@@ -469,7 +469,7 @@ class PipelineTests(unittest.TestCase):
         row = output["rounds"][0]
         self.assertEqual(row["feedback"]["diagnostics"]["space"]["peak_tm_status"],
                          "unmeasured")
-        self.assertIn("缺值", row["prompt"])
+        self.assertIn("n/a", row["prompt"])
         self.assertFalse(row["feedback"]["can_write_result"])
         self.assertFalse(output["formal_result_written"])
 
@@ -487,7 +487,7 @@ class PipelineTests(unittest.TestCase):
                                   diagnostic=diagnostic, line_timing=timing,
                                   space_result=space_result,
                                   rss_baseline_mb=rss_baseline_mb,
-                                  radius=0, max_chars=300)
+                                  radius=0, max_chars=430)
 
         output, _ = self.run_case(
             "time-only", {"base": {}, "candidate-v1": {"time_ms": 80}},

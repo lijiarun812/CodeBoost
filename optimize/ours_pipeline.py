@@ -7,6 +7,7 @@ Result. A later runner must separately handle persistence and schema gates.
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any, Callable, Mapping
 
 from eval.harness import measure_task
@@ -179,6 +180,23 @@ def run_offline_loop(
         if not isinstance(feedback, dict):
             raise ValueError("feedback_builder must return a feedback dict")
         feedback_meta = _feedback_projection(feedback)
+        prompt_hashes = {"f3": None, "f4": None}
+        prompt_hash_error = None
+        if feedback_method.lower() == "f4":
+            prompt_hashes["f4"] = hashlib.sha256(feedback["prompt"].encode("utf-8")).hexdigest()
+            try:
+                f3_feedback = feedback_builder(
+                    "f3", task, current_code,
+                    total_ms=time.get("mean_trimmed_ms"),
+                    space_result=current_measure,
+                    rss_baseline_mb=rss_baseline_mb,
+                )
+                if not isinstance(f3_feedback, dict) or not isinstance(f3_feedback.get("prompt"), str):
+                    raise ValueError("F3 comparison prompt unavailable")
+                prompt_hashes["f3"] = hashlib.sha256(
+                    f3_feedback["prompt"].encode("utf-8")).hexdigest()
+            except Exception as exc:
+                prompt_hash_error = f"{type(exc).__name__}: {exc}"
         formal_eligible = feedback_meta["can_write_result"]
         candidate_code = generate_candidate(feedback["prompt"], current_code, index)
         if not isinstance(candidate_code, str) or not candidate_code.strip():
@@ -252,6 +270,9 @@ def run_offline_loop(
             "acceptance_rule": output["acceptance_rule"],
             "source_code": current_code,
             "prompt": feedback["prompt"],
+            "feedback_text": feedback.get("feedback", ""),
+            "prompt_hashes": prompt_hashes,
+            "prompt_hash_error": prompt_hash_error,
             "candidate_code": candidate_code,
             "candidate_status": candidate_measure.get("status"),
             "decision": decision["decision"],

@@ -82,4 +82,14 @@ def profile_case(
                 or row["hits"] < 0 or row["line_time_ms"] < 0):
             return {"ok": False, "status": "line_mismatch", "mode": "none",
                     "reason": "line_number_or_source_mismatch"}
+    plain_ms = result.get("unprofiled_case_wall_ms")
+    profiled_ms = result.get("profiled_case_wall_ms")
+    if (any(isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or value <= 0
+            for value in (plain_ms, profiled_ms))
+            or result.get("overhead_method") != "same_child_fresh_namespace_case_wall"):
+        return {"ok": False, "status": "bad_payload", "mode": "none",
+                "reason": "measured_profiler_overhead_unavailable"}
+    # Derive the ratio from both observed case wall times, never a caller constant.
+    result["profiler_overhead_ratio"] = profiled_ms / plain_ms
     return result

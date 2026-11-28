@@ -30,6 +30,8 @@ class LineTimingContractTests(unittest.TestCase):
         code = "def f():\n    return 1\n"
         base = {
             "ok": True, "status": "ok", "mode": "line_profiler", "unit": "ms",
+            "unprofiled_case_wall_ms": 2.0, "profiled_case_wall_ms": 5.0,
+            "overhead_method": "same_child_fresh_namespace_case_wall",
             "source_sha256": hashlib.sha256(code.encode()).hexdigest(),
             "items": [{"line": 2, "hits": 1, "line_time_ms": 1.5,
                        "src": "    return 1"}],
@@ -38,12 +40,19 @@ class LineTimingContractTests(unittest.TestCase):
             run.return_value = subprocess.CompletedProcess(
                 ["python"], 0, MARKER + json.dumps(base), ""
             )
-            self.assertTrue(profile_case(code, "f()", "f")["ok"])
+            measured = profile_case(code, "f()", "f")
+            self.assertTrue(measured["ok"])
+            self.assertEqual(measured["profiler_overhead_ratio"], 2.5)
             bad = {**base, "items": [{**base["items"][0], "src": "    return 2"}]}
             run.return_value = subprocess.CompletedProcess(
                 ["python"], 0, MARKER + json.dumps(bad), ""
             )
             self.assertEqual(profile_case(code, "f()", "f")["status"], "line_mismatch")
+            no_overhead = {**base, "profiled_case_wall_ms": None}
+            run.return_value = subprocess.CompletedProcess(
+                ["python"], 0, MARKER + json.dumps(no_overhead), ""
+            )
+            self.assertEqual(profile_case(code, "f()", "f")["status"], "bad_payload")
             bad = {**base, "source_sha256": "wrong"}
             run.return_value = subprocess.CompletedProcess(
                 ["python"], 0, MARKER + json.dumps(bad), ""
@@ -72,6 +81,11 @@ class RealLineProfilerTests(unittest.TestCase):
         self.assertEqual(result["unit"], "ms")
         self.assertEqual(rows[4]["src"], "    time.sleep(0.02)")
         self.assertGreater(rows[4]["line_time_ms"], rows[3]["line_time_ms"] * 5)
+        self.assertEqual(result["overhead_method"], "same_child_fresh_namespace_case_wall")
+        self.assertGreater(result["unprofiled_case_wall_ms"], 0)
+        self.assertGreater(result["profiled_case_wall_ms"], 0)
+        self.assertAlmostEqual(result["profiler_overhead_ratio"],
+                               result["profiled_case_wall_ms"] / result["unprofiled_case_wall_ms"])
 
     def test_loop_and_called_function_line_numbers(self):
         code = ("def helper(n):\n"

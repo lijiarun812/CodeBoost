@@ -2,7 +2,8 @@
 
 Formal Result writes are disabled by default. The batch entry checks A's RSS
 baseline through eval.rss_baseline.ensure(); generation, measurement, and
-writers remain injectable. Incomplete F4 is always diagnostic-only.
+writers remain injectable. F4 stays diagnostic-only unless C completeness and
+A's executable gate both pass; writes remain disabled by default.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import socket
 import sys
 from typing import Any, Callable, Mapping
 
+from eval.gate import check as check_f4_gate
 from eval.harness import PROTOCOL_VERSION, measure_task
 from eval.rss_baseline import ensure as ensure_rss_baseline
 from optimize.acceptance import AcceptanceConfig, Mode
@@ -112,8 +114,49 @@ def run_offline_ours(
                     "prompt_version": prompt_version})
         feedback = row["feedback"]
         measurement = row.get("candidate_measurement")
-        if (allow_formal_results and feedback["can_write_result"]
-                and isinstance(measurement, Mapping)):
+        if feedback_method.lower() == "f4" and isinstance(measurement, Mapping):
+            hashes = row.get("prompt_hashes") or {}
+            diagnostics = feedback.get("diagnostics") or {}
+            effective = feedback.get("effective_method")
+            proposed_method = "ours" if effective == "f4" else feedback.get("method")
+            gate = check_f4_gate(
+                diagnostics=diagnostics, feedback=row.get("feedback_text", ""),
+                result_status=measurement.get("status"),
+                harness_status=row.get("candidate_status"),
+                prompt_hash_f3=hashes.get("f3"),
+                prompt_hash_f4=hashes.get("f4"),
+                method=proposed_method,
+            )
+            if not hashes.get("f3") or not hashes.get("f4"):
+                gate["passed"] = False
+                gate["failures"].append({"code": "G5", "detail":
+                                         "same-code F3/F4 prompt hash unavailable: "
+                                         + str(row.get("prompt_hash_error"))})
+                gate["suggested_method"] = "f3" if diagnostics.get("hotspot_mode") != "none" else "f2"
+            c_complete = diagnostics.get("feedback_complete") is True
+            gate["c_feedback_complete"] = c_complete
+            row["gate"] = gate
+            if (effective == "f4" and c_complete and gate["passed"]
+                    and row.get("decision") == "accept"
+                    and measurement.get("status") == "ok"):
+                feedback.update({"method": "ours", "degrade_reason": None,
+                                 "can_write_result": True,
+                                 "schema_mapping_pending": False,
+                                 "eligible_for_requested_method": True})
+            elif effective in ("f4", "f4_line_hits"):
+                # The candidate saw an F4 diagnostic prompt. Do not relabel it
+                # as a formal F3 result; record the suggested rerun method.
+                feedback.update({"method": None, "can_write_result": False,
+                                 "degrade_reason": ("budget_exceeded" if
+                                     "space_feedback_omitted_by_length_limit" in diagnostics.get("reasons", [])
+                                     else "no_hotspot")})
+                row["suggested_rerun_method"] = gate["suggested_method"]
+            elif not gate["passed"]:
+                feedback["can_write_result"] = False
+        if (allow_formal_results and row.get("decision") == "accept"
+                and feedback["can_write_result"]
+                and isinstance(measurement, Mapping)
+                and measurement.get("status") == "ok"):
             formal = dict(measurement)
             formal["method"] = feedback["method"]
             formal["requested_method"] = feedback["requested_method"]

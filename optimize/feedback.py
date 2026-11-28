@@ -27,8 +27,8 @@ _MAX_DIAGNOSTIC_TIMEOUT_S = 60.0
 
 def _bounded(lines: list[str], max_chars: int) -> tuple[str, bool, int]:
     """Keep only complete lines within the character budget."""
-    if max_chars < 256:
-        raise ValueError("max_chars must be at least 256")
+    if max_chars < 0:
+        raise ValueError("max_chars must be nonnegative")
     output = []
     length = 0
     for line in lines:
@@ -95,6 +95,18 @@ def _timing_source_error(timing: dict, code: str) -> str | None:
     return None
 
 
+def _measured_overhead_ratio(timing: dict) -> float | None:
+    """Use the two observed child-process case wall times, never a supplied ratio."""
+    plain = timing.get("unprofiled_case_wall_ms")
+    profiled = timing.get("profiled_case_wall_ms")
+    if timing.get("overhead_method") != "same_child_fresh_namespace_case_wall":
+        return None
+    if any(isinstance(value, bool) or not isinstance(value, (int, float))
+           or not math.isfinite(value) or value <= 0 for value in (plain, profiled)):
+        return None
+    return profiled / plain
+
+
 def _program_space_feedback(task: dict, result: dict,
                             rss_baseline_mb: float | None) -> tuple[str, dict]:
     """Render only program-level peaks from a paired official harness Result."""
@@ -137,9 +149,9 @@ def _program_space_feedback(task: dict, result: dict,
                  "peak_tm_status": states["peak_tm_status"],
                  "rss_status": states["rss_status"]})
     if tm is None:
-        tm_text = "缺值（本次独立内存测量未取得峰值，不能判断空间收益）"
+        tm_text = "n/a（本次独立内存测量未取得峰值，空间不可分辨）"
     elif states["peak_tm_status"] == "below_floor":
-        tm_text = f"{tm:.4f} MB（低于 0.05 MB 分辨下限，不能量化改善幅度）"
+        tm_text = "n/a（本题空间不可分辨：低于 0.05 MB 分辨下限）"
     else:
         tm_text = f"{tm:.4f} MB（可测）"
     if rss is None:
@@ -195,6 +207,8 @@ def build_feedback(
         raise ValueError("method must be one of f0, f1, f2, f3, f4")
     if radius < 0:
         raise ValueError("radius must be nonnegative")
+    if max_chars < 256:
+        raise ValueError("max_chars must be at least 256")
     if not math.isfinite(line_timeout_s) or not 0 < line_timeout_s <= _MAX_DIAGNOSTIC_TIMEOUT_S:
         raise ValueError("line_timeout_s must be positive and at most 60 seconds")
     if rss_baseline_mb is not None and (
@@ -207,9 +221,11 @@ def build_feedback(
         raise ValueError("Task.description is required (full problem description)")
     meta = {"requested": arm, "effective": arm, "reasons": [], "case": None,
             "case_mode": None, "case_count": None, "slow_ms": None,
+            "case_ms": None, "profiler_overhead_ratio": None,
+            "space_status": None, "not_applicable": {}, "feedback_complete": False,
             "diagnostic_timeout_s": None,
             "diagnostic_timeout_cap_s": _MAX_DIAGNOSTIC_TIMEOUT_S,
-            "hotspot_mode": None, "space": None,
+            "hotspot_mode": "none", "space": None,
             "line_timing": None, "truncated": False}
     feedback = _NO_FEEDBACK
 
@@ -252,7 +268,10 @@ def build_feedback(
             meta["case"] = {"idx": slow.get("idx"), "ms": slow.get("ms"),
                             "src": slow["src"]}
             meta["slow_ms"] = slow["ms"]
-            feedback = f"Slowest test case:\n{slow['src']}\nCase execution time: {slow['ms']:.4f} ms."
+            meta["case_ms"] = slow["ms"]
+            case_feedback = ("Slowest test case (measured by harness, not instrumented):\n"
+                             f"{slow['src']}\nCase execution time: {slow['ms']:.4f} ms.")
+            feedback = case_feedback
             if arm in ("f3", "f4"):
                 timeout_s = min(_MAX_DIAGNOSTIC_TIMEOUT_S,
                                 max(line_timeout_s, 20.0 * slow["ms"] / 1000.0))
@@ -262,6 +281,7 @@ def build_feedback(
                     if slow["ms"] < 2.0:
                         timing = {"ok": False, "status": "case_too_small",
                                   "reason": "case_too_small(<2ms)"}
+                        meta["not_applicable"]["profiler_overhead_ratio"] = "case_too_small"
                     else:
                         try:
                             timing = line_timing if line_timing is not None else profile_case(
@@ -285,8 +305,18 @@ def build_feedback(
                         "status": timing.get("status"), "mode": timing.get("mode"),
                         "tool": timing.get("tool"), "tool_version": timing.get("tool_version"),
                         "reason": timing.get("reason"), "unit": timing.get("unit"),
+                        "numbers_in": "percent" if timing.get("ok") else "hits_only",
+                        "denominator": ("profiled_lines_sum" if timing.get("ok") else None),
+                        "unprofiled_case_wall_ms": timing.get("unprofiled_case_wall_ms"),
+                        "profiled_case_wall_ms": timing.get("profiled_case_wall_ms"),
+                        "overhead_method": timing.get("overhead_method"),
                     }
-                    if not timing.get("ok"):
+                    if timing.get("ok"):
+                        meta["profiler_overhead_ratio"] = _measured_overhead_ratio(timing)
+                        meta["line_timing"]["profiler_overhead_ratio"] = meta["profiler_overhead_ratio"]
+                        if meta["profiler_overhead_ratio"] is None:
+                            meta["reasons"].append("measured_profiler_overhead_unavailable")
+                    if not timing.get("ok") and timing.get("status") != "case_too_small":
                         meta["reasons"].append(
                             "line_timing_failed: " + str(timing.get("reason") or timing.get("status"))
                         )
@@ -323,6 +353,8 @@ def build_feedback(
                 )))
                 if signal_failed:
                     meta["effective"] = "f2"
+                    if arm == "f4" and meta["line_timing"]:
+                        meta["line_timing"]["numbers_in"] = "hits_only"
                     meta["reasons"].append(
                         "line_signal_failed: " + str(
                             (hits or {}).get("reason") or (hits or {}).get("error")
@@ -335,36 +367,40 @@ def build_feedback(
                     profiled_total_ms = (sum(row["line_time_ms"] for row in timing["items"])
                                          if use_timing else None)
                     if use_timing:
-                        feedback = "热点行占本次已剖析行时间之和的比例（line_profiler 诊断值，含剖析开销；不用于最终 speedup；不含被调函数耗时）:\n"
-                        feedback += "\n".join(
-                            f"L{item['line']}: {item['hits']} hits | "
-                            f"占本次已剖析行时间之和的比例 {100 * item['line_time_ms'] / profiled_total_ms:.1f}% | "
+                        line_feedback = "Hot lines (占已剖析行时间之和；line_profiler 插桩诊断，不用于正式 speedup；不含被调函数耗时):\n"
+                        line_feedback += "\n".join(
+                            f"L{item['line']}: "
+                            f"{100 * item['line_time_ms'] / profiled_total_ms:.1f}% | "
+                            f"{item['hits']} hits | "
                             f"{source_lines[item['line'] - 1].rstrip()}"
                             for item in items
                         )
                     else:
                         if arm == "f4":
-                            meta["effective"] = "f4_line_hits"
-                        feedback = "高频执行行（按执行次数排序，非逐行耗时）:\n"
-                        feedback += "\n".join(
+                            meta["effective"] = ("f3" if slow["ms"] < 2.0 else "f4_line_hits")
+                        line_feedback = "Hot lines (高频执行行；按执行次数排序，非逐行耗时):\n"
+                        line_feedback += "\n".join(
                             f"L{item['line']}: {item['hits']} hits | "
                             f"{source_lines[item['line'] - 1].rstrip()}"
                             for item in items
                         )
+                    feedback = case_feedback + "\n\n" + line_feedback
                     if arm == "f4":
                         try:
                             regions = context_regions(code, meta["hot_lines"], radius)
                             region_lines = [
-                                ("热点行占本次已剖析行时间之和的比例与周围源码（line_profiler 诊断值，"
-                                 "含剖析开销；不用于最终 speedup；不含被调函数耗时）:"
+                                ("Hot lines (占已剖析行时间之和；line_profiler 插桩诊断，"
+                                 "不用于正式 speedup；不含被调函数耗时):"
                                  if use_timing else
-                                 "高频执行行与周围源码（按执行次数排序，非逐行耗时）:")
+                                 "Hot lines (高频执行行与周围源码；按执行次数排序，非逐行耗时):")
                             ]
                             for item in items:
-                                summary = f"L{item['line']}: {item['hits']} hits"
+                                summary = f"L{item['line']}: "
                                 if use_timing:
-                                    summary += (" | 占本次已剖析行时间之和的比例 "
-                                                f"{100 * item['line_time_ms'] / profiled_total_ms:.1f}%")
+                                    summary += (f"{100 * item['line_time_ms'] / profiled_total_ms:.1f}% | "
+                                                f"{item['hits']} hits")
+                                else:
+                                    summary += f"{item['hits']} hits"
                                 region_lines.append(summary)
                                 scope = scopes_at(code, item["line"])
                                 region_lines.append(
@@ -380,7 +416,9 @@ def build_feedback(
                                 for number in range(region["start"], region["end"] + 1):
                                     source_line_positions[len(region_lines)] = number
                                     region_lines.append(f"{number:>4}: {source_lines[number - 1]}")
-                            feedback, meta["truncated"], kept_count = _bounded(region_lines, max_chars)
+                            region_text, meta["truncated"], kept_count = _bounded(
+                                region_lines, max_chars - len(case_feedback) - 2)
+                            feedback = case_feedback + "\n\n" + region_text
                             meta["regions"] = [
                                 {"start": region["start"], "end": region["end"],
                                  "hits": region["hits"]} for region in regions
@@ -412,16 +450,16 @@ def build_feedback(
                                     fallback_items = items
                                 if not fallback_items:
                                     meta["effective"] = "f2"
-                                    meta["hotspot_mode"] = None
+                                    meta["hotspot_mode"] = "none"
                                     meta["reasons"].append("line_hits_fallback_failed")
-                                    feedback = (f"Slowest test case:\n{slow['src']}\n"
-                                                f"Case execution time: {slow['ms']:.4f} ms.")
+                                    feedback = case_feedback
                                 else:
                                     meta["effective"] = "f3"
                                     meta["hotspot_mode"] = "line_hits"
                                     meta["hot_lines"] = [item["line"] for item in fallback_items]
                                     meta["reasons"].append("f4_context_omitted_by_length_limit")
-                                    feedback = "高频执行行（按执行次数排序，非逐行耗时）:\n"
+                                    meta["line_timing"]["numbers_in"] = "hits_only"
+                                    feedback = case_feedback + "\n\nHot lines (高频执行行；按执行次数排序，非逐行耗时):\n"
                                     feedback += "\n".join(
                                         f"L{item['line']}: {item['hits']} hits | "
                                         f"{source_lines[item['line'] - 1].rstrip()}"
@@ -429,28 +467,39 @@ def build_feedback(
                                     )
                         except (SyntaxError, ValueError) as exc:
                             meta["effective"] = "f2"
-                            meta["hotspot_mode"] = None
+                            meta["hotspot_mode"] = "none"
                             meta["reasons"].append(
                                 f"source_context_failed: {type(exc).__name__}: {exc}"
                             )
-                            feedback = (f"Slowest test case:\n{slow['src']}\n"
-                                        f"Case execution time: {slow['ms']:.4f} ms.")
+                            feedback = case_feedback
 
     effective = meta["effective"]
     if arm == "f4":
-        if effective in ("f4", "f4_line_hits") and space_result is not None:
+        small_case_f3 = effective == "f3" and meta["case_ms"] is not None and meta["case_ms"] < 2.0
+        space_arm = effective in ("f4", "f4_line_hits") or small_case_f3
+        if space_arm and space_result is not None:
             space_text, space_meta = _program_space_feedback(
                 task, space_result, rss_baseline_mb)
             meta["space"] = space_meta
             if len(feedback) + len(space_text) + 2 <= max_chars:
                 feedback += "\n\n" + space_text
+                if space_meta["status"] == "ok":
+                    meta["space_status"] = space_meta["peak_tm_status"]
             else:
                 meta["reasons"].append("space_feedback_omitted_by_length_limit")
                 meta["space"]["status"] = "omitted_by_length_limit"
-        elif effective in ("f4", "f4_line_hits"):
+        elif space_arm:
             meta["space"] = {"status": "unavailable", "reason": "official_space_result_missing"}
         else:
             meta["space"] = {"status": "omitted_after_feedback_downgrade"}
+        meta["feedback_complete"] = bool(
+            effective == "f4" and meta["hotspot_mode"] == "line_profiler"
+            and isinstance(meta["case_ms"], (int, float)) and meta["case_ms"] >= 2.0
+            and meta["profiler_overhead_ratio"] is not None
+            and meta["space_status"] is not None
+            and meta.get("retained_hot_lines")
+            and meta["line_timing"] and meta["line_timing"].get("numbers_in") == "percent"
+        )
     # schema v1.1 has no f4_line_hits method. Program-level peaks are now
     # available, but the group's complete-F4 acceptance scope remains pending.
     # Keep both prototypes out of formal Results.
@@ -473,7 +522,7 @@ def build_feedback(
         "requested_method": _METHODS[arm],
         "degrade_reason": degrade_reason,
         "schema_mapping_pending": mapping_pending,
-        "can_write_result": not mapping_pending,
+        "can_write_result": arm != "f4" and not mapping_pending,
         "requested_arm": arm,
         "effective_arm": effective,
         "effective_method": effective,

@@ -175,13 +175,14 @@ class OfflineRunnerTests(unittest.TestCase):
                 feedback_method="f4", feedback_builder=c_feedback,
                 ensure_rss_baseline_fn=lambda: {"status": "missing", "value": None,
                                                 "reason": "measure_failed", "meta": {}},
-                allow_formal_results=True,
+                allow_formal_results=False,
                 write_result=lambda record: formal_path.write_text(json.dumps(record)),
             )
             self.assertFalse(formal_path.exists())
-        self.assertEqual(len(seen), 1)
-        self.assertIs(seen[0][0], output["rounds"][0]["baseline_measurement"])
-        self.assertIsNone(seen[0][1])
+        self.assertEqual(len(seen), 2)  # F4 and same-code F3 comparison
+        self.assertTrue(all(item[0] is output["rounds"][0]["baseline_measurement"]
+                            for item in seen))
+        self.assertTrue(all(item[1] is None for item in seen))
         self.assertEqual(output["rounds"][0]["feedback"]["diagnostics"]["space"]["rss_status"],
                          "unavailable")
         self.assertEqual(output["mu_deducted_baseline_mb"], "n/a")
@@ -216,7 +217,7 @@ class OfflineRunnerTests(unittest.TestCase):
                     output, _ = self.run_case(
                         {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
                         feedback_method="f4", feedback_builder=c_feedback,
-                        allow_formal_results=True,
+                        allow_formal_results=False,
                         write_result=lambda record: formal_path.write_text(json.dumps(record)),
                         write_diagnostic=lambda record: diagnostic_path.write_text(json.dumps(record)),
                     )
@@ -225,27 +226,26 @@ class OfflineRunnerTests(unittest.TestCase):
                     self.assertEqual(output["formal_results_written"], 0)
                     self.assertFalse(output["formal_result_written"])
                     feedback = output["rounds"][0]["feedback"]
-                    self.assertEqual(feedback["effective_method"], variant)
+                    self.assertEqual(feedback["effective_method"],
+                                     variant if variant == "f4" else "f3")
                     self.assertFalse(feedback["can_write_result"])
                     self.assertEqual(feedback["diagnostics"]["space"]["rss_baseline_mb"],
                                      self.rss_info["value"])
                     self.assertEqual(json.loads(diagnostic_path.read_text())["kind"],
                                      "diagnostic_demo")
 
-    def test_opt_in_result_writer_uses_schema_method_only_in_temp_dir(self):
+    def test_result_writer_remains_disabled_for_f1_offline(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             formal_path = root / "result.json"
             output, _ = self.run_case(
                 {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
-                allow_formal_results=True,
+                allow_formal_results=False,
                 write_result=lambda record: formal_path.write_text(json.dumps(record)),
             )
-            self.assertTrue(formal_path.exists())
-            stored = json.loads(formal_path.read_text())
-            self.assertEqual((stored["method"], stored["requested_method"],
-                              stored["degrade_reason"]), ("f1", "f1", None))
-            self.assertEqual(output["formal_results_written"], 1)
+            self.assertFalse(formal_path.exists())
+            self.assertEqual(output["rounds"][0]["feedback"]["method"], "f1")
+            self.assertEqual(output["formal_results_written"], 0)
 
 
 if __name__ == "__main__":

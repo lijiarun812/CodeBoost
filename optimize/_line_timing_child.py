@@ -7,6 +7,7 @@ import hashlib
 import importlib.metadata
 import json
 import sys
+import time
 import types
 
 MARKER = "__CODEBOOST_LINE_TIMING__"
@@ -35,15 +36,19 @@ def main() -> None:
         case_src = request["case_src"]
         entry = request["entry_point"]
         prelude = request.get("prelude", "")
-        namespace = {"__name__": "__codeboost_line_timing__"}
-        # User code may print; keep stdout reserved for the machine-readable result.
-        with contextlib.redirect_stdout(sys.stderr):
-            if prelude:
-                pre_namespace = {"__name__": "__codeboost_prelude__"}
-                exec(compile(prelude, "<prelude>", "exec"), pre_namespace)
-                namespace.update((key, value) for key, value in pre_namespace.items()
-                                 if key != "__name__")
-            exec(compile(code, SOURCE_NAME, "exec"), namespace)
+        source_code = compile(code, SOURCE_NAME, "exec")
+        case_code = compile(case_src, CASE_NAME, "exec")
+
+        def fresh_namespace():
+            namespace = {"__name__": "__codeboost_line_timing__"}
+            # User code may print; keep stdout reserved for the machine result.
+            with contextlib.redirect_stdout(sys.stderr):
+                if prelude:
+                    pre_namespace = {"__name__": "__codeboost_prelude__"}
+                    exec(compile(prelude, "<prelude>", "exec"), pre_namespace)
+                    namespace.update((key, value) for key, value in pre_namespace.items()
+                                     if key != "__name__")
+                exec(source_code, namespace)
             target = namespace.get(entry)
             if target is None:
                 target = namespace.get(entry[:1].upper() + entry[1:])
@@ -55,6 +60,15 @@ def main() -> None:
                 namespace.setdefault(entry, target)
                 namespace.setdefault("solution", target)
                 namespace.setdefault("candidate", target)
+            return namespace
+
+        plain_namespace = fresh_namespace()
+        with contextlib.redirect_stdout(sys.stderr):
+            plain_start_ns = time.perf_counter_ns()
+            exec(case_code, plain_namespace)
+            unprofiled_wall_ms = (time.perf_counter_ns() - plain_start_ns) / 1_000_000
+        namespace = fresh_namespace()
+        with contextlib.redirect_stdout(sys.stderr):
             profiler = LineProfiler()
             seen = set()
             for value in namespace.values():
@@ -73,8 +87,12 @@ def main() -> None:
                         seen.add(id(fn))
             if not seen:
                 raise ValueError("no_user_functions_to_profile")
+            profiled_start_ns = time.perf_counter_ns()
             with profiler:
-                exec(compile(case_src, CASE_NAME, "exec"), namespace)
+                exec(case_code, namespace)
+            profiled_wall_ms = (time.perf_counter_ns() - profiled_start_ns) / 1_000_000
+        if unprofiled_wall_ms <= 0 or profiled_wall_ms <= 0:
+            raise ValueError("non_positive_case_wall_time")
         stats = profiler.get_stats()
         source_lines = code.splitlines()
         merged = {}
@@ -101,6 +119,10 @@ def main() -> None:
         _emit({"ok": True, "status": "ok", "mode": "line_profiler",
                "tool": "line_profiler", "tool_version": version,
                "unit": "ms", "timer_unit_s": stats.unit,
+               "unprofiled_case_wall_ms": unprofiled_wall_ms,
+               "profiled_case_wall_ms": profiled_wall_ms,
+               "profiler_overhead_ratio": profiled_wall_ms / unprofiled_wall_ms,
+               "overhead_method": "same_child_fresh_namespace_case_wall",
                "source_sha256": hashlib.sha256(code.encode("utf-8")).hexdigest(),
                "items": items})
     except Exception as exc:
