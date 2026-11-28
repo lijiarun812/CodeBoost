@@ -1,0 +1,212 @@
+{
+  "NOTICE": "仅供离线诊断审阅：diagnostic/loop200k 是构造的诊断用例，不是小组冻结题库样本；本记录不是正式 Ours Result，没有模型候选或基线/候选收益比较，不支持任何性能收益结论。",
+  "classification": {
+    "constructed_diagnostic_case": true,
+    "frozen_benchmark_sample": false,
+    "formal_ours_result": false,
+    "performance_gain_conclusion": false,
+    "mock_result_used": false,
+    "rss_peak_available": false,
+    "rss_gate_and_baseline_adjusted_mu": "n/a"
+  },
+  "source_report_sha256": "8ea9f3fafa4cdff815d37c02ed16aed88cfb76755c3cb59efc50cdda996f1503",
+  "record_type": "measured_diagnostic",
+  "formal_dataset_included": false,
+  "model_called": false,
+  "formal_result_written": false,
+  "raw_harness_result_source": "eval.harness.measure_task, unmodified in-memory Result",
+  "case_diagnostic_source": "eval.harness.measure_cases, same code and frozen test",
+  "task": {
+    "task_id": "diagnostic/loop200k",
+    "dataset": "diagnostic",
+    "kind": "assert",
+    "entry_point": "solution",
+    "description": "Diagnostic loop returning its argument; excluded from every formal dataset.",
+    "code": "def solution(x):\n    total = 0\n    for i in range(200000):\n        total += i\n    return x\n",
+    "test": "assert solution(1) == 1\n",
+    "inputs": [
+      {
+        "tier": "t1",
+        "n": null,
+        "gen": "fixed-diagnostic",
+        "args_hash": "sha256:c38d38238a7a5976",
+        "test": "assert solution(1) == 1\n"
+      }
+    ]
+  },
+  "source_sha256": "7742d7147eaaae0e58791ec427f87ddde9588264c1ee4fa1f5659bce1598e1b0",
+  "frozen_pair_valid": true,
+  "raw_harness_result": {
+    "run_id": "20261128-114023-canonical-s42-dc3a375-diagnostic_loop200k",
+    "task_id": "diagnostic/loop200k",
+    "dataset": "diagnostic",
+    "method": "base",
+    "started_at": "2026-11-28T11:40:23",
+    "manifest": {
+      "model": "",
+      "model_version": "",
+      "temperature": 0.2,
+      "seed": 42,
+      "dataset_hash": "n/a",
+      "harness_commit": "dc3a375",
+      "protocol_version": "proto-2026.11"
+    },
+    "status": "ok",
+    "error": null,
+    "time": {
+      "median_ms": 4.5152,
+      "mean_trimmed_ms": 4.5648,
+      "iqr": 0.2807,
+      "cv": 0.0695,
+      "raw_ms": [
+        5.3462,
+        4.4733,
+        4.4717,
+        4.8248,
+        5.3626,
+        4.5111,
+        4.6816,
+        4.4121,
+        4.4171,
+        4.5009,
+        4.5193,
+        4.5359
+      ],
+      "tiers": [
+        {
+          "tier": "t1",
+          "n": null,
+          "gen": "fixed-diagnostic",
+          "args_hash": "sha256:c38d38238a7a5976",
+          "status": "ok",
+          "median_ms": 4.5152,
+          "iqr": 0.2807,
+          "cv": 0.0695,
+          "reps": 55,
+          "downgraded": false
+        }
+      ]
+    },
+    "mem": {
+      "peak_tracemalloc_mb": 0.0015,
+      "peak_rss_mb": null
+    },
+    "speedup": null,
+    "mem_ratio": null,
+    "downgraded": false,
+    "protocol_version": "proto-2026.11",
+    "code_source": "canonical"
+  },
+  "case_diagnostic": {
+    "status": "ok",
+    "mode": "block",
+    "reps": 5,
+    "cases": [
+      {
+        "idx": 0,
+        "ms": 4.9417,
+        "src": "assert solution(1) == 1"
+      }
+    ],
+    "total_ms": 4.9417,
+    "slowest": {
+      "idx": 0,
+      "ms": 4.9417,
+      "src": "assert solution(1) == 1"
+    }
+  },
+  "f3": {
+    "effective_method": "f3",
+    "prompt_sha256": "87e9586e47fb39f1ce5a5e9c724b2fe40ed5ecb49163a271201a10d9314963d3",
+    "feedback": "Slowest test case (measured by harness, not instrumented):\nassert solution(1) == 1\nCase execution time: 4.9417 ms.\n\nHot lines (高频执行行；按执行次数排序，非逐行耗时):\nL3: 200001 hits |     for i in range(200000):\nL4: 200000 hits |         total += i\nL2: 1 hits |     total = 0"
+  },
+  "f4": {
+    "effective_method": "f4",
+    "method_before_D_gate": null,
+    "can_write_result_before_D_gate": false,
+    "prompt_sha256": "bf12861779fd24f812c23cfb50bba1a48acf271014117db01e4c07e7e88f97da",
+    "feedback": "Slowest test case (measured by harness, not instrumented):\nassert solution(1) == 1\nCase execution time: 4.9417 ms.\n\nHot lines (占已剖析行时间之和；line_profiler 插桩诊断，不用于正式 speedup；不含被调函数耗时):\nL4: 55.4% | 200000 hits\n  Enclosing function/loop: def solution(x): ->     for i in range(200000):\nL3: 44.5% | 200001 hits\n  Enclosing function/loop: def solution(x): ->     for i in range(200000):\nL5: 0.0% | 1 hits\n  Enclosing function/loop: def solution(x):\nSource lines 1-5 (hot lines: 3, 4, 5):\n   1: def solution(x):\n   2:     total = 0\n   3:     for i in range(200000):\n   4:         total += i\n   5:     return x\n\n程序级空间证据（来自 eval.harness.measure_task 的独立内存测量；单位 MB；不是逐行内存归因）：\n冻结输入档：t1，args_hash=sha256:c38d38238a7a5976，n=None，gen=fixed-diagnostic\npeak_tracemalloc_mb：n/a（本题空间不可分辨：低于 0.05 MB 分辨下限）；Python 分配峰值，状态=below_floor。\npeak_rss_mb：缺值（未取得进程驻留峰值，RSS 门禁跳过；扣基线 MU 为 n/a）；进程驻留占用峰值，仅作资源报告／门禁，不作为空间改善奖励。\nRSS 空载基线未提供；无法判断门禁可分辨性。",
+    "diagnostics": {
+      "requested": "f4",
+      "effective": "f4",
+      "reasons": [],
+      "case": {
+        "idx": 0,
+        "ms": 4.9417,
+        "src": "assert solution(1) == 1"
+      },
+      "case_mode": "block",
+      "case_count": 1,
+      "slow_ms": 4.9417,
+      "case_ms": 4.9417,
+      "profiler_overhead_ratio": 12.98444313494402,
+      "space_status": "below_floor",
+      "not_applicable": {},
+      "feedback_complete": true,
+      "diagnostic_timeout_s": 10.0,
+      "diagnostic_timeout_cap_s": 60.0,
+      "hotspot_mode": "line_profiler",
+      "space": {
+        "source": "eval.harness.measure_task Result",
+        "status": "ok",
+        "tier": "t1",
+        "args_hash": "sha256:c38d38238a7a5976",
+        "n": null,
+        "gen": "fixed-diagnostic",
+        "rss_baseline_mb": null,
+        "peak_tm_status": "below_floor",
+        "rss_status": "unavailable"
+      },
+      "line_timing": {
+        "status": "ok",
+        "mode": "line_profiler",
+        "tool": "line_profiler",
+        "tool_version": "5.1.0",
+        "reason": null,
+        "unit": "ms",
+        "numbers_in": "percent",
+        "denominator": "profiled_lines_sum",
+        "unprofiled_case_wall_ms": 4.2425,
+        "profiled_case_wall_ms": 55.0865,
+        "overhead_method": "same_child_fresh_namespace_case_wall",
+        "profiler_overhead_ratio": 12.98444313494402
+      },
+      "truncated": false,
+      "hot_lines": [
+        4,
+        3,
+        5
+      ],
+      "regions": [
+        {
+          "start": 1,
+          "end": 5,
+          "hits": [
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "retained_source_ranges": [
+        [
+          1,
+          5
+        ]
+      ],
+      "retained_hot_lines": [
+        4,
+        3,
+        5
+      ]
+    }
+  },
+  "f4_gate": {
+    "passed": true,
+    "failures": [],
+    "suggested_method": "ours"
+  },
+  "offline_gate_eligible_only": true,
+  "limitation": "A gate pass here is diagnostic evidence only: this is a constructed task, not a formal benchmark item or model-generated candidate.",
+  "generated_at_local": "2026-11-28T11:40:31"
+}
