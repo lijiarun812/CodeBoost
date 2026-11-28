@@ -1,0 +1,56 @@
+{
+  "protocol_version": "proto-2026.11",
+  "dataset": "effibench",
+  "source_file": "datasets\\dataset.json",
+  "generated_at": "2026-11-27T23:54:29",
+  "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.18",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel"
+  },
+  "counts": {
+    "candidates_total": 1000,
+    "valid_tasks": 993,
+    "missing_solution": 7,
+    "missing_test": 0,
+    "missing_description": 0,
+    "tier_present": {
+      "t1": 993,
+      "t2": 993,
+      "t3": 993
+    },
+    "generator_failed_tiers": 164
+  },
+  "skipped": [
+    {
+      "problem_idx": "295",
+      "reason": "no_canonical_solution"
+    },
+    {
+      "problem_idx": "362",
+      "reason": "no_canonical_solution"
+    },
+    {
+      "problem_idx": "981",
+      "reason": "no_canonical_solution"
+    },
+    {
+      "problem_idx": "1157",
+      "reason": "no_canonical_solution"
+    },
+    {
+      "problem_idx": "1286",
+      "reason": "no_canonical_solution"
+    },
+    {
+      "problem_idx": "1483",
+      "reason": "no_canonical_solution"
+    },
+    {
+      "problem_idx": "2080",
+      "reason": "no_canonical_solution"
+    }
+  ],
+  "output": "results\\bank\\effibench_tasks.jsonl",
+  "note": "difficulty 字段留空，待 B 用 harness.calibrate_task() 回填；inputs 由 eval.inputs 按固定 SEED 生成。"
+}

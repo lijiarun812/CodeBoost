@@ -7,6 +7,10 @@ venv/
 # 数据集：体积大的（EffiBench 全量）不入库；20 题 HumanEval 小样入库，保证 clone 即可跑
 datasets/*
 !datasets/sample_humaneval_20.json
+# 冻结题库（成员 B 产出）：8 MB，入库以保证 clone 即可复跑优化线实验
+!datasets/effibench_tasks.jsonl
+!datasets/bank_manifest.json
+!datasets/space_resolved_provisional.json
 *.json.gz
 *.jsonl.gz
 
