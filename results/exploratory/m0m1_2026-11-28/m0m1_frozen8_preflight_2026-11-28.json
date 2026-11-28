@@ -1,0 +1,754 @@
+{
+  "classification": "no-model M0/M1 preregistration",
+  "shared_manifest_sha256": "520368613083cfc8e2e8fbd788c020a402ccc85c8f294abe6dba50451d465470",
+  "prompt_version": "m0m1-program-peak-v1",
+  "hypothesis": "M1 combined memory-number-and-space-goal may change the rate of correct Pareto-accepted candidates versus M0.",
+  "interpretation": "M1 combines a measured memory number and changed objective wording; their effects are not separately identified.",
+  "primary_metric": "number of candidates both correct and pareto_accept decision=accept divided by 16 attempts per arm",
+  "secondary_metrics": [
+    "paired candidate time.mean_trimmed_ms",
+    "paired candidate peak_tracemalloc_mb",
+    "token use",
+    "all errors and missing data"
+  ],
+  "acceptance": {
+    "function": "eval.space.pareto_accept:v1.1",
+    "time_rel": 0.01,
+    "space_rel": 0.1,
+    "space_abs_mb": 0.005,
+    "peak_tm_floor_mb": 0.05,
+    "rss_baseline_mb": null,
+    "retest_handling": "record pending retest without automatic repeat; never count as accepted"
+  },
+  "generation": {
+    "provider": "dashscope",
+    "model_id": "qwen4-max",
+    "temperature": 0.7,
+    "enable_thinking": false,
+    "max_tokens": 2048,
+    "seed_sent": false
+  },
+  "prompt_relation": "M1 feedback starts with the exact M0 feedback bytes; only the program-level heap peak and space constraint are appended. Both use optimize.prompts.render_prompt.",
+  "rows": [
+    {
+      "task_id": "EffiBench/815",
+      "baseline": {
+        "run_id": "20261128-164806-qwen4-max-s42-unknown-EffiBench_815",
+        "task_id": "EffiBench/815",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:48:06",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 151.386,
+          "mean_trimmed_ms": 152.0484,
+          "iqr": 9.6311,
+          "cv": 0.0573,
+          "raw_ms": [
+            161.2259,
+            155.7555,
+            147.2706,
+            147.7339,
+            141.1495,
+            144.3593,
+            175.66,
+            155.4848,
+            152.3179,
+            150.454,
+            148.8591,
+            158.5112
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:ba9fd61c2a3906f2",
+              "status": "ok",
+              "median_ms": 151.386,
+              "iqr": 9.6311,
+              "cv": 0.0573,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 1.1259,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 157.2394,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import defaultdict, deque\\nfrom typing import List\\n\\nclass Solution:\\n    def numBusesToDestination(\\n        self, routes: List[List[int]], source: int, target: int\\n  "
+          }
+        ],
+        "total_ms": 157.2394,
+        "slowest": {
+          "idx": 0,
+          "ms": 157.2394,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import defaultdict, deque\\nfrom typing import List\\n\\nclass Solution:\\n    def numBusesToDestination(\\n        self, routes: List[List[int]], source: int, target: int\\n    ) -> int:\\n        if source == target:\\n            return 0\\n\\n        s = [set(r) for r in routes]\\n        d = defaultdict(list)\\n        for i, r in enumerate(routes):\\n            for v in r:\\n                d[v].append(i)\\n\\n        g = defaultdict(list)\\n        for ids in d.values():\\n            m = len(ids)\\n            for i in range(m):\\n                for j in range(i + 1, m):\\n                    a, b = ids[i], ids[j]\\n                    g[a].append(b)\\n                    g[b].append(a)\\n        q = deque(d[source])\\n        ans = 1\\n        vis = set(d[source])\\n        while q:\\n            for _ in range(len(q)):\\n                i = q.popleft()\\n                if target in s[i]:\\n                    return ans\\n                for j in g[i]:\\n                    if j not in vis:\\n                        vis.add(j)\\n                        q.append(j)\\n            ans += 1\\n        return -1\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate routes\\n    num_routes = random.randint(1, 101)\\n    routes = []\\n    for _ in range(num_routes):\\n        route_length = random.randint(1, 11)\\n        route = random.sample(range(1, 100001), route_length)\\n        routes.append(route)\\n\\n    # Generate random source and target bus stops\\n    source = random.randint(1, 100001)\\n    target = random.randint(1, 100001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.numBusesToDestination(routes, source, target)\\n\\n    return routes, source, target, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        routes, source, target, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.numBusesToDestination(routes, source, target) == expected_result\\n        print(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 152.0484 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import defaultdict, deque\\nfrom typing import List\\n\\nclass Solution:\\n    def numBusesToDestination(\\n        self, routes: List[List[int]], source: int, target: int\\n    ) -> int:\\n        if source == target:\\n            return 0\\n\\n        s = [set(r) for r in routes]\\n        d = defaultdict(list)\\n        for i, r in enumerate(routes):\\n            for v in r:\\n                d[v].append(i)\\n\\n        g = defaultdict(list)\\n        for ids in d.values():\\n            m = len(ids)\\n            for i in range(m):\\n                for j in range(i + 1, m):\\n                    a, b = ids[i], ids[j]\\n                    g[a].append(b)\\n                    g[b].append(a)\\n        q = deque(d[source])\\n        ans = 1\\n        vis = set(d[source])\\n        while q:\\n            for _ in range(len(q)):\\n                i = q.popleft()\\n                if target in s[i]:\\n                    return ans\\n                for j in g[i]:\\n                    if j not in vis:\\n                        vis.add(j)\\n                        q.append(j)\\n            ans += 1\\n        return -1\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate routes\\n    num_routes = random.randint(1, 101)\\n    routes = []\\n    for _ in range(num_routes):\\n        route_length = random.randint(1, 11)\\n        route = random.sample(range(1, 100001), route_length)\\n        routes.append(route)\\n\\n    # Generate random source and target bus stops\\n    source = random.randint(1, 100001)\\n    target = random.randint(1, 100001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.numBusesToDestination(routes, source, target)\\n\\n    return routes, source, target, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        routes, source, target, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.numBusesToDestination(routes, source, target) == expected_result\\n        print(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 157.2394 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nYou are given an array `routes` representing bus routes where `routes[i]` is a bus route that the `ith` bus repeats forever.\n\n\n* For example, if `routes[0] = [1, 5, 7]`, this means that the `0th` bus travels in the sequence `1 -> 5 -> 7 -> 1 -> 5 -> 7 -> 1 -> ...` forever.\n\n\nYou will start at the bus stop `source` (You are not on any bus initially), and you want to go to the bus stop `target`. You can travel between bus stops by buses only.\n\n\nReturn *the least number of buses you must take to travel from* `source` *to* `target`. Return `-1` if it is not possible.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** routes = [[1,2,7],[3,6,7]], source = 1, target = 6\n**Output:** 2\n**Explanation:** The best strategy is take the first bus to the bus stop 7, then take the second bus to the bus stop 6.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** routes = [[7,12],[4,5,15],[6],[15,19],[9,12,13]], source = 15, target = 12\n**Output:** -1\n\n```\n\n \n\n\n \n\n\n**Constraints:**\n\n\n* `1 <= routes.length <= 500`.\n* `1 <= routes[i].length <= 105`\n* All the values of `routes[i]` are **unique**.\n* `sum(routes[i].length) <= 105`\n* `0 <= routes[i][j] < 106`\n* `0 <= source, target < 106`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def numBusesToDestination(\n        self, routes: List[List[int]], source: int, target: int\n    ) -> int:\n        if source == target:\n            return 0\n\n        s = [set(r) for r in routes]\n        d = defaultdict(list)\n        for i, r in enumerate(routes):\n            for v in r:\n                d[v].append(i)\n\n        g = defaultdict(list)\n        for ids in d.values():\n            m = len(ids)\n            for i in range(m):\n                for j in range(i + 1, m):\n                    a, b = ids[i], ids[j]\n                    g[a].append(b)\n                    g[b].append(a)\n        q = deque(d[source])\n        ans = 1\n        vis = set(d[source])\n        while q:\n            for _ in range(len(q)):\n                i = q.popleft()\n                if target in s[i]:\n                    return ans\n                for j in g[i]:\n                    if j not in vis:\n                        vis.add(j)\n                        q.append(j)\n            ans += 1\n        return -1\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 152.0484 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import defaultdict, deque\\nfrom typing import List\\n\\nclass Solution:\\n    def numBusesToDestination(\\n        self, routes: List[List[int]], source: int, target: int\\n    ) -> int:\\n        if source == target:\\n            return 0\\n\\n        s = [set(r) for r in routes]\\n        d = defaultdict(list)\\n        for i, r in enumerate(routes):\\n            for v in r:\\n                d[v].append(i)\\n\\n        g = defaultdict(list)\\n        for ids in d.values():\\n            m = len(ids)\\n            for i in range(m):\\n                for j in range(i + 1, m):\\n                    a, b = ids[i], ids[j]\\n                    g[a].append(b)\\n                    g[b].append(a)\\n        q = deque(d[source])\\n        ans = 1\\n        vis = set(d[source])\\n        while q:\\n            for _ in range(len(q)):\\n                i = q.popleft()\\n                if target in s[i]:\\n                    return ans\\n                for j in g[i]:\\n                    if j not in vis:\\n                        vis.add(j)\\n                        q.append(j)\\n            ans += 1\\n        return -1\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate routes\\n    num_routes = random.randint(1, 101)\\n    routes = []\\n    for _ in range(num_routes):\\n        route_length = random.randint(1, 11)\\n        route = random.sample(range(1, 100001), route_length)\\n        routes.append(route)\\n\\n    # Generate random source and target bus stops\\n    source = random.randint(1, 100001)\\n    target = random.randint(1, 100001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.numBusesToDestination(routes, source, target)\\n\\n    return routes, source, target, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        routes, source, target, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.numBusesToDestination(routes, source, target) == expected_result\\n        print(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 157.2394 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 152.0484 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import defaultdict, deque\\nfrom typing import List\\n\\nclass Solution:\\n    def numBusesToDestination(\\n        self, routes: List[List[int]], source: int, target: int\\n    ) -> int:\\n        if source == target:\\n            return 0\\n\\n        s = [set(r) for r in routes]\\n        d = defaultdict(list)\\n        for i, r in enumerate(routes):\\n            for v in r:\\n                d[v].append(i)\\n\\n        g = defaultdict(list)\\n        for ids in d.values():\\n            m = len(ids)\\n            for i in range(m):\\n                for j in range(i + 1, m):\\n                    a, b = ids[i], ids[j]\\n                    g[a].append(b)\\n                    g[b].append(a)\\n        q = deque(d[source])\\n        ans = 1\\n        vis = set(d[source])\\n        while q:\\n            for _ in range(len(q)):\\n                i = q.popleft()\\n                if target in s[i]:\\n                    return ans\\n                for j in g[i]:\\n                    if j not in vis:\\n                        vis.add(j)\\n                        q.append(j)\\n            ans += 1\\n        return -1\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate routes\\n    num_routes = random.randint(1, 101)\\n    routes = []\\n    for _ in range(num_routes):\\n        route_length = random.randint(1, 11)\\n        route = random.sample(range(1, 100001), route_length)\\n        routes.append(route)\\n\\n    # Generate random source and target bus stops\\n    source = random.randint(1, 100001)\\n    target = random.randint(1, 100001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.numBusesToDestination(routes, source, target)\\n\\n    return routes, source, target, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        routes, source, target, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.numBusesToDestination(routes, source, target) == expected_result\\n        print(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 157.2394 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 1.1259 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nYou are given an array `routes` representing bus routes where `routes[i]` is a bus route that the `ith` bus repeats forever.\n\n\n* For example, if `routes[0] = [1, 5, 7]`, this means that the `0th` bus travels in the sequence `1 -> 5 -> 7 -> 1 -> 5 -> 7 -> 1 -> ...` forever.\n\n\nYou will start at the bus stop `source` (You are not on any bus initially), and you want to go to the bus stop `target`. You can travel between bus stops by buses only.\n\n\nReturn *the least number of buses you must take to travel from* `source` *to* `target`. Return `-1` if it is not possible.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** routes = [[1,2,7],[3,6,7]], source = 1, target = 6\n**Output:** 2\n**Explanation:** The best strategy is take the first bus to the bus stop 7, then take the second bus to the bus stop 6.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** routes = [[7,12],[4,5,15],[6],[15,19],[9,12,13]], source = 15, target = 12\n**Output:** -1\n\n```\n\n \n\n\n \n\n\n**Constraints:**\n\n\n* `1 <= routes.length <= 500`.\n* `1 <= routes[i].length <= 105`\n* All the values of `routes[i]` are **unique**.\n* `sum(routes[i].length) <= 105`\n* `0 <= routes[i][j] < 106`\n* `0 <= source, target < 106`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def numBusesToDestination(\n        self, routes: List[List[int]], source: int, target: int\n    ) -> int:\n        if source == target:\n            return 0\n\n        s = [set(r) for r in routes]\n        d = defaultdict(list)\n        for i, r in enumerate(routes):\n            for v in r:\n                d[v].append(i)\n\n        g = defaultdict(list)\n        for ids in d.values():\n            m = len(ids)\n            for i in range(m):\n                for j in range(i + 1, m):\n                    a, b = ids[i], ids[j]\n                    g[a].append(b)\n                    g[b].append(a)\n        q = deque(d[source])\n        ans = 1\n        vis = set(d[source])\n        while q:\n            for _ in range(len(q)):\n                i = q.popleft()\n                if target in s[i]:\n                    return ans\n                for j in g[i]:\n                    if j not in vis:\n                        vis.add(j)\n                        q.append(j)\n            ans += 1\n        return -1\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 152.0484 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import defaultdict, deque\\nfrom typing import List\\n\\nclass Solution:\\n    def numBusesToDestination(\\n        self, routes: List[List[int]], source: int, target: int\\n    ) -> int:\\n        if source == target:\\n            return 0\\n\\n        s = [set(r) for r in routes]\\n        d = defaultdict(list)\\n        for i, r in enumerate(routes):\\n            for v in r:\\n                d[v].append(i)\\n\\n        g = defaultdict(list)\\n        for ids in d.values():\\n            m = len(ids)\\n            for i in range(m):\\n                for j in range(i + 1, m):\\n                    a, b = ids[i], ids[j]\\n                    g[a].append(b)\\n                    g[b].append(a)\\n        q = deque(d[source])\\n        ans = 1\\n        vis = set(d[source])\\n        while q:\\n            for _ in range(len(q)):\\n                i = q.popleft()\\n                if target in s[i]:\\n                    return ans\\n                for j in g[i]:\\n                    if j not in vis:\\n                        vis.add(j)\\n                        q.append(j)\\n            ans += 1\\n        return -1\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate routes\\n    num_routes = random.randint(1, 101)\\n    routes = []\\n    for _ in range(num_routes):\\n        route_length = random.randint(1, 11)\\n        route = random.sample(range(1, 100001), route_length)\\n        routes.append(route)\\n\\n    # Generate random source and target bus stops\\n    source = random.randint(1, 100001)\\n    target = random.randint(1, 100001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.numBusesToDestination(routes, source, target)\\n\\n    return routes, source, target, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        routes, source, target, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.numBusesToDestination(routes, source, target) == expected_result\\n        print(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.numBusesToDestination({routes}, {source}, {target}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 157.2394 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 1.1259 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/1238",
+      "baseline": {
+        "run_id": "20261128-164821-qwen4-max-s42-unknown-EffiBench_1238",
+        "task_id": "EffiBench/1238",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:48:21",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 2193.5411,
+          "mean_trimmed_ms": 2190.4739,
+          "iqr": 47.5822,
+          "cv": 0.0474,
+          "raw_ms": [
+            2222.2639,
+            2190.4192,
+            2196.663,
+            2172.2585,
+            2107.7613,
+            2112.3534,
+            2179.7123,
+            2199.0931,
+            2528.2458,
+            2281.5373,
+            2159.111,
+            2204.27
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:f713f871cd890ef3",
+              "status": "ok",
+              "median_ms": 2193.5411,
+              "iqr": 47.5822,
+              "cv": 0.0474,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 68.3304,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 2091.944,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def circularPermutation(self, n: int, start: int) -> List[int]:\\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\\n\\ndef genera"
+          }
+        ],
+        "total_ms": 2091.944,
+        "slowest": {
+          "idx": 0,
+          "ms": 2091.944,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def circularPermutation(self, n: int, start: int) -> List[int]:\\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random values for n and start\\n    n = random.randint(1, 16)\\n    start = random.randint(0, (2 ** n) - 1)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.circularPermutation(n, start)\\n\\n    return n, start, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, start, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.circularPermutation(n, start) == expected_result\\n        print(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\") # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 2190.4739 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def circularPermutation(self, n: int, start: int) -> List[int]:\\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random values for n and start\\n    n = random.randint(1, 16)\\n    start = random.randint(0, (2 ** n) - 1)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.circularPermutation(n, start)\\n\\n    return n, start, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, start, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.circularPermutation(n, start) == expected_result\\n        print(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\") # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 2091.9440 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nGiven 2 integers `n` and `start`. Your task is return **any** permutation `p` of `(0,1,2.....,2^n -1)` such that :\n\n\n* `p[0] = start`\n* `p[i]` and `p[i+1]` differ by only one bit in their binary representation.\n* `p[0]` and `p[2^n -1]` must also differ by only one bit in their binary representation.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 2, start = 3\n**Output:** [3,2,0,1]\n**Explanation:** The binary representation of the permutation is (11,10,00,01). \nAll the adjacent element differ by one bit. Another valid permutation is [3,1,0,2]\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 3, start = 2\n**Output:** [2,6,7,5,4,0,1,3]\n**Explanation:** The binary representation of the permutation is (010,110,111,101,100,000,001,011).\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 16`\n* `0 <= start < 2 ^ n`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def circularPermutation(self, n: int, start: int) -> List[int]:\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 2190.4739 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def circularPermutation(self, n: int, start: int) -> List[int]:\\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random values for n and start\\n    n = random.randint(1, 16)\\n    start = random.randint(0, (2 ** n) - 1)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.circularPermutation(n, start)\\n\\n    return n, start, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, start, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.circularPermutation(n, start) == expected_result\\n        print(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\") # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 2091.9440 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 2190.4739 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def circularPermutation(self, n: int, start: int) -> List[int]:\\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random values for n and start\\n    n = random.randint(1, 16)\\n    start = random.randint(0, (2 ** n) - 1)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.circularPermutation(n, start)\\n\\n    return n, start, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, start, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.circularPermutation(n, start) == expected_result\\n        print(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\") # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 2091.9440 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 68.3304 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nGiven 2 integers `n` and `start`. Your task is return **any** permutation `p` of `(0,1,2.....,2^n -1)` such that :\n\n\n* `p[0] = start`\n* `p[i]` and `p[i+1]` differ by only one bit in their binary representation.\n* `p[0]` and `p[2^n -1]` must also differ by only one bit in their binary representation.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 2, start = 3\n**Output:** [3,2,0,1]\n**Explanation:** The binary representation of the permutation is (11,10,00,01). \nAll the adjacent element differ by one bit. Another valid permutation is [3,1,0,2]\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 3, start = 2\n**Output:** [2,6,7,5,4,0,1,3]\n**Explanation:** The binary representation of the permutation is (010,110,111,101,100,000,001,011).\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 16`\n* `0 <= start < 2 ^ n`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def circularPermutation(self, n: int, start: int) -> List[int]:\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 2190.4739 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def circularPermutation(self, n: int, start: int) -> List[int]:\\n        return [i ^ (i >> 1) ^ start for i in range(1 << n)]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random values for n and start\\n    n = random.randint(1, 16)\\n    start = random.randint(0, (2 ** n) - 1)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.circularPermutation(n, start)\\n\\n    return n, start, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, start, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.circularPermutation(n, start) == expected_result\\n        print(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.circularPermutation({n}, {start}) == {expected_result}\") # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 2091.9440 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 68.3304 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/1293",
+      "baseline": {
+        "run_id": "20261128-165024-qwen4-max-s42-unknown-EffiBench_1293",
+        "task_id": "EffiBench/1293",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:50:24",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 253.0547,
+          "mean_trimmed_ms": 251.7896,
+          "iqr": 8.7982,
+          "cv": 0.0374,
+          "raw_ms": [
+            242.5175,
+            280.8806,
+            256.2559,
+            255.8079,
+            255.2524,
+            253.5586,
+            247.1272,
+            244.723,
+            252.5507,
+            254.4614,
+            249.2223,
+            246.3366
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:642eb76ec6c7b3e7",
+              "status": "ok",
+              "median_ms": 253.0547,
+              "iqr": 8.7982,
+              "cv": 0.0374,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 2.258,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 240.7848,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import deque\\n\\nclass Solution:\\n    def shortestPath(self, grid, k):\\n        m, n = len(grid), len(grid[0])\\n        if k >= m + n - 3:\\n            return m + n - 2\\n "
+          }
+        ],
+        "total_ms": 240.7848,
+        "slowest": {
+          "idx": 0,
+          "ms": 240.7848,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import deque\\n\\nclass Solution:\\n    def shortestPath(self, grid, k):\\n        m, n = len(grid), len(grid[0])\\n        if k >= m + n - 3:\\n            return m + n - 2\\n        q = deque([(0, 0, k)])\\n        vis = {(0, 0, k)}\\n        ans = 0\\n        while q:\\n            ans += 1\\n            for _ in range(len(q)):\\n                i, j, k = q.popleft()\\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\\n                    x, y = i + a, j + b\\n                    if 0 <= x < m and 0 <= y < n:\\n                        if x == m - 1 and y == n - 1:\\n                            return ans\\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\\n                            q.append((x, y, k))\\n                            vis.add((x, y, k))\\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\\n                            q.append((x, y, k - 1))\\n                            vis.add((x, y, k - 1))\\n        return -1\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    m = random.randint(1, 40)\\n    n = random.randint(1, 40)\\n    k = random.randint(1, m * n)\\n    grid = [[random.randint(0, 1) for _ in range(n)] for _ in range(m)]\\n    \\n    expected_result = solution.shortestPath(grid, k)\\n\\n    return grid, k, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        grid, k, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.shortestPath(grid, k) == expected_result\\n        print(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 251.7896 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import deque\\n\\nclass Solution:\\n    def shortestPath(self, grid, k):\\n        m, n = len(grid), len(grid[0])\\n        if k >= m + n - 3:\\n            return m + n - 2\\n        q = deque([(0, 0, k)])\\n        vis = {(0, 0, k)}\\n        ans = 0\\n        while q:\\n            ans += 1\\n            for _ in range(len(q)):\\n                i, j, k = q.popleft()\\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\\n                    x, y = i + a, j + b\\n                    if 0 <= x < m and 0 <= y < n:\\n                        if x == m - 1 and y == n - 1:\\n                            return ans\\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\\n                            q.append((x, y, k))\\n                            vis.add((x, y, k))\\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\\n                            q.append((x, y, k - 1))\\n                            vis.add((x, y, k - 1))\\n        return -1\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    m = random.randint(1, 40)\\n    n = random.randint(1, 40)\\n    k = random.randint(1, m * n)\\n    grid = [[random.randint(0, 1) for _ in range(n)] for _ in range(m)]\\n    \\n    expected_result = solution.shortestPath(grid, k)\\n\\n    return grid, k, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        grid, k, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.shortestPath(grid, k) == expected_result\\n        print(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 240.7848 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nYou are given an `m x n` integer matrix `grid` where each cell is either `0` (empty) or `1` (obstacle). You can move up, down, left, or right from and to an empty cell in **one step**.\n\n\nReturn *the minimum number of **steps** to walk from the upper left corner* `(0, 0)` *to the lower right corner* `(m - 1, n - 1)` *given that you can eliminate **at most*** `k` *obstacles*. If it is not possible to find such walk return `-1`.\n\n\n \n\n\n**Example 1:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/1200-1299/1293.Shortest%20Path%20in%20a%20Grid%20with%20Obstacles%20Elimination/images/short1-grid.jpg)\n\n```\n\n**Input:** grid = [[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]], k = 1\n**Output:** 6\n**Explanation:** \nThe shortest path without eliminating any obstacle is 10.\nThe shortest path with one obstacle elimination at position (3,2) is 6. Such path is (0,0) -> (0,1) -> (0,2) -> (1,2) -> (2,2) -> **(3,2)** -> (4,2).\n\n```\n\n**Example 2:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/1200-1299/1293.Shortest%20Path%20in%20a%20Grid%20with%20Obstacles%20Elimination/images/short2-grid.jpg)\n\n```\n\n**Input:** grid = [[0,1,1],[1,1,1],[1,0,0]], k = 1\n**Output:** -1\n**Explanation:** We need to eliminate at least two obstacles to find such a walk.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `m == grid.length`\n* `n == grid[i].length`\n* `1 <= m, n <= 40`\n* `1 <= k <= m * n`\n* `grid[i][j]` is either `0` **or** `1`.\n* `grid[0][0] == grid[m - 1][n - 1] == 0`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def shortestPath(self, grid: List[List[int]], k: int) -> int:\n        m, n = len(grid), len(grid[0])\n        if k >= m + n - 3:\n            return m + n - 2\n        q = deque([(0, 0, k)])\n        vis = {(0, 0, k)}\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                i, j, k = q.popleft()\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n:\n                        if x == m - 1 and y == n - 1:\n                            return ans\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\n                            q.append((x, y, k))\n                            vis.add((x, y, k))\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\n                            q.append((x, y, k - 1))\n                            vis.add((x, y, k - 1))\n        return -1\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 251.7896 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import deque\\n\\nclass Solution:\\n    def shortestPath(self, grid, k):\\n        m, n = len(grid), len(grid[0])\\n        if k >= m + n - 3:\\n            return m + n - 2\\n        q = deque([(0, 0, k)])\\n        vis = {(0, 0, k)}\\n        ans = 0\\n        while q:\\n            ans += 1\\n            for _ in range(len(q)):\\n                i, j, k = q.popleft()\\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\\n                    x, y = i + a, j + b\\n                    if 0 <= x < m and 0 <= y < n:\\n                        if x == m - 1 and y == n - 1:\\n                            return ans\\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\\n                            q.append((x, y, k))\\n                            vis.add((x, y, k))\\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\\n                            q.append((x, y, k - 1))\\n                            vis.add((x, y, k - 1))\\n        return -1\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    m = random.randint(1, 40)\\n    n = random.randint(1, 40)\\n    k = random.randint(1, m * n)\\n    grid = [[random.randint(0, 1) for _ in range(n)] for _ in range(m)]\\n    \\n    expected_result = solution.shortestPath(grid, k)\\n\\n    return grid, k, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        grid, k, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.shortestPath(grid, k) == expected_result\\n        print(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 240.7848 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 251.7896 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import deque\\n\\nclass Solution:\\n    def shortestPath(self, grid, k):\\n        m, n = len(grid), len(grid[0])\\n        if k >= m + n - 3:\\n            return m + n - 2\\n        q = deque([(0, 0, k)])\\n        vis = {(0, 0, k)}\\n        ans = 0\\n        while q:\\n            ans += 1\\n            for _ in range(len(q)):\\n                i, j, k = q.popleft()\\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\\n                    x, y = i + a, j + b\\n                    if 0 <= x < m and 0 <= y < n:\\n                        if x == m - 1 and y == n - 1:\\n                            return ans\\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\\n                            q.append((x, y, k))\\n                            vis.add((x, y, k))\\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\\n                            q.append((x, y, k - 1))\\n                            vis.add((x, y, k - 1))\\n        return -1\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    m = random.randint(1, 40)\\n    n = random.randint(1, 40)\\n    k = random.randint(1, m * n)\\n    grid = [[random.randint(0, 1) for _ in range(n)] for _ in range(m)]\\n    \\n    expected_result = solution.shortestPath(grid, k)\\n\\n    return grid, k, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        grid, k, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.shortestPath(grid, k) == expected_result\\n        print(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 240.7848 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 2.2580 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nYou are given an `m x n` integer matrix `grid` where each cell is either `0` (empty) or `1` (obstacle). You can move up, down, left, or right from and to an empty cell in **one step**.\n\n\nReturn *the minimum number of **steps** to walk from the upper left corner* `(0, 0)` *to the lower right corner* `(m - 1, n - 1)` *given that you can eliminate **at most*** `k` *obstacles*. If it is not possible to find such walk return `-1`.\n\n\n \n\n\n**Example 1:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/1200-1299/1293.Shortest%20Path%20in%20a%20Grid%20with%20Obstacles%20Elimination/images/short1-grid.jpg)\n\n```\n\n**Input:** grid = [[0,0,0],[1,1,0],[0,0,0],[0,1,1],[0,0,0]], k = 1\n**Output:** 6\n**Explanation:** \nThe shortest path without eliminating any obstacle is 10.\nThe shortest path with one obstacle elimination at position (3,2) is 6. Such path is (0,0) -> (0,1) -> (0,2) -> (1,2) -> (2,2) -> **(3,2)** -> (4,2).\n\n```\n\n**Example 2:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/1200-1299/1293.Shortest%20Path%20in%20a%20Grid%20with%20Obstacles%20Elimination/images/short2-grid.jpg)\n\n```\n\n**Input:** grid = [[0,1,1],[1,1,1],[1,0,0]], k = 1\n**Output:** -1\n**Explanation:** We need to eliminate at least two obstacles to find such a walk.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `m == grid.length`\n* `n == grid[i].length`\n* `1 <= m, n <= 40`\n* `1 <= k <= m * n`\n* `grid[i][j]` is either `0` **or** `1`.\n* `grid[0][0] == grid[m - 1][n - 1] == 0`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def shortestPath(self, grid: List[List[int]], k: int) -> int:\n        m, n = len(grid), len(grid[0])\n        if k >= m + n - 3:\n            return m + n - 2\n        q = deque([(0, 0, k)])\n        vis = {(0, 0, k)}\n        ans = 0\n        while q:\n            ans += 1\n            for _ in range(len(q)):\n                i, j, k = q.popleft()\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\n                    x, y = i + a, j + b\n                    if 0 <= x < m and 0 <= y < n:\n                        if x == m - 1 and y == n - 1:\n                            return ans\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\n                            q.append((x, y, k))\n                            vis.add((x, y, k))\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\n                            q.append((x, y, k - 1))\n                            vis.add((x, y, k - 1))\n        return -1\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 251.7896 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom collections import deque\\n\\nclass Solution:\\n    def shortestPath(self, grid, k):\\n        m, n = len(grid), len(grid[0])\\n        if k >= m + n - 3:\\n            return m + n - 2\\n        q = deque([(0, 0, k)])\\n        vis = {(0, 0, k)}\\n        ans = 0\\n        while q:\\n            ans += 1\\n            for _ in range(len(q)):\\n                i, j, k = q.popleft()\\n                for a, b in [[0, -1], [0, 1], [1, 0], [-1, 0]]:\\n                    x, y = i + a, j + b\\n                    if 0 <= x < m and 0 <= y < n:\\n                        if x == m - 1 and y == n - 1:\\n                            return ans\\n                        if grid[x][y] == 0 and (x, y, k) not in vis:\\n                            q.append((x, y, k))\\n                            vis.add((x, y, k))\\n                        if grid[x][y] == 1 and k > 0 and (x, y, k - 1) not in vis:\\n                            q.append((x, y, k - 1))\\n                            vis.add((x, y, k - 1))\\n        return -1\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    m = random.randint(1, 40)\\n    n = random.randint(1, 40)\\n    k = random.randint(1, m * n)\\n    grid = [[random.randint(0, 1) for _ in range(n)] for _ in range(m)]\\n    \\n    expected_result = solution.shortestPath(grid, k)\\n\\n    return grid, k, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        grid, k, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.shortestPath(grid, k) == expected_result\\n        print(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.shortestPath({grid}, {k}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 240.7848 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 2.2580 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/1415",
+      "baseline": {
+        "run_id": "20261128-165041-qwen4-max-s42-unknown-EffiBench_1415",
+        "task_id": "EffiBench/1415",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:50:41",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 53.3345,
+          "mean_trimmed_ms": 53.4118,
+          "iqr": 4.3114,
+          "cv": 0.0503,
+          "raw_ms": [
+            53.8576,
+            50.8395,
+            51.5929,
+            57.5742,
+            50.2001,
+            54.0153,
+            51.6856,
+            52.8113,
+            57.2635,
+            58.6936,
+            51.5581,
+            54.5103
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:b9d7661ff44d413f",
+              "status": "ok",
+              "median_ms": 53.3345,
+              "iqr": 4.3114,
+              "cv": 0.0503,
+              "reps": 4,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 5.1008,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 54.4835,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def getHappyString(self, n: int, k: int) -> str:\\n        def dfs(t):\\n            if len(t) == n:\\n                ans.append(t)\\n                return\\n         "
+          }
+        ],
+        "total_ms": 54.4835,
+        "slowest": {
+          "idx": 0,
+          "ms": 54.4835,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def getHappyString(self, n: int, k: int) -> str:\\n        def dfs(t):\\n            if len(t) == n:\\n                ans.append(t)\\n                return\\n            for c in \\'abc\\':\\n                if t and t[-1] == c:\\n                    continue\\n                dfs(t + c)\\n\\n        ans = []\\n        dfs(\\'\\')\\n        return \\'\\' if len(ans) < k else ans[k - 1]\\n\\n\\ndef generate_test_case_happy_string():\\n    solution = Solution()\\n\\n    # Generate random values for n and k\\n    n = random.randint(1, 10)\\n    k = random.randint(1, 100)\\n\\n    # Call the solution function to get the expected result\\n    expected_result = solution.getHappyString(n, k)\\n\\n    return n, k, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, k, expected_result = generate_test_case_happy_string()\\n        solution = Solution()\\n        assert solution.getHappyString(n, k) == expected_result\\n        if expected_result != \"\":\\n            print(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n            test_case_generator_results.append(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 53.4118 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def getHappyString(self, n: int, k: int) -> str:\\n        def dfs(t):\\n            if len(t) == n:\\n                ans.append(t)\\n                return\\n            for c in \\'abc\\':\\n                if t and t[-1] == c:\\n                    continue\\n                dfs(t + c)\\n\\n        ans = []\\n        dfs(\\'\\')\\n        return \\'\\' if len(ans) < k else ans[k - 1]\\n\\n\\ndef generate_test_case_happy_string():\\n    solution = Solution()\\n\\n    # Generate random values for n and k\\n    n = random.randint(1, 10)\\n    k = random.randint(1, 100)\\n\\n    # Call the solution function to get the expected result\\n    expected_result = solution.getHappyString(n, k)\\n\\n    return n, k, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, k, expected_result = generate_test_case_happy_string()\\n        solution = Solution()\\n        assert solution.getHappyString(n, k) == expected_result\\n        if expected_result != \"\":\\n            print(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n            test_case_generator_results.append(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 54.4835 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nA **happy string** is a string that:\n\n\n* consists only of letters of the set `['a', 'b', 'c']`.\n* `s[i] != s[i + 1]` for all values of `i` from `1` to `s.length - 1` (string is 1-indexed).\n\n\nFor example, strings **\"abc\", \"ac\", \"b\"** and **\"abcbabcbcb\"** are all happy strings and strings **\"aa\", \"baa\"** and **\"ababbc\"** are not happy strings.\n\n\nGiven two integers `n` and `k`, consider a list of all happy strings of length `n` sorted in lexicographical order.\n\n\nReturn *the kth string* of this list or return an **empty string** if there are less than `k` happy strings of length `n`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 1, k = 3\n**Output:** \"c\"\n**Explanation:** The list [\"a\", \"b\", \"c\"] contains all happy strings of length 1. The third string is \"c\".\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 1, k = 4\n**Output:** \"\"\n**Explanation:** There are only 3 happy strings of length 1.\n\n```\n\n**Example 3:**\n\n\n\n```\n\n**Input:** n = 3, k = 9\n**Output:** \"cab\"\n**Explanation:** There are 12 different happy string of length 3 [\"aba\", \"abc\", \"aca\", \"acb\", \"bab\", \"bac\", \"bca\", \"bcb\", \"cab\", \"cac\", \"cba\", \"cbc\"]. You will find the 9th string = \"cab\"\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 10`\n* `1 <= k <= 100`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def getHappyString(self, n: int, k: int) -> str:\n        def dfs(t):\n            if len(t) == n:\n                ans.append(t)\n                return\n            for c in 'abc':\n                if t and t[-1] == c:\n                    continue\n                dfs(t + c)\n\n        ans = []\n        dfs('')\n        return '' if len(ans) < k else ans[k - 1]\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 53.4118 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def getHappyString(self, n: int, k: int) -> str:\\n        def dfs(t):\\n            if len(t) == n:\\n                ans.append(t)\\n                return\\n            for c in \\'abc\\':\\n                if t and t[-1] == c:\\n                    continue\\n                dfs(t + c)\\n\\n        ans = []\\n        dfs(\\'\\')\\n        return \\'\\' if len(ans) < k else ans[k - 1]\\n\\n\\ndef generate_test_case_happy_string():\\n    solution = Solution()\\n\\n    # Generate random values for n and k\\n    n = random.randint(1, 10)\\n    k = random.randint(1, 100)\\n\\n    # Call the solution function to get the expected result\\n    expected_result = solution.getHappyString(n, k)\\n\\n    return n, k, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, k, expected_result = generate_test_case_happy_string()\\n        solution = Solution()\\n        assert solution.getHappyString(n, k) == expected_result\\n        if expected_result != \"\":\\n            print(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n            test_case_generator_results.append(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 54.4835 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 53.4118 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def getHappyString(self, n: int, k: int) -> str:\\n        def dfs(t):\\n            if len(t) == n:\\n                ans.append(t)\\n                return\\n            for c in \\'abc\\':\\n                if t and t[-1] == c:\\n                    continue\\n                dfs(t + c)\\n\\n        ans = []\\n        dfs(\\'\\')\\n        return \\'\\' if len(ans) < k else ans[k - 1]\\n\\n\\ndef generate_test_case_happy_string():\\n    solution = Solution()\\n\\n    # Generate random values for n and k\\n    n = random.randint(1, 10)\\n    k = random.randint(1, 100)\\n\\n    # Call the solution function to get the expected result\\n    expected_result = solution.getHappyString(n, k)\\n\\n    return n, k, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, k, expected_result = generate_test_case_happy_string()\\n        solution = Solution()\\n        assert solution.getHappyString(n, k) == expected_result\\n        if expected_result != \"\":\\n            print(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n            test_case_generator_results.append(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 54.4835 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 5.1008 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nA **happy string** is a string that:\n\n\n* consists only of letters of the set `['a', 'b', 'c']`.\n* `s[i] != s[i + 1]` for all values of `i` from `1` to `s.length - 1` (string is 1-indexed).\n\n\nFor example, strings **\"abc\", \"ac\", \"b\"** and **\"abcbabcbcb\"** are all happy strings and strings **\"aa\", \"baa\"** and **\"ababbc\"** are not happy strings.\n\n\nGiven two integers `n` and `k`, consider a list of all happy strings of length `n` sorted in lexicographical order.\n\n\nReturn *the kth string* of this list or return an **empty string** if there are less than `k` happy strings of length `n`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 1, k = 3\n**Output:** \"c\"\n**Explanation:** The list [\"a\", \"b\", \"c\"] contains all happy strings of length 1. The third string is \"c\".\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 1, k = 4\n**Output:** \"\"\n**Explanation:** There are only 3 happy strings of length 1.\n\n```\n\n**Example 3:**\n\n\n\n```\n\n**Input:** n = 3, k = 9\n**Output:** \"cab\"\n**Explanation:** There are 12 different happy string of length 3 [\"aba\", \"abc\", \"aca\", \"acb\", \"bab\", \"bac\", \"bca\", \"bcb\", \"cab\", \"cac\", \"cba\", \"cbc\"]. You will find the 9th string = \"cab\"\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 10`\n* `1 <= k <= 100`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def getHappyString(self, n: int, k: int) -> str:\n        def dfs(t):\n            if len(t) == n:\n                ans.append(t)\n                return\n            for c in 'abc':\n                if t and t[-1] == c:\n                    continue\n                dfs(t + c)\n\n        ans = []\n        dfs('')\n        return '' if len(ans) < k else ans[k - 1]\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 53.4118 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def getHappyString(self, n: int, k: int) -> str:\\n        def dfs(t):\\n            if len(t) == n:\\n                ans.append(t)\\n                return\\n            for c in \\'abc\\':\\n                if t and t[-1] == c:\\n                    continue\\n                dfs(t + c)\\n\\n        ans = []\\n        dfs(\\'\\')\\n        return \\'\\' if len(ans) < k else ans[k - 1]\\n\\n\\ndef generate_test_case_happy_string():\\n    solution = Solution()\\n\\n    # Generate random values for n and k\\n    n = random.randint(1, 10)\\n    k = random.randint(1, 100)\\n\\n    # Call the solution function to get the expected result\\n    expected_result = solution.getHappyString(n, k)\\n\\n    return n, k, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, k, expected_result = generate_test_case_happy_string()\\n        solution = Solution()\\n        assert solution.getHappyString(n, k) == expected_result\\n        if expected_result != \"\":\\n            print(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n            test_case_generator_results.append(f\"assert solution.getHappyString({n}, {k}) == \\\\\"{expected_result}\\\\\"\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 54.4835 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 5.1008 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/1638",
+      "baseline": {
+        "run_id": "20261128-165052-qwen4-max-s42-unknown-EffiBench_1638",
+        "task_id": "EffiBench/1638",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:50:52",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 190.6334,
+          "mean_trimmed_ms": 190.268,
+          "iqr": 5.7491,
+          "cv": 0.0264,
+          "raw_ms": [
+            190.6246,
+            193.8412,
+            185.0523,
+            186.9025,
+            190.6421,
+            191.0242,
+            190.6099,
+            186.9701,
+            193.1216,
+            203.654,
+            183.1637,
+            192.2493
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:08bab5d853545b68",
+              "status": "ok",
+              "median_ms": 190.6334,
+              "iqr": 5.7491,
+              "cv": 0.0264,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 0.2358,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 186.0687,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countSubstrings(self, s: str, t: str) -> int:\\n        ans = 0\\n        m, n = len(s), len(t)\\n        f = [[0] * (n + 1) for _ in range(m + 1)]\\n        g = [["
+          }
+        ],
+        "total_ms": 186.0687,
+        "slowest": {
+          "idx": 0,
+          "ms": 186.0687,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countSubstrings(self, s: str, t: str) -> int:\\n        ans = 0\\n        m, n = len(s), len(t)\\n        f = [[0] * (n + 1) for _ in range(m + 1)]\\n        g = [[0] * (n + 1) for _ in range(m + 1)]\\n        for i, a in enumerate(s, 1):\\n            for j, b in enumerate(t, 1):\\n                if a == b:\\n                    f[i][j] = f[i - 1][j - 1] + 1\\n        for i in range(m - 1, -1, -1):\\n            for j in range(n - 1, -1, -1):\\n                if s[i] == t[j]:\\n                    g[i][j] = g[i + 1][j + 1] + 1\\n                else:\\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\\n        return ans\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate random strings for s and t\\n    s = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n    t = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countSubstrings(s, t)\\n\\n    return s, t, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        s, t, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countSubstrings(s, t) == expected_result\\n        print(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 190.2680 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countSubstrings(self, s: str, t: str) -> int:\\n        ans = 0\\n        m, n = len(s), len(t)\\n        f = [[0] * (n + 1) for _ in range(m + 1)]\\n        g = [[0] * (n + 1) for _ in range(m + 1)]\\n        for i, a in enumerate(s, 1):\\n            for j, b in enumerate(t, 1):\\n                if a == b:\\n                    f[i][j] = f[i - 1][j - 1] + 1\\n        for i in range(m - 1, -1, -1):\\n            for j in range(n - 1, -1, -1):\\n                if s[i] == t[j]:\\n                    g[i][j] = g[i + 1][j + 1] + 1\\n                else:\\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\\n        return ans\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate random strings for s and t\\n    s = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n    t = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countSubstrings(s, t)\\n\\n    return s, t, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        s, t, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countSubstrings(s, t) == expected_result\\n        print(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 186.0687 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nGiven two strings `s` and `t`, find the number of ways you can choose a non-empty substring of `s` and replace a **single character** by a different character such that the resulting substring is a substring of `t`. In other words, find the number of substrings in `s` that differ from some substring in `t` by **exactly** one character.\n\n\nFor example, the underlined substrings in `\"computer\"` and `\"computation\"` only differ by the `'e'`/`'a'`, so this is a valid way.\n\n\nReturn *the number of substrings that satisfy the condition above.*\n\n\nA **substring** is a contiguous sequence of characters within a string.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** s = \"aba\", t = \"baba\"\n**Output:** 6\n**Explanation:** The following are the pairs of substrings from s and t that differ by exactly 1 character:\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\nThe underlined portions are the substrings that are chosen from s and t.\n\n```\n\n\n​​**Example 2:**\n\n```\n\n**Input:** s = \"ab\", t = \"bb\"\n**Output:** 3\n**Explanation:** The following are the pairs of substrings from s and t that differ by 1 character:\n(\"ab\", \"bb\")\n(\"ab\", \"bb\")\n(\"ab\", \"bb\")\n​​​​The underlined portions are the substrings that are chosen from s and t.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= s.length, t.length <= 100`\n* `s` and `t` consist of lowercase English letters only.\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def countSubstrings(self, s: str, t: str) -> int:\n        ans = 0\n        m, n = len(s), len(t)\n        f = [[0] * (n + 1) for _ in range(m + 1)]\n        g = [[0] * (n + 1) for _ in range(m + 1)]\n        for i, a in enumerate(s, 1):\n            for j, b in enumerate(t, 1):\n                if a == b:\n                    f[i][j] = f[i - 1][j - 1] + 1\n        for i in range(m - 1, -1, -1):\n            for j in range(n - 1, -1, -1):\n                if s[i] == t[j]:\n                    g[i][j] = g[i + 1][j + 1] + 1\n                else:\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\n        return ans\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 190.2680 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countSubstrings(self, s: str, t: str) -> int:\\n        ans = 0\\n        m, n = len(s), len(t)\\n        f = [[0] * (n + 1) for _ in range(m + 1)]\\n        g = [[0] * (n + 1) for _ in range(m + 1)]\\n        for i, a in enumerate(s, 1):\\n            for j, b in enumerate(t, 1):\\n                if a == b:\\n                    f[i][j] = f[i - 1][j - 1] + 1\\n        for i in range(m - 1, -1, -1):\\n            for j in range(n - 1, -1, -1):\\n                if s[i] == t[j]:\\n                    g[i][j] = g[i + 1][j + 1] + 1\\n                else:\\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\\n        return ans\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate random strings for s and t\\n    s = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n    t = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countSubstrings(s, t)\\n\\n    return s, t, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        s, t, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countSubstrings(s, t) == expected_result\\n        print(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 186.0687 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 190.2680 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countSubstrings(self, s: str, t: str) -> int:\\n        ans = 0\\n        m, n = len(s), len(t)\\n        f = [[0] * (n + 1) for _ in range(m + 1)]\\n        g = [[0] * (n + 1) for _ in range(m + 1)]\\n        for i, a in enumerate(s, 1):\\n            for j, b in enumerate(t, 1):\\n                if a == b:\\n                    f[i][j] = f[i - 1][j - 1] + 1\\n        for i in range(m - 1, -1, -1):\\n            for j in range(n - 1, -1, -1):\\n                if s[i] == t[j]:\\n                    g[i][j] = g[i + 1][j + 1] + 1\\n                else:\\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\\n        return ans\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate random strings for s and t\\n    s = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n    t = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countSubstrings(s, t)\\n\\n    return s, t, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        s, t, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countSubstrings(s, t) == expected_result\\n        print(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 186.0687 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.2358 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nGiven two strings `s` and `t`, find the number of ways you can choose a non-empty substring of `s` and replace a **single character** by a different character such that the resulting substring is a substring of `t`. In other words, find the number of substrings in `s` that differ from some substring in `t` by **exactly** one character.\n\n\nFor example, the underlined substrings in `\"computer\"` and `\"computation\"` only differ by the `'e'`/`'a'`, so this is a valid way.\n\n\nReturn *the number of substrings that satisfy the condition above.*\n\n\nA **substring** is a contiguous sequence of characters within a string.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** s = \"aba\", t = \"baba\"\n**Output:** 6\n**Explanation:** The following are the pairs of substrings from s and t that differ by exactly 1 character:\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\n(\"aba\", \"baba\")\nThe underlined portions are the substrings that are chosen from s and t.\n\n```\n\n\n​​**Example 2:**\n\n```\n\n**Input:** s = \"ab\", t = \"bb\"\n**Output:** 3\n**Explanation:** The following are the pairs of substrings from s and t that differ by 1 character:\n(\"ab\", \"bb\")\n(\"ab\", \"bb\")\n(\"ab\", \"bb\")\n​​​​The underlined portions are the substrings that are chosen from s and t.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= s.length, t.length <= 100`\n* `s` and `t` consist of lowercase English letters only.\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def countSubstrings(self, s: str, t: str) -> int:\n        ans = 0\n        m, n = len(s), len(t)\n        f = [[0] * (n + 1) for _ in range(m + 1)]\n        g = [[0] * (n + 1) for _ in range(m + 1)]\n        for i, a in enumerate(s, 1):\n            for j, b in enumerate(t, 1):\n                if a == b:\n                    f[i][j] = f[i - 1][j - 1] + 1\n        for i in range(m - 1, -1, -1):\n            for j in range(n - 1, -1, -1):\n                if s[i] == t[j]:\n                    g[i][j] = g[i + 1][j + 1] + 1\n                else:\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\n        return ans\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 190.2680 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countSubstrings(self, s: str, t: str) -> int:\\n        ans = 0\\n        m, n = len(s), len(t)\\n        f = [[0] * (n + 1) for _ in range(m + 1)]\\n        g = [[0] * (n + 1) for _ in range(m + 1)]\\n        for i, a in enumerate(s, 1):\\n            for j, b in enumerate(t, 1):\\n                if a == b:\\n                    f[i][j] = f[i - 1][j - 1] + 1\\n        for i in range(m - 1, -1, -1):\\n            for j in range(n - 1, -1, -1):\\n                if s[i] == t[j]:\\n                    g[i][j] = g[i + 1][j + 1] + 1\\n                else:\\n                    ans += (f[i][j] + 1) * (g[i + 1][j + 1] + 1)\\n        return ans\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate random strings for s and t\\n    s = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n    t = \\'\\'.join(random.choice(\\'abcdefghijklmnopqrstuvwxyz\\') for _ in range(random.randint(1, 101)))\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countSubstrings(s, t)\\n\\n    return s, t, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        s, t, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countSubstrings(s, t) == expected_result\\n        print(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countSubstrings(\\'{s}\\', \\'{t}\\') == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 186.0687 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.2358 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/1718",
+      "baseline": {
+        "run_id": "20261128-165106-qwen4-max-s42-unknown-EffiBench_1718",
+        "task_id": "EffiBench/1718",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:51:06",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 132.5984,
+          "mean_trimmed_ms": 132.8745,
+          "iqr": 4.4047,
+          "cv": 0.0413,
+          "raw_ms": [
+            135.2314,
+            134.8206,
+            135.3727,
+            134.7071,
+            150.6957,
+            129.857,
+            132.2612,
+            132.9357,
+            130.5176,
+            130.725,
+            131.7975,
+            128.0718
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:76067485c5b3747d",
+              "status": "ok",
+              "median_ms": 132.5984,
+              "iqr": 4.4047,
+              "cv": 0.0413,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 0.1605,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 128.5375,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def constructDistancedSequence(self, n: int) -> List[int]:\\n        def dfs(u):\\n            if u == n * 2:\\n                return True\\n "
+          }
+        ],
+        "total_ms": 128.5375,
+        "slowest": {
+          "idx": 0,
+          "ms": 128.5375,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def constructDistancedSequence(self, n: int) -> List[int]:\\n        def dfs(u):\\n            if u == n * 2:\\n                return True\\n            if path[u]:\\n                return dfs(u + 1)\\n            for i in range(n, 1, -1):\\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\\n                    cnt[i] = 0\\n                    path[u] = path[u + i] = i\\n                    if dfs(u + 1):\\n                        return True\\n                    path[u] = path[u + i] = 0\\n                    cnt[i] = 2\\n            if cnt[1]:\\n                cnt[1], path[u] = 0, 1\\n                if dfs(u + 1):\\n                    return True\\n                path[u], cnt[1] = 0, 1\\n            return False\\n\\n        path = [0] * (n * 2)\\n        cnt = [2] * (n * 2)\\n        cnt[1] = 1\\n        dfs(1)\\n        return path[1:]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    n = random.randint(1, 20)\\n    expected_result = solution.constructDistancedSequence(n)\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.constructDistancedSequence(n) == expected_result\\n        print(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 132.8745 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def constructDistancedSequence(self, n: int) -> List[int]:\\n        def dfs(u):\\n            if u == n * 2:\\n                return True\\n            if path[u]:\\n                return dfs(u + 1)\\n            for i in range(n, 1, -1):\\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\\n                    cnt[i] = 0\\n                    path[u] = path[u + i] = i\\n                    if dfs(u + 1):\\n                        return True\\n                    path[u] = path[u + i] = 0\\n                    cnt[i] = 2\\n            if cnt[1]:\\n                cnt[1], path[u] = 0, 1\\n                if dfs(u + 1):\\n                    return True\\n                path[u], cnt[1] = 0, 1\\n            return False\\n\\n        path = [0] * (n * 2)\\n        cnt = [2] * (n * 2)\\n        cnt[1] = 1\\n        dfs(1)\\n        return path[1:]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    n = random.randint(1, 20)\\n    expected_result = solution.constructDistancedSequence(n)\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.constructDistancedSequence(n) == expected_result\\n        print(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 128.5375 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nGiven an integer `n`, find a sequence that satisfies all of the following:\n\n\n* The integer `1` occurs once in the sequence.\n* Each integer between `2` and `n` occurs twice in the sequence.\n* For every integer `i` between `2` and `n`, the **distance** between the two occurrences of `i` is exactly `i`.\n\n\nThe **distance** between two numbers on the sequence, `a[i]` and `a[j]`, is the absolute difference of their indices, `|j - i|`.\n\n\nReturn *the **lexicographically largest** sequence**. It is guaranteed that under the given constraints, there is always a solution.* \n\n\nA sequence `a` is lexicographically larger than a sequence `b` (of the same length) if in the first position where `a` and `b` differ, sequence `a` has a number greater than the corresponding number in `b`. For example, `[0,1,9,0]` is lexicographically larger than `[0,1,5,6]` because the first position they differ is at the third number, and `9` is greater than `5`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 3\n**Output:** [3,1,2,3,2]\n**Explanation:** [2,3,2,1,3] is also a valid sequence, but [3,1,2,3,2] is the lexicographically largest valid sequence.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 5\n**Output:** [5,3,1,4,3,5,2,4,2]\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 20`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def constructDistancedSequence(self, n: int) -> List[int]:\n        def dfs(u):\n            if u == n * 2:\n                return True\n            if path[u]:\n                return dfs(u + 1)\n            for i in range(n, 1, -1):\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\n                    cnt[i] = 0\n                    path[u] = path[u + i] = i\n                    if dfs(u + 1):\n                        return True\n                    path[u] = path[u + i] = 0\n                    cnt[i] = 2\n            if cnt[1]:\n                cnt[1], path[u] = 0, 1\n                if dfs(u + 1):\n                    return True\n                path[u], cnt[1] = 0, 1\n            return False\n\n        path = [0] * (n * 2)\n        cnt = [2] * (n * 2)\n        cnt[1] = 1\n        dfs(1)\n        return path[1:]\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 132.8745 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def constructDistancedSequence(self, n: int) -> List[int]:\\n        def dfs(u):\\n            if u == n * 2:\\n                return True\\n            if path[u]:\\n                return dfs(u + 1)\\n            for i in range(n, 1, -1):\\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\\n                    cnt[i] = 0\\n                    path[u] = path[u + i] = i\\n                    if dfs(u + 1):\\n                        return True\\n                    path[u] = path[u + i] = 0\\n                    cnt[i] = 2\\n            if cnt[1]:\\n                cnt[1], path[u] = 0, 1\\n                if dfs(u + 1):\\n                    return True\\n                path[u], cnt[1] = 0, 1\\n            return False\\n\\n        path = [0] * (n * 2)\\n        cnt = [2] * (n * 2)\\n        cnt[1] = 1\\n        dfs(1)\\n        return path[1:]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    n = random.randint(1, 20)\\n    expected_result = solution.constructDistancedSequence(n)\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.constructDistancedSequence(n) == expected_result\\n        print(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 128.5375 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 132.8745 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def constructDistancedSequence(self, n: int) -> List[int]:\\n        def dfs(u):\\n            if u == n * 2:\\n                return True\\n            if path[u]:\\n                return dfs(u + 1)\\n            for i in range(n, 1, -1):\\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\\n                    cnt[i] = 0\\n                    path[u] = path[u + i] = i\\n                    if dfs(u + 1):\\n                        return True\\n                    path[u] = path[u + i] = 0\\n                    cnt[i] = 2\\n            if cnt[1]:\\n                cnt[1], path[u] = 0, 1\\n                if dfs(u + 1):\\n                    return True\\n                path[u], cnt[1] = 0, 1\\n            return False\\n\\n        path = [0] * (n * 2)\\n        cnt = [2] * (n * 2)\\n        cnt[1] = 1\\n        dfs(1)\\n        return path[1:]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    n = random.randint(1, 20)\\n    expected_result = solution.constructDistancedSequence(n)\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.constructDistancedSequence(n) == expected_result\\n        print(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 128.5375 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.1605 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nGiven an integer `n`, find a sequence that satisfies all of the following:\n\n\n* The integer `1` occurs once in the sequence.\n* Each integer between `2` and `n` occurs twice in the sequence.\n* For every integer `i` between `2` and `n`, the **distance** between the two occurrences of `i` is exactly `i`.\n\n\nThe **distance** between two numbers on the sequence, `a[i]` and `a[j]`, is the absolute difference of their indices, `|j - i|`.\n\n\nReturn *the **lexicographically largest** sequence**. It is guaranteed that under the given constraints, there is always a solution.* \n\n\nA sequence `a` is lexicographically larger than a sequence `b` (of the same length) if in the first position where `a` and `b` differ, sequence `a` has a number greater than the corresponding number in `b`. For example, `[0,1,9,0]` is lexicographically larger than `[0,1,5,6]` because the first position they differ is at the third number, and `9` is greater than `5`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 3\n**Output:** [3,1,2,3,2]\n**Explanation:** [2,3,2,1,3] is also a valid sequence, but [3,1,2,3,2] is the lexicographically largest valid sequence.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 5\n**Output:** [5,3,1,4,3,5,2,4,2]\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 20`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def constructDistancedSequence(self, n: int) -> List[int]:\n        def dfs(u):\n            if u == n * 2:\n                return True\n            if path[u]:\n                return dfs(u + 1)\n            for i in range(n, 1, -1):\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\n                    cnt[i] = 0\n                    path[u] = path[u + i] = i\n                    if dfs(u + 1):\n                        return True\n                    path[u] = path[u + i] = 0\n                    cnt[i] = 2\n            if cnt[1]:\n                cnt[1], path[u] = 0, 1\n                if dfs(u + 1):\n                    return True\n                path[u], cnt[1] = 0, 1\n            return False\n\n        path = [0] * (n * 2)\n        cnt = [2] * (n * 2)\n        cnt[1] = 1\n        dfs(1)\n        return path[1:]\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 132.8745 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def constructDistancedSequence(self, n: int) -> List[int]:\\n        def dfs(u):\\n            if u == n * 2:\\n                return True\\n            if path[u]:\\n                return dfs(u + 1)\\n            for i in range(n, 1, -1):\\n                if cnt[i] and u + i < n * 2 and path[u + i] == 0:\\n                    cnt[i] = 0\\n                    path[u] = path[u + i] = i\\n                    if dfs(u + 1):\\n                        return True\\n                    path[u] = path[u + i] = 0\\n                    cnt[i] = 2\\n            if cnt[1]:\\n                cnt[1], path[u] = 0, 1\\n                if dfs(u + 1):\\n                    return True\\n                path[u], cnt[1] = 0, 1\\n            return False\\n\\n        path = [0] * (n * 2)\\n        cnt = [2] * (n * 2)\\n        cnt[1] = 1\\n        dfs(1)\\n        return path[1:]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    n = random.randint(1, 20)\\n    expected_result = solution.constructDistancedSequence(n)\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.constructDistancedSequence(n) == expected_result\\n        print(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.constructDistancedSequence({n}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 128.5375 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.1605 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/2320",
+      "baseline": {
+        "run_id": "20261128-165118-qwen4-max-s42-unknown-EffiBench_2320",
+        "task_id": "EffiBench/2320",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:51:18",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 278.0134,
+          "mean_trimmed_ms": 277.1863,
+          "iqr": 15.3144,
+          "cv": 0.0331,
+          "raw_ms": [
+            297.1731,
+            279.4559,
+            268.2747,
+            267.2267,
+            269.8572,
+            267.5654,
+            284.9525,
+            276.5709,
+            283.8082,
+            281.7969,
+            289.6267,
+            272.774
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:4a61a581732dd577",
+              "status": "ok",
+              "median_ms": 278.0134,
+              "iqr": 15.3144,
+              "cv": 0.0331,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 0.4983,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 278.1499,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countHousePlacements(self, n: int) -> int:\\n        mod = 10**9 + 7\\n        f = [1] * n\\n        g = [1] * n\\n        for i in range(1, n):\\n            f[i] ="
+          }
+        ],
+        "total_ms": 278.1499,
+        "slowest": {
+          "idx": 0,
+          "ms": 278.1499,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countHousePlacements(self, n: int) -> int:\\n        mod = 10**9 + 7\\n        f = [1] * n\\n        g = [1] * n\\n        for i in range(1, n):\\n            f[i] = g[i - 1]\\n            g[i] = (f[i - 1] + g[i - 1]) % mod\\n        v = f[-1] + g[-1]\\n        return v * v % mod\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random value for n\\n    n = random.randint(1, 10001)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countHousePlacements(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countHousePlacements(n) == expected_result\\n        print(f\"assert solution.countHousePlacements({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countHousePlacements({n}) == {expected_result}\") # Construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 277.1863 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countHousePlacements(self, n: int) -> int:\\n        mod = 10**9 + 7\\n        f = [1] * n\\n        g = [1] * n\\n        for i in range(1, n):\\n            f[i] = g[i - 1]\\n            g[i] = (f[i - 1] + g[i - 1]) % mod\\n        v = f[-1] + g[-1]\\n        return v * v % mod\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random value for n\\n    n = random.randint(1, 10001)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countHousePlacements(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countHousePlacements(n) == expected_result\\n        print(f\"assert solution.countHousePlacements({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countHousePlacements({n}) == {expected_result}\") # Construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 278.1499 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nThere is a street with `n * 2` **plots**, where there are `n` plots on each side of the street. The plots on each side are numbered from `1` to `n`. On each plot, a house can be placed.\n\n\nReturn *the number of ways houses can be placed such that no two houses are adjacent to each other on the same side of the street*. Since the answer may be very large, return it **modulo** `109 + 7`.\n\n\nNote that if a house is placed on the `ith` plot on one side of the street, a house can also be placed on the `ith` plot on the other side of the street.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 1\n**Output:** 4\n**Explanation:** \nPossible arrangements:\n1. All plots are empty.\n2. A house is placed on one side of the street.\n3. A house is placed on the other side of the street.\n4. Two houses are placed, one on each side of the street.\n\n```\n\n**Example 2:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/2300-2399/2320.Count%20Number%20of%20Ways%20to%20Place%20Houses/images/arrangements.png)\n\n```\n\n**Input:** n = 2\n**Output:** 9\n**Explanation:** The 9 possible arrangements are shown in the diagram above.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 104`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def countHousePlacements(self, n: int) -> int:\n        mod = 10**9 + 7\n        f = [1] * n\n        g = [1] * n\n        for i in range(1, n):\n            f[i] = g[i - 1]\n            g[i] = (f[i - 1] + g[i - 1]) % mod\n        v = f[-1] + g[-1]\n        return v * v % mod\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 277.1863 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countHousePlacements(self, n: int) -> int:\\n        mod = 10**9 + 7\\n        f = [1] * n\\n        g = [1] * n\\n        for i in range(1, n):\\n            f[i] = g[i - 1]\\n            g[i] = (f[i - 1] + g[i - 1]) % mod\\n        v = f[-1] + g[-1]\\n        return v * v % mod\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random value for n\\n    n = random.randint(1, 10001)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countHousePlacements(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countHousePlacements(n) == expected_result\\n        print(f\"assert solution.countHousePlacements({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countHousePlacements({n}) == {expected_result}\") # Construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 278.1499 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 277.1863 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countHousePlacements(self, n: int) -> int:\\n        mod = 10**9 + 7\\n        f = [1] * n\\n        g = [1] * n\\n        for i in range(1, n):\\n            f[i] = g[i - 1]\\n            g[i] = (f[i - 1] + g[i - 1]) % mod\\n        v = f[-1] + g[-1]\\n        return v * v % mod\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random value for n\\n    n = random.randint(1, 10001)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countHousePlacements(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countHousePlacements(n) == expected_result\\n        print(f\"assert solution.countHousePlacements({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countHousePlacements({n}) == {expected_result}\") # Construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 278.1499 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.4983 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nThere is a street with `n * 2` **plots**, where there are `n` plots on each side of the street. The plots on each side are numbered from `1` to `n`. On each plot, a house can be placed.\n\n\nReturn *the number of ways houses can be placed such that no two houses are adjacent to each other on the same side of the street*. Since the answer may be very large, return it **modulo** `109 + 7`.\n\n\nNote that if a house is placed on the `ith` plot on one side of the street, a house can also be placed on the `ith` plot on the other side of the street.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 1\n**Output:** 4\n**Explanation:** \nPossible arrangements:\n1. All plots are empty.\n2. A house is placed on one side of the street.\n3. A house is placed on the other side of the street.\n4. Two houses are placed, one on each side of the street.\n\n```\n\n**Example 2:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/2300-2399/2320.Count%20Number%20of%20Ways%20to%20Place%20Houses/images/arrangements.png)\n\n```\n\n**Input:** n = 2\n**Output:** 9\n**Explanation:** The 9 possible arrangements are shown in the diagram above.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 104`\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def countHousePlacements(self, n: int) -> int:\n        mod = 10**9 + 7\n        f = [1] * n\n        g = [1] * n\n        for i in range(1, n):\n            f[i] = g[i - 1]\n            g[i] = (f[i - 1] + g[i - 1]) % mod\n        v = f[-1] + g[-1]\n        return v * v % mod\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 277.1863 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def countHousePlacements(self, n: int) -> int:\\n        mod = 10**9 + 7\\n        f = [1] * n\\n        g = [1] * n\\n        for i in range(1, n):\\n            f[i] = g[i - 1]\\n            g[i] = (f[i - 1] + g[i - 1]) % mod\\n        v = f[-1] + g[-1]\\n        return v * v % mod\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random value for n\\n    n = random.randint(1, 10001)\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countHousePlacements(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countHousePlacements(n) == expected_result\\n        print(f\"assert solution.countHousePlacements({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countHousePlacements({n}) == {expected_result}\") # Construct the test case in the same format as the example\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 278.1499 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.4983 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    },
+    {
+      "task_id": "EffiBench/2552",
+      "baseline": {
+        "run_id": "20261128-165141-qwen4-max-s42-unknown-EffiBench_2552",
+        "task_id": "EffiBench/2552",
+        "dataset": "effibench",
+        "method": "base",
+        "started_at": "2026-11-28T16:51:41",
+        "manifest": {
+          "model": "qwen4-max",
+          "model_version": "provider_model_id_only",
+          "temperature": 0.7,
+          "seed": 42,
+          "dataset_hash": "n/a",
+          "harness_commit": "unknown",
+          "protocol_version": "proto-2026.11"
+        },
+        "status": "ok",
+        "error": null,
+        "time": {
+          "median_ms": 219.2787,
+          "mean_trimmed_ms": 219.9243,
+          "iqr": 10.4268,
+          "cv": 0.0684,
+          "raw_ms": [
+            259.3345,
+            220.9446,
+            257.8867,
+            212.9516,
+            214.5652,
+            219.0187,
+            223.3928,
+            217.1799,
+            214.8373,
+            228.3904,
+            219.5387,
+            216.0923
+          ],
+          "tiers": [
+            {
+              "tier": "t2",
+              "n": 200,
+              "gen": "seed:20261127",
+              "args_hash": "sha256:5d32515a18d3ed61",
+              "status": "ok",
+              "median_ms": 219.2787,
+              "iqr": 10.4268,
+              "cv": 0.0684,
+              "reps": 1,
+              "downgraded": false
+            }
+          ]
+        },
+        "mem": {
+          "peak_tracemalloc_mb": 0.3297,
+          "peak_rss_mb": null
+        },
+        "speedup": null,
+        "mem_ratio": null,
+        "downgraded": false,
+        "protocol_version": "proto-2026.11",
+        "code_source": "canonical"
+      },
+      "case_diagnostic": {
+        "status": "ok",
+        "mode": "block",
+        "reps": 5,
+        "cases": [
+          {
+            "idx": 0,
+            "ms": 221.034,
+            "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\n\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def countQuadruplets(self, nums: List[int]) -> int:\\n        n = len(nums)\\n        f = [[0] * n for _ in range(n)]\\n        g = [[0] * n"
+          }
+        ],
+        "total_ms": 221.034,
+        "slowest": {
+          "idx": 0,
+          "ms": 221.034,
+          "src": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\n\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def countQuadruplets(self, nums: List[int]) -> int:\\n        n = len(nums)\\n        f = [[0] * n for _ in range(n)]\\n        g = [[0] * n for _ in range(n)]\\n        for j in range(1, n - 2):\\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\\n            for k in range(j + 1, n - 1):\\n                if nums[j] > nums[k]:\\n                    f[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        for k in range(2, n - 1):\\n            cnt = sum(nums[i] < nums[k] for i in range(k))\\n            for j in range(k - 1, 0, -1):\\n                if nums[j] > nums[k]:\\n                    g[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        return sum(\\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\\n        )\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random numbers list\\n    nums = random.sample(range(1, 1001), random.randint(4, 101))\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countQuadruplets(nums)\\n\\n    return nums, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        nums, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countQuadruplets(nums) == expected_result\\n        print(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})"
+        }
+      },
+      "M0": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 219.9243 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\n\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def countQuadruplets(self, nums: List[int]) -> int:\\n        n = len(nums)\\n        f = [[0] * n for _ in range(n)]\\n        g = [[0] * n for _ in range(n)]\\n        for j in range(1, n - 2):\\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\\n            for k in range(j + 1, n - 1):\\n                if nums[j] > nums[k]:\\n                    f[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        for k in range(2, n - 1):\\n            cnt = sum(nums[i] < nums[k] for i in range(k))\\n            for j in range(k - 1, 0, -1):\\n                if nums[j] > nums[k]:\\n                    g[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        return sum(\\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\\n        )\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random numbers list\\n    nums = random.sample(range(1, 1001), random.randint(4, 101))\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countQuadruplets(nums)\\n\\n    return nums, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        nums, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countQuadruplets(nums) == expected_result\\n        print(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 221.0340 ms.\nOptimize execution time while preserving behavior.",
+        "prompt": "Task description:\n\nGiven a **0-indexed** integer array `nums` of size `n` containing all numbers from `1` to `n`, return *the number of increasing quadruplets*.\n\n\nA quadruplet `(i, j, k, l)` is increasing if:\n\n\n* `0 <= i < j < k < l < n`, and\n* `nums[i] < nums[k] < nums[j] < nums[l]`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** nums = [1,3,2,4,5]\n**Output:** 2\n**Explanation:** \n- When i = 0, j = 1, k = 2, and l = 3, nums[i] < nums[k] < nums[j] < nums[l].\n- When i = 0, j = 1, k = 2, and l = 4, nums[i] < nums[k] < nums[j] < nums[l]. \nThere are no other quadruplets, so we return 2.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** nums = [1,2,3,4]\n**Output:** 0\n**Explanation:** There exists only one quadruplet with i = 0, j = 1, k = 2, l = 3, but since nums[j] < nums[k], we return 0.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `4 <= nums.length <= 4000`\n* `1 <= nums[i] <= nums.length`\n* All the integers of `nums` are **unique**. `nums` is a permutation.\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def countQuadruplets(self, nums: List[int]) -> int:\n        n = len(nums)\n        f = [[0] * n for _ in range(n)]\n        g = [[0] * n for _ in range(n)]\n        for j in range(1, n - 2):\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\n            for k in range(j + 1, n - 1):\n                if nums[j] > nums[k]:\n                    f[j][k] = cnt\n                else:\n                    cnt -= 1\n        for k in range(2, n - 1):\n            cnt = sum(nums[i] < nums[k] for i in range(k))\n            for j in range(k - 1, 0, -1):\n                if nums[j] > nums[k]:\n                    g[j][k] = cnt\n                else:\n                    cnt -= 1\n        return sum(\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\n        )\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 219.9243 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\n\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def countQuadruplets(self, nums: List[int]) -> int:\\n        n = len(nums)\\n        f = [[0] * n for _ in range(n)]\\n        g = [[0] * n for _ in range(n)]\\n        for j in range(1, n - 2):\\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\\n            for k in range(j + 1, n - 1):\\n                if nums[j] > nums[k]:\\n                    f[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        for k in range(2, n - 1):\\n            cnt = sum(nums[i] < nums[k] for i in range(k))\\n            for j in range(k - 1, 0, -1):\\n                if nums[j] > nums[k]:\\n                    g[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        return sum(\\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\\n        )\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random numbers list\\n    nums = random.sample(range(1, 1001), random.randint(4, 101))\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countQuadruplets(nums)\\n\\n    return nums, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        nums, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countQuadruplets(nums) == expected_result\\n        print(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 221.0340 ms.\nOptimize execution time while preserving behavior.\n"
+      },
+      "M1": {
+        "feedback": "Total execution time of this frozen test block (shared harness mean-trimmed): 219.9243 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\n\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def countQuadruplets(self, nums: List[int]) -> int:\\n        n = len(nums)\\n        f = [[0] * n for _ in range(n)]\\n        g = [[0] * n for _ in range(n)]\\n        for j in range(1, n - 2):\\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\\n            for k in range(j + 1, n - 1):\\n                if nums[j] > nums[k]:\\n                    f[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        for k in range(2, n - 1):\\n            cnt = sum(nums[i] < nums[k] for i in range(k))\\n            for j in range(k - 1, 0, -1):\\n                if nums[j] > nums[k]:\\n                    g[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        return sum(\\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\\n        )\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random numbers list\\n    nums = random.sample(range(1, 1001), random.randint(4, 101))\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countQuadruplets(nums)\\n\\n    return nums, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        nums, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countQuadruplets(nums) == expected_result\\n        print(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 221.0340 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.3297 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.",
+        "prompt": "Task description:\n\nGiven a **0-indexed** integer array `nums` of size `n` containing all numbers from `1` to `n`, return *the number of increasing quadruplets*.\n\n\nA quadruplet `(i, j, k, l)` is increasing if:\n\n\n* `0 <= i < j < k < l < n`, and\n* `nums[i] < nums[k] < nums[j] < nums[l]`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** nums = [1,3,2,4,5]\n**Output:** 2\n**Explanation:** \n- When i = 0, j = 1, k = 2, and l = 3, nums[i] < nums[k] < nums[j] < nums[l].\n- When i = 0, j = 1, k = 2, and l = 4, nums[i] < nums[k] < nums[j] < nums[l]. \nThere are no other quadruplets, so we return 2.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** nums = [1,2,3,4]\n**Output:** 0\n**Explanation:** There exists only one quadruplet with i = 0, j = 1, k = 2, l = 3, but since nums[j] < nums[k], we return 0.\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `4 <= nums.length <= 4000`\n* `1 <= nums[i] <= nums.length`\n* All the integers of `nums` are **unique**. `nums` is a permutation.\n\n\n\n\nInitial code:\n```python\nclass Solution:\n    def countQuadruplets(self, nums: List[int]) -> int:\n        n = len(nums)\n        f = [[0] * n for _ in range(n)]\n        g = [[0] * n for _ in range(n)]\n        for j in range(1, n - 2):\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\n            for k in range(j + 1, n - 1):\n                if nums[j] > nums[k]:\n                    f[j][k] = cnt\n                else:\n                    cnt -= 1\n        for k in range(2, n - 1):\n            cnt = sum(nums[i] < nums[k] for i in range(k))\n            for j in range(k - 1, 0, -1):\n                if nums[j] > nums[k]:\n                    g[j][k] = cnt\n                else:\n                    cnt -= 1\n        return sum(\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\n        )\n\n```\n\nOptimization requirement:\nOptimize the code while preserving its behavior and public interface. Return only a complete Python program in a python code fence.\n\nPerformance feedback:\nTotal execution time of this frozen test block (shared harness mean-trimmed): 219.9243 ms.\nSlowest test case (unprofiled harness):\nif '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\n\\nimport random\\nfrom typing import List\\n\\nclass Solution:\\n    def countQuadruplets(self, nums: List[int]) -> int:\\n        n = len(nums)\\n        f = [[0] * n for _ in range(n)]\\n        g = [[0] * n for _ in range(n)]\\n        for j in range(1, n - 2):\\n            cnt = sum(nums[l] > nums[j] for l in range(j + 1, n))\\n            for k in range(j + 1, n - 1):\\n                if nums[j] > nums[k]:\\n                    f[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        for k in range(2, n - 1):\\n            cnt = sum(nums[i] < nums[k] for i in range(k))\\n            for j in range(k - 1, 0, -1):\\n                if nums[j] > nums[k]:\\n                    g[j][k] = cnt\\n                else:\\n                    cnt -= 1\\n        return sum(\\n            f[j][k] * g[j][k] for j in range(1, n - 2) for k in range(j + 1, n - 1)\\n        )\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random numbers list\\n    nums = random.sample(range(1, 1001), random.randint(4, 101))\\n    \\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.countQuadruplets(nums)\\n\\n    return nums, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        nums, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.countQuadruplets(nums) == expected_result\\n        print(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.countQuadruplets({nums}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\nCase execution time: 221.0340 ms.\nOptimize execution time while preserving behavior.\n\nProgram-level peak_tracemalloc_mb from the matching baseline eval.harness.measure_task Result: 0.3297 MB. This is the peak Python allocation measurement for the whole test block, not line-level memory attribution. Additional space constraint: reduce peak memory by avoiding unnecessary intermediate containers or copies while preserving correctness and avoiding material time regression.\n"
+      }
+    }
+  ]
+}

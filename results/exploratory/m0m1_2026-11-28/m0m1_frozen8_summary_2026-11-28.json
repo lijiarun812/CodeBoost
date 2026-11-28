@@ -1,0 +1,884 @@
+{
+  "classification": "frozen-bank exploratory M0/M1 comparison, not a formal Result",
+  "formal_task": false,
+  "formal_result_written": false,
+  "source_sha256": {
+    "m0m1_frozen8_trial_2026-11-28.json": "ce05ade94e0faba83ceba19c52e2767f490eb9691edf41302f494559d0a8bc18",
+    "m0m1_frozen8_manifest_2026-11-28.json": "520368613083cfc8e2e8fbd788c020a402ccc85c8f294abe6dba50451d465470",
+    "m0m1_frozen8_preflight_2026-11-28.json": "924218b50672409443e323c948b75845d059cc389a3951b938aa97c109289aab"
+  },
+  "selection_rule": "Exclude prior five G/F tasks. From the 91 frozen rows, require B scan 10<=baseline_ms<=100, 0.1<=peak_tm_mb<=20, cv<=0.10 and t2.test differs from t1.test. Sort by numeric task_id ascending. On this Python/harness, require canonical t2 status=ok, measured peak_tracemalloc_mb>=0.05 and slowest case>=2ms. Take first eight passing rows. No model outputs used.",
+  "source_bank_sha256": {
+    "CodeBoost/results/bank/frozen_tasks.json": "94804c11bf488f78d989c4ddcad1f00057422125e95774279af187ad29d48371",
+    "CodeBoost/results/bank/frozen_manifest.json": "a58e1b11263687f10e670a6bf6dc6d9391a90b4c8ca77a630151ce73b088f325"
+  },
+  "prompt_version": "m0m1-program-peak-v1",
+  "acceptance": {
+    "function": "eval.space.pareto_accept:v1.1",
+    "time_rel": 0.01,
+    "space_rel": 0.1,
+    "space_abs_mb": 0.005,
+    "peak_tm_floor_mb": 0.05,
+    "rss_baseline_mb": null,
+    "retest_handling": "record pending retest without automatic repeat; never count as accepted"
+  },
+  "primary_metric": "number of candidates both correct and pareto_accept decision=accept divided by 16 attempts per arm",
+  "generation_calls_attempted": 32,
+  "returned_model_ids": {
+    "qwen4-max": 32
+  },
+  "cost_usd": null,
+  "immutable_model_revision": null,
+  "arm_counts": {
+    "M0": {
+      "attempts": 16,
+      "correct": 8,
+      "accepted_correct": 3,
+      "accepted_correct_fraction": 0.1875,
+      "status_counts": {
+        "ok": 8,
+        "incorrect": 8
+      },
+      "decision_counts": {
+        "reject": 13,
+        "accept": 3
+      },
+      "prompt_tokens": 20970,
+      "completion_tokens": 8520,
+      "total_tokens": 29490
+    },
+    "M1": {
+      "attempts": 16,
+      "correct": 11,
+      "accepted_correct": 6,
+      "accepted_correct_fraction": 0.375,
+      "status_counts": {
+        "ok": 11,
+        "incorrect": 5
+      },
+      "decision_counts": {
+        "reject": 10,
+        "accept": 6
+      },
+      "prompt_tokens": 22108,
+      "completion_tokens": 8642,
+      "total_tokens": 30750
+    }
+  },
+  "primary_m1_minus_m0_percentage_points": 18.75,
+  "both_correct_pair_count": 7,
+  "both_correct_paired_time_pct_median": 0.327,
+  "both_correct_paired_peak_pct_median": 0.0,
+  "tasks": [
+    {
+      "task_id": "EffiBench/815",
+      "tier": "t2",
+      "args_hash": "sha256:ba9fd61c2a3906f2",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 152.0484,
+        "time_cv": 0.0573,
+        "peak_tracemalloc_mb": 1.1259,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 1.1%",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 142.0047,
+            "time_cv": 0.047,
+            "peak_tracemalloc_mb": 1.1383,
+            "peak_rss_mb": null,
+            "total_tokens": 1969,
+            "prompt_tokens": 1530,
+            "completion_tokens": 439,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "32c00986a82771bac1260b3e8a13a9a0a8431101e35497fa04fb81ad857d7bba"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 1.1%",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 141.6513,
+            "time_cv": 0.0485,
+            "peak_tracemalloc_mb": 1.1383,
+            "peak_rss_mb": null,
+            "total_tokens": 2187,
+            "prompt_tokens": 1601,
+            "completion_tokens": 586,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "d5ecb2862629b61fbccc86459d90c58aca634dc6bfc835e5e6ca94809f7ea9c0"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": -0.3534,
+            "time_pct_m1_vs_m0": -0.249,
+            "peak_tracemalloc_mb_m1_minus_m0": 0.0,
+            "peak_tracemalloc_pct_m1_vs_m0": 0.0
+          }
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 1.1%",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 140.1194,
+            "time_cv": 0.0492,
+            "peak_tracemalloc_mb": 1.1383,
+            "peak_rss_mb": null,
+            "total_tokens": 2027,
+            "prompt_tokens": 1530,
+            "completion_tokens": 497,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "5080df06a1106e26ea32313b42a6e53e39989e9558a10e76fdce0b657b97a98a"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 1.1%",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 142.5111,
+            "time_cv": 0.0519,
+            "peak_tracemalloc_mb": 1.1383,
+            "peak_rss_mb": null,
+            "total_tokens": 2094,
+            "prompt_tokens": 1601,
+            "completion_tokens": 493,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "582eb5f59e6ebee5059c9d1cda6d388ba1deba4b526f2974f2a4eb6e9eb62c87"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": 2.3917,
+            "time_pct_m1_vs_m0": 1.707,
+            "peak_tracemalloc_mb_m1_minus_m0": 0.0,
+            "peak_tracemalloc_pct_m1_vs_m0": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/1238",
+      "tier": "t2",
+      "args_hash": "sha256:f713f871cd890ef3",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 2190.4739,
+        "time_cv": 0.0474,
+        "peak_tracemalloc_mb": 68.3304,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1313,
+            "prompt_tokens": 921,
+            "completion_tokens": 392,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "bb57dd9420efbf750c4b2019ed3b730d9b974659a30fd660775748291bd16c4a"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "RSS 门禁跳过（unavailable）",
+              "两轴都没有超出噪声的改善 → 保持"
+            ],
+            "time_mean_trimmed_ms": 2237.4128,
+            "time_cv": 0.0131,
+            "peak_tracemalloc_mb": 68.3304,
+            "peak_rss_mb": null,
+            "total_tokens": 1357,
+            "prompt_tokens": 993,
+            "completion_tokens": 364,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "cbba94b48c05dfa72a363811d62a37627c4af975547bd10af565fa5b26b09091"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "RSS 门禁跳过（unavailable）",
+              "两轴都没有超出噪声的改善 → 保持"
+            ],
+            "time_mean_trimmed_ms": 2054.8601,
+            "time_cv": 0.0128,
+            "peak_tracemalloc_mb": 68.3306,
+            "peak_rss_mb": null,
+            "total_tokens": 1243,
+            "prompt_tokens": 921,
+            "completion_tokens": 322,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "68b2c84bbfefa3b98643da3569ff4d178608c412365c7bfc72e170832db7dea6"
+          },
+          "M1": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1380,
+            "prompt_tokens": 993,
+            "completion_tokens": 387,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "886a94340d105c63871f0830f258e7374a7f08cf8afdfd61550a2c1631c224c1"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/1293",
+      "tier": "t2",
+      "args_hash": "sha256:642eb76ec6c7b3e7",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 251.7896,
+        "time_cv": 0.0374,
+        "peak_tracemalloc_mb": 2.258,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 2487,
+            "prompt_tokens": 1700,
+            "completion_tokens": 787,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "349129f72672617102f2fc269f39ddf2444cdf638d631e1f0397870280096dd3"
+          },
+          "M1": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 2540,
+            "prompt_tokens": 1771,
+            "completion_tokens": 769,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "9fa12b2ba077afc0c48155698ede1f63a00b6a6d0c98a1aa6ebc2541b31dd02e"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 2512,
+            "prompt_tokens": 1700,
+            "completion_tokens": 812,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "e033ca5624ebfc9b9332f8ccf8711b9028317c41c9814a0409523c9fd1aec981"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 25.8%",
+              "时间改善 24.4%（阈值 7.5%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 190.384,
+            "time_cv": 0.0697,
+            "peak_tracemalloc_mb": 1.6749,
+            "peak_rss_mb": null,
+            "total_tokens": 2609,
+            "prompt_tokens": 1771,
+            "completion_tokens": 838,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "a51178cc07590590d562e5d7071d571103f938f6bc6ae382735ca50033d3dff4"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/1415",
+      "tier": "t2",
+      "args_hash": "sha256:b9d7661ff44d413f",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 53.4118,
+        "time_cv": 0.0503,
+        "peak_tracemalloc_mb": 5.1008,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 24.4%",
+              "时间改善 31.9%（阈值 10.1%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 36.356,
+            "time_cv": 0.0344,
+            "peak_tracemalloc_mb": 3.8571,
+            "peak_rss_mb": null,
+            "total_tokens": 1639,
+            "prompt_tokens": 1133,
+            "completion_tokens": 506,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "d82ee529513c3e1275de0afd8902ecd7e120edd6fd5978d5686a28b3439c4817"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 24.4%",
+              "时间改善 32.7%（阈值 10.1%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 35.9684,
+            "time_cv": 0.0419,
+            "peak_tracemalloc_mb": 3.8571,
+            "peak_rss_mb": null,
+            "total_tokens": 1669,
+            "prompt_tokens": 1204,
+            "completion_tokens": 465,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "dec1f3186e000ffb15107426f7afef957a9c8c5e82e241334990c1798542f65f"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": -0.3876,
+            "time_pct_m1_vs_m0": -1.066,
+            "peak_tracemalloc_mb_m1_minus_m0": 0.0,
+            "peak_tracemalloc_pct_m1_vs_m0": 0.0
+          }
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 24.4%",
+              "时间改善 31.8%（阈值 10.1%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 36.4161,
+            "time_cv": 0.0318,
+            "peak_tracemalloc_mb": 3.8571,
+            "peak_rss_mb": null,
+            "total_tokens": 1617,
+            "prompt_tokens": 1133,
+            "completion_tokens": 484,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "8355382fe91bf01956d2cdb48d214c4e9ec7b13e78312856bbe5e9141634d551"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 24.4%",
+              "时间改善 32.3%（阈值 10.1%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 36.1553,
+            "time_cv": 0.0399,
+            "peak_tracemalloc_mb": 3.8571,
+            "peak_rss_mb": null,
+            "total_tokens": 1648,
+            "prompt_tokens": 1204,
+            "completion_tokens": 444,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "f93a2f27cb1d285bf3239103baac5cba81e4736f4a487a3008eef55904a22df1"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": -0.2608,
+            "time_pct_m1_vs_m0": -0.716,
+            "peak_tracemalloc_mb_m1_minus_m0": 0.0,
+            "peak_tracemalloc_pct_m1_vs_m0": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/1638",
+      "tier": "t2",
+      "args_hash": "sha256:08bab5d853545b68",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 190.268,
+        "time_cv": 0.0264,
+        "peak_tracemalloc_mb": 0.2358,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1951,
+            "prompt_tokens": 1421,
+            "completion_tokens": 530,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "8bdc746f819860136e0e750ea82b94061ef91772e1f5f09ecb4b6ce5cc71a2c6"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值改善 5.2%",
+              "时间变差 16.1%（阈值 5.3%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 220.8611,
+            "time_cv": 0.036,
+            "peak_tracemalloc_mb": 0.2235,
+            "peak_rss_mb": null,
+            "total_tokens": 2063,
+            "prompt_tokens": 1492,
+            "completion_tokens": 571,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "bf4b04fa7ceb036615246e53ee29c626e12e660bdd1dd17225715b8a0020170b"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1848,
+            "prompt_tokens": 1421,
+            "completion_tokens": 427,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "bb68267384679ff790949ce91c8128917074eafa9c14d218f84338b6966a325a"
+          },
+          "M1": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 2071,
+            "prompt_tokens": 1492,
+            "completion_tokens": 579,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "bb22ccff0892da58eea2c9b82782e1cc0a1f975282053f7301207d63ba91d8f0"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/1718",
+      "tier": "t2",
+      "args_hash": "sha256:76067485c5b3747d",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 132.8745,
+        "time_cv": 0.0413,
+        "peak_tracemalloc_mb": 0.1605,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 4.2%",
+              "时间改善 33.2%（阈值 8.3%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 88.8025,
+            "time_cv": 0.0246,
+            "peak_tracemalloc_mb": 0.1672,
+            "peak_rss_mb": null,
+            "total_tokens": 1901,
+            "prompt_tokens": 1339,
+            "completion_tokens": 562,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "6f4b49c4ed846a5a25818a1c99c738dac5713e83e56f79a01df4d00c8da43f08"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 27.1%",
+              "时间改善 32.9%（阈值 8.3%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 89.0933,
+            "time_cv": 0.0294,
+            "peak_tracemalloc_mb": 0.204,
+            "peak_rss_mb": null,
+            "total_tokens": 2021,
+            "prompt_tokens": 1410,
+            "completion_tokens": 611,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "a6f72ba6f55c96ff32f9ae56fe5c98a3be0935b5fde7276a78c54e3825425bd6"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": 0.2908,
+            "time_pct_m1_vs_m0": 0.327,
+            "peak_tracemalloc_mb_m1_minus_m0": 0.0368,
+            "peak_tracemalloc_pct_m1_vs_m0": 22.01
+          }
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "reject",
+            "decision_reasons": [
+              "堆峰值变差 4.9%",
+              "时间改善 33.0%（阈值 8.3%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 89.0622,
+            "time_cv": 0.0619,
+            "peak_tracemalloc_mb": 0.1684,
+            "peak_rss_mb": null,
+            "total_tokens": 1903,
+            "prompt_tokens": 1339,
+            "completion_tokens": 564,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "e3d4a0de0cb0ef9b5e7f5c643dd5eaf3e9aff16a6bdc7d6a100132df26b239fe"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "时间改善 32.6%（阈值 8.3%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 89.4978,
+            "time_cv": 0.0501,
+            "peak_tracemalloc_mb": 0.1557,
+            "peak_rss_mb": null,
+            "total_tokens": 1964,
+            "prompt_tokens": 1410,
+            "completion_tokens": 554,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "a328a9ffd13fbc7ac7efbffd8b57d3b49ff9002129db349f065dc34977b489f0"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": 0.4356,
+            "time_pct_m1_vs_m0": 0.489,
+            "peak_tracemalloc_mb_m1_minus_m0": -0.0127,
+            "peak_tracemalloc_pct_m1_vs_m0": -7.542
+          }
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/2320",
+      "tier": "t2",
+      "args_hash": "sha256:4a61a581732dd577",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 277.1863,
+        "time_cv": 0.0331,
+        "peak_tracemalloc_mb": 0.4983,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 4.1%",
+              "时间改善 35.2%（阈值 6.6%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 179.6163,
+            "time_cv": 0.0174,
+            "peak_tracemalloc_mb": 0.4777,
+            "peak_rss_mb": null,
+            "total_tokens": 1541,
+            "prompt_tokens": 1065,
+            "completion_tokens": 476,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "034993c0b3cacbacfe928a8517334af9a3fc9ead7be61e61d743bb077e7338af"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 4.1%",
+              "时间改善 34.4%（阈值 6.6%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 181.7248,
+            "time_cv": 0.0225,
+            "peak_tracemalloc_mb": 0.4777,
+            "peak_rss_mb": null,
+            "total_tokens": 1571,
+            "prompt_tokens": 1136,
+            "completion_tokens": 435,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "eda8287b931f0fb3e151d046783d59250028de2a745b2e97f045fe9f7a5043db"
+          },
+          "both_correct": true,
+          "paired_delta_only_if_both_correct": {
+            "time_ms_m1_minus_m0": 2.1085,
+            "time_pct_m1_vs_m0": 1.174,
+            "peak_tracemalloc_mb_m1_minus_m0": 0.0,
+            "peak_tracemalloc_pct_m1_vs_m0": 0.0
+          }
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1540,
+            "prompt_tokens": 1065,
+            "completion_tokens": 475,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "1ebe756246e606553fdbe7d89bbc05eb182c9dcd627044371820fa12439c3929"
+          },
+          "M1": {
+            "status": "ok",
+            "harness_error": null,
+            "decision": "accept",
+            "decision_reasons": [
+              "堆峰值改善 4.1%",
+              "时间改善 19.9%（阈值 6.6%）",
+              "RSS 门禁跳过（unavailable）"
+            ],
+            "time_mean_trimmed_ms": 222.0729,
+            "time_cv": 0.0277,
+            "peak_tracemalloc_mb": 0.4777,
+            "peak_rss_mb": null,
+            "total_tokens": 1501,
+            "prompt_tokens": 1136,
+            "completion_tokens": 365,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "e10d861e70a3954b0ab3f2915bb64acbcb90be19d4b4c17680c53529f7855aec"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        }
+      ]
+    },
+    {
+      "task_id": "EffiBench/2552",
+      "tier": "t2",
+      "args_hash": "sha256:5d32515a18d3ed61",
+      "baseline": {
+        "status": "ok",
+        "time_mean_trimmed_ms": 219.9243,
+        "time_cv": 0.0684,
+        "peak_tracemalloc_mb": 0.3297,
+        "peak_rss_mb": null
+      },
+      "pairs": [
+        {
+          "replicate": 1,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 2055,
+            "prompt_tokens": 1376,
+            "completion_tokens": 679,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "68e2281852d96f864b8916bd2434d8e0885db588997c0ab9ca561b3c09491b50"
+          },
+          "M1": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1982,
+            "prompt_tokens": 1447,
+            "completion_tokens": 535,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "0b9a60b78ab379051068373b79f09f5538cf679e3b95070ce34b75d6eaecd330"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        },
+        {
+          "replicate": 2,
+          "M0": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 1944,
+            "prompt_tokens": 1376,
+            "completion_tokens": 568,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "681f6a4eaac126a7eeb2e1703493d2f6cae2c3d96d70311e98f93bd595d6b786"
+          },
+          "M1": {
+            "status": "incorrect",
+            "harness_error": "AssertionError: ",
+            "decision": "reject",
+            "decision_reasons": [
+              "候选 status=incorrect（未通过测试），不进入效率比较"
+            ],
+            "time_mean_trimmed_ms": null,
+            "time_cv": null,
+            "peak_tracemalloc_mb": null,
+            "peak_rss_mb": null,
+            "total_tokens": 2093,
+            "prompt_tokens": 1447,
+            "completion_tokens": 646,
+            "returned_model_id": "qwen4-max",
+            "candidate_code_sha256": "25aa4de0f7a86201f8bb3dae3f0d10315aa37deba4a90fe9630ee5badba51065"
+          },
+          "both_correct": false,
+          "paired_delta_only_if_both_correct": null
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Only eight selected tasks and two stochastic calls per arm; observed differences do not establish stable superiority.",
+    "M1 combines a program-level heap measurement and an added space goal; their causal effects are not separated.",
+    "Both-correct paired time and heap differences exclude incorrect candidates; primary rate retains every attempt.",
+    "RSS unavailable in the measurement environment; gate skipped for both arms, without imputing RSS.",
+    "Time and heap are separate harness measurements, and timing noise remains in single candidate measurements.",
+    "No provider cost or immutable model revision was returned."
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "classification": "frozen-bank five-task exploratory paired run",
+  "formal_task": false,
+  "formal_result_writes_enabled": false,
+  "source_zip": "E:\\AI大模型原理与应用（小组）\\CodeBoost.zip",
+  "source_file_sha256": {
+    "CodeBoost/results/bank/frozen_tasks.json": "94804c11bf488f78d989c4ddcad1f00057422125e95774279af187ad29d48371",
+    "CodeBoost/results/bank/frozen_manifest.json": "a58e1b11263687f10e670a6bf6dc6d9391a90b4c8ca77a630151ce73b088f325"
+  },
+  "frozen_count": 91,
+  "selection_rule": "From the 91 frozen Task rows, keep rows with B scan 10 <= baseline_ms <= 100, 0.1 <= peak_tm_mb <= 20, cv <= 0.10, and t2.test distinct from t1.test; sort by integer suffix of task_id ascending; on the current harness/Python, require canonical t2 baseline status=ok and slowest case >=2 ms; take first five; use t2. All screening precedes model calls and uses no model output.",
+  "pre_model_screen": [
+    {
+      "task_id": "EffiBench/22",
+      "status": "ok",
+      "case_ms": 181.7693
+    },
+    {
+      "task_id": "EffiBench/51",
+      "status": "incorrect",
+      "case_ms": null
+    },
+    {
+      "task_id": "EffiBench/52",
+      "status": "ok",
+      "case_ms": 419.0773
+    },
+    {
+      "task_id": "EffiBench/89",
+      "status": "ok",
+      "case_ms": 2008.451
+    },
+    {
+      "task_id": "EffiBench/241",
+      "status": "incorrect",
+      "case_ms": null
+    },
+    {
+      "task_id": "EffiBench/494",
+      "status": "ok",
+      "error": null,
+      "args_hash": "sha256:adb1c4d16fbe7eab",
+      "case_status": "ok",
+      "case_ms": 472.459
+    },
+    {
+      "task_id": "EffiBench/518",
+      "status": "ok",
+      "error": null,
+      "args_hash": "sha256:7c544e27d6c3fc64",
+      "case_status": "ok",
+      "case_ms": 309.3834
+    }
+  ],
+  "arms": [
+    "G0",
+    "G1",
+    "G2",
+    "G3",
+    "F0",
+    "F1",
+    "F2",
+    "F3",
+    "F4"
+  ],
+  "generations_per_task_arm": 1,
+  "max_generation_calls": 45,
+  "entries": [
+    {
+      "task_id": "EffiBench/22",
+      "tier": "t2",
+      "args_hash": "sha256:eb25f69429197475",
+      "n": 200,
+      "gen": "seed:20261127",
+      "test": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def generateParenthesis(self, n: int):\\n        def dfs(l, r, t):\\n            if l > n or r > n or l < r:\\n                return\\n            if l == n and r == n:\\n                ans.append(t)\\n                return\\n            dfs(l + 1, r, t + \\'(\\')\\n            dfs(l, r + 1, t + \\')\\')\\n\\n        ans = []\\n        dfs(0, 0, \\'\\')\\n        return ans\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random n value\\n    n = random.randint(1, 8)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.generateParenthesis(n)\\n\\n    return n, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.generateParenthesis(n) == expected_result\\n        print(f\"assert solution.generateParenthesis({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.generateParenthesis({n}) == {expected_result}\") # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\n",
+      "description": "\nGiven `n` pairs of parentheses, write a function to *generate all combinations of well-formed parentheses*.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n**Input:** n = 3\n**Output:** [\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"]\n\n```\n**Example 2:**\n\n\n\n```\n**Input:** n = 1\n**Output:** [\"()\"]\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 8`\n\n\n",
+      "initial_code": "class Solution:\n    def generateParenthesis(self, n: int) -> List[str]:\n        def dfs(l, r, t):\n            if l > n or r > n or l < r:\n                return\n            if l == n and r == n:\n                ans.append(t)\n                return\n            dfs(l + 1, r, t + '(')\n            dfs(l, r + 1, t + ')')\n\n        ans = []\n        dfs(0, 0, '')\n        return ans\n",
+      "dataset": "effibench",
+      "kind": "test_block",
+      "entry_point": "solution",
+      "task_name": "Generate Parentheses",
+      "scan": {
+        "peak_tm_mb": 3.2107,
+        "peak_rss_mb": 36.09,
+        "rss_delta_mb": 15.57,
+        "baseline_ms": 12.0228,
+        "cv": 0.0346,
+        "reps": 12,
+        "pass_h1_space": true,
+        "pass_h2_mu": true,
+        "pass_h3_time": true
+      },
+      "test_sha256": "b78a08de63fde9c93bf5f0576f60c52ea8ee295e3ae2c6c6482d994535fbc3d7",
+      "description_sha256": "a23d8d2be9506f616a486d12e9d396277bba2b3a3ca75dea74a17d81e18a54f6",
+      "initial_code_sha256": "ecd601394445c44c4c1a9abfbf278400a5def44f39fa121cce978868595d65f6"
+    },
+    {
+      "task_id": "EffiBench/52",
+      "tier": "t2",
+      "args_hash": "sha256:f05360affce0ebf4",
+      "n": 200,
+      "gen": "seed:20261127",
+      "test": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def totalNQueens(self, n: int) -> int:\\n        def dfs(i):\\n            if i == n:\\n                nonlocal ans\\n                ans += 1\\n                return\\n            for j in range(n):\\n                a, b = i + j, i - j + n\\n                if cols[j] or dg[a] or udg[b]:\\n                    continue\\n                cols[j] = dg[a] = udg[b] = True\\n                dfs(i + 1)\\n                cols[j] = dg[a] = udg[b] = False\\n\\n        cols = [False] * 10\\n        dg = [False] * 20\\n        udg = [False] * 20\\n        ans = 0\\n        dfs(0)\\n        return ans\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random value for n\\n    n = random.randint(1, 9)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.totalNQueens(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.totalNQueens(n) == expected_result\\n        print(f\"assert solution.totalNQueens({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.totalNQueens({n}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\n",
+      "description": "\nThe **n-queens** puzzle is the problem of placing `n` queens on an `n x n` chessboard such that no two queens attack each other.\n\n\nGiven an integer `n`, return *the number of distinct solutions to the **n-queens puzzle***.\n\n\n \n\n\n**Example 1:**\n\n\n![](https://fastly.jsdelivr.net/gh/doocs/leetcode@main/solution/0000-0099/0052.N-Queens%20II/images/queens.jpg)\n\n```\n\n**Input:** n = 4\n**Output:** 2\n**Explanation:** There are two distinct solutions to the 4-queens puzzle as shown.\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 1\n**Output:** 1\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 9`\n\n\n",
+      "initial_code": "class Solution:\n    def totalNQueens(self, n: int) -> int:\n        def dfs(i):\n            if i == n:\n                nonlocal ans\n                ans += 1\n                return\n            for j in range(n):\n                a, b = i + j, i - j + n\n                if cols[j] or dg[a] or udg[b]:\n                    continue\n                cols[j] = dg[a] = udg[b] = True\n                dfs(i + 1)\n                cols[j] = dg[a] = udg[b] = False\n\n        cols = [False] * 10\n        dg = [False] * 20\n        udg = [False] * 20\n        ans = 0\n        dfs(0)\n        return ans\n",
+      "dataset": "effibench",
+      "kind": "test_block",
+      "entry_point": "solution",
+      "task_name": "N",
+      "scan": {
+        "peak_tm_mb": 0.1375,
+        "peak_rss_mb": 23.75,
+        "rss_delta_mb": 3.23,
+        "baseline_ms": 50.4848,
+        "cv": 0.0237,
+        "reps": 2,
+        "pass_h1_space": true,
+        "pass_h2_mu": false,
+        "pass_h3_time": true
+      },
+      "test_sha256": "c83b625c23459f6cc12c7b2e3828ba2cb244041839967c86e2467fd5d7f0c1a9",
+      "description_sha256": "0aa1e5c10ddf5e1cbb9bafbdb494f3ed3f89be52beb012994a7f40f95e5532c0",
+      "initial_code_sha256": "208d217ae0482e60303978e1eb8410f15ad15c7349221ca453d81b24bdf1dffe"
+    },
+    {
+      "task_id": "EffiBench/89",
+      "tier": "t2",
+      "args_hash": "sha256:f6a1bce610a36f7d",
+      "n": 200,
+      "gen": "seed:20261127",
+      "test": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nfrom typing import List\\nimport random\\n\\nclass Solution:\\n    def grayCode(self, n: int) -> List[int]:\\n        return [i ^ (i >> 1) for i in range(1 << n)]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate a random value for n\\n    n = random.randint(1, 16)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.grayCode(n)\\n\\n    return n, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        n, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.grayCode(n) == expected_result\\n        print(f\"assert solution.grayCode({n}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.grayCode({n}) == {expected_result}\") \\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\n",
+      "description": "\nAn **n-bit gray code sequence** is a sequence of `2n` integers where:\n\n\n* Every integer is in the **inclusive** range `[0, 2n - 1]`,\n* The first integer is `0`,\n* An integer appears **no more than once** in the sequence,\n* The binary representation of every pair of **adjacent** integers differs by **exactly one bit**, and\n* The binary representation of the **first** and **last** integers differs by **exactly one bit**.\n\n\nGiven an integer `n`, return *any valid **n-bit gray code sequence***.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** n = 2\n**Output:** [0,1,3,2]\n**Explanation:**\nThe binary representation of [0,1,3,2] is [00,01,11,10].\n- 00 and 01 differ by one bit\n- 01 and 11 differ by one bit\n- 11 and 10 differ by one bit\n- 10 and 00 differ by one bit\n[0,2,3,1] is also a valid gray code sequence, whose binary representation is [00,10,11,01].\n- 00 and 10 differ by one bit\n- 10 and 11 differ by one bit\n- 11 and 01 differ by one bit\n- 01 and 00 differ by one bit\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** n = 1\n**Output:** [0,1]\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= n <= 16`\n\n\n",
+      "initial_code": "class Solution:\n    def grayCode(self, n: int) -> List[int]:\n        return [i ^ (i >> 1) for i in range(1 << n)]\n",
+      "dataset": "effibench",
+      "kind": "test_block",
+      "entry_point": "solution",
+      "task_name": "Gray Code",
+      "scan": {
+        "peak_tm_mb": 3.0286,
+        "peak_rss_mb": 59.5,
+        "rss_delta_mb": 38.98,
+        "baseline_ms": 42.6922,
+        "cv": 0.0679,
+        "reps": 3,
+        "pass_h1_space": true,
+        "pass_h2_mu": true,
+        "pass_h3_time": true
+      },
+      "test_sha256": "3c1ebf683496bcf4c45b51f77ec26c4ebe098be1742d58c19c9d6596c7fbc6fb",
+      "description_sha256": "12318f0129699958ef55ff14408231f58d81fa90acd3eefe2aadb5d2016475d2",
+      "initial_code_sha256": "98451eb280236ed6cf69ae041531930b98c584d5fa73483a249fa8f9abea55de"
+    },
+    {
+      "task_id": "EffiBench/494",
+      "tier": "t2",
+      "args_hash": "sha256:adb1c4d16fbe7eab",
+      "n": 200,
+      "gen": "seed:20261127",
+      "test": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def findTargetSumWays(self, nums, target):\\n        s = sum(nums)\\n        if s < target or (s - target) % 2 != 0:\\n            return 0\\n        n = (s - target) // 2\\n        dp = [0] * (n + 1)\\n        dp[0] = 1\\n        for v in nums:\\n            for j in range(n, v - 1, -1):\\n                dp[j] += dp[j - v]\\n        return dp[-1]\\n\\n\\ndef generate_test_case():\\n    solution = Solution()\\n\\n    # Generate random numbers list\\n    nums = random.sample(range(1001), random.randint(1, 21))\\n\\n    # Generate a random target sum\\n    target = random.randint(-1000, 1001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.findTargetSumWays(nums, target)\\n\\n    return nums, target, expected_result\\n\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        nums, target, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.findTargetSumWays(nums, target) == expected_result\\n        print(f\"assert solution.findTargetSumWays({nums}, {target}) == {expected_result}\")\\n        test_case_generator_results.append(\\n            f\"assert solution.findTargetSumWays({nums}, {target}) == {expected_result}\"\\n        )  # You can find that we construct the test case in the same format as the example\\n    return test_case_generator_results\\n\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\n",
+      "description": "\nYou are given an integer array `nums` and an integer `target`.\n\n\nYou want to build an **expression** out of nums by adding one of the symbols `'+'` and `'-'` before each integer in nums and then concatenate all the integers.\n\n\n* For example, if `nums = [2, 1]`, you can add a `'+'` before `2` and a `'-'` before `1` and concatenate them to build the expression `\"+2-1\"`.\n\n\nReturn the number of different **expressions** that you can build, which evaluates to `target`.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** nums = [1,1,1,1,1], target = 3\n**Output:** 5\n**Explanation:** There are 5 ways to assign symbols to make the sum of nums be target 3.\n-1 + 1 + 1 + 1 + 1 = 3\n+1 - 1 + 1 + 1 + 1 = 3\n+1 + 1 - 1 + 1 + 1 = 3\n+1 + 1 + 1 - 1 + 1 = 3\n+1 + 1 + 1 + 1 - 1 = 3\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** nums = [1], target = 1\n**Output:** 1\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= nums.length <= 20`\n* `0 <= nums[i] <= 1000`\n* `0 <= sum(nums[i]) <= 1000`\n* `-1000 <= target <= 1000`\n\n\n",
+      "initial_code": "class Solution:\n    def findTargetSumWays(self, nums: List[int], target: int) -> int:\n        s = sum(nums)\n        if s < target or (s - target) % 2 != 0:\n            return 0\n        n = (s - target) // 2\n        dp = [0] * (n + 1)\n        dp[0] = 1\n        for v in nums:\n            for j in range(n, v - 1, -1):\n                dp[j] += dp[j - v]\n        return dp[-1]\n",
+      "dataset": "effibench",
+      "kind": "test_block",
+      "entry_point": "solution",
+      "task_name": "Target Sum",
+      "scan": {
+        "peak_tm_mb": 0.107,
+        "peak_rss_mb": 23.6,
+        "rss_delta_mb": 3.08,
+        "baseline_ms": 74.3559,
+        "cv": 0.0276,
+        "reps": 2,
+        "pass_h1_space": true,
+        "pass_h2_mu": false,
+        "pass_h3_time": true
+      },
+      "test_sha256": "503193975017795a6b0b6eded0d81cd8375b7a446c73b75482f8522edbfd4f4c",
+      "description_sha256": "cacb7dce9f337564d21443f4b1a4a90bd6db67c6a57bc5e7b60435aae193b6d6",
+      "initial_code_sha256": "b0b1000a7018f1a9713144df32d3d6b81514fae68c0e825e7fa5eb372d89ebfc"
+    },
+    {
+      "task_id": "EffiBench/518",
+      "tier": "t2",
+      "args_hash": "sha256:7c544e27d6c3fc64",
+      "n": 200,
+      "gen": "seed:20261127",
+      "test": "if '_gen_cache' not in globals():\n    import random as _r\n    _r.seed(20261127)\n    _GEN_SRC = '\\nimport random\\n\\nclass Solution:\\n    def change(self, amount, coins):\\n        dp = [0] * (amount + 1)\\n        dp[0] = 1\\n        for coin in coins:\\n            for j in range(coin, amount + 1):\\n                dp[j] += dp[j - coin]\\n        return dp[-1]\\n\\ndef generate_test_case():\\n    solution = Solution()\\n    \\n    # Generate random coins list\\n    coins = random.sample(range(1, 501), random.randint(1, 10))\\n    \\n    # Generate a random amount\\n    amount = random.randint(0, 5001)\\n\\n    # Calculate the expected result using the provided Solution class\\n    expected_result = solution.change(amount, coins)\\n\\n    return amount, coins, expected_result\\n\\ndef test_generated_test_cases(num_tests):\\n    test_case_generator_results = []\\n    for i in range(num_tests):\\n        amount, coins, expected_result = generate_test_case()\\n        solution = Solution()\\n        assert solution.change(amount, coins) == expected_result\\n        print(f\"assert solution.change({amount}, {coins}) == {expected_result}\")\\n        test_case_generator_results.append(f\"assert solution.change({amount}, {coins}) == {expected_result}\")\\n    return test_case_generator_results\\n'\n    _ns = {}\n    exec(_GEN_SRC, _ns)  # 注意：不能写 compile()——PREAMBLE 里 `from re import *` 会把内置 compile 遮蔽\n    _gen_cache = _ns['test_generated_test_cases'](200)\nsolution = Solution()\nfor _ln in _gen_cache:\n    exec(_ln, {'solution': solution})\n",
+      "description": "\nYou are given an integer array `coins` representing coins of different denominations and an integer `amount` representing a total amount of money.\n\n\nReturn *the number of combinations that make up that amount*. If that amount of money cannot be made up by any combination of the coins, return `0`.\n\n\nYou may assume that you have an infinite number of each kind of coin.\n\n\nThe answer is **guaranteed** to fit into a signed **32-bit** integer.\n\n\n \n\n\n**Example 1:**\n\n\n\n```\n\n**Input:** amount = 5, coins = [1,2,5]\n**Output:** 4\n**Explanation:** there are four ways to make up the amount:\n5=5\n5=2+2+1\n5=2+1+1+1\n5=1+1+1+1+1\n\n```\n\n**Example 2:**\n\n\n\n```\n\n**Input:** amount = 3, coins = [2]\n**Output:** 0\n**Explanation:** the amount of 3 cannot be made up just with coins of 2.\n\n```\n\n**Example 3:**\n\n\n\n```\n\n**Input:** amount = 10, coins = [10]\n**Output:** 1\n\n```\n\n \n\n\n**Constraints:**\n\n\n* `1 <= coins.length <= 300`\n* `1 <= coins[i] <= 5000`\n* All the values of `coins` are **unique**.\n* `0 <= amount <= 5000`\n\n\n",
+      "initial_code": "class Solution:\n    def change(self, amount: int, coins: List[int]) -> int:\n        dp = [0] * (amount + 1)\n        dp[0] = 1\n        for coin in coins:\n            for j in range(coin, amount + 1):\n                dp[j] += dp[j - coin]\n        return dp[-1]\n",
+      "dataset": "effibench",
+      "kind": "test_block",
+      "entry_point": "solution",
+      "task_name": "Coin Change II",
+      "scan": {
+        "peak_tm_mb": 0.161,
+        "peak_rss_mb": 23.96,
+        "rss_delta_mb": 3.43,
+        "baseline_ms": 38.9136,
+        "cv": 0.0399,
+        "reps": 3,
+        "pass_h1_space": true,
+        "pass_h2_mu": false,
+        "pass_h3_time": true
+      },
+      "test_sha256": "1c18d8f1346fd5ffdfca502af2d618111e1ae55cf8a066a1ad4ae187da9629c1",
+      "description_sha256": "a010d6a40fd37bb5992a5f82e6357a82fb7bc78af1388c72e84e5ddd0018e352",
+      "initial_code_sha256": "fe3c84f61b0f3023b64d73a39205b10f47fb32e8c3add1ea8a8571b867b429bf"
+    }
+  ]
+}
