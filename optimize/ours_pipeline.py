@@ -127,7 +127,7 @@ def run_offline_loop(
         "feedback_method": feedback_method,
         "acceptance_rule": ("eval.space.pareto_accept:v1.1" if mode == "joint"
                             else "optimize.acceptance.decide_acceptance:group"),
-        "rss_baseline_mb": rss_baseline_mb if mode == "joint" else None,
+        "rss_baseline_mb": rss_baseline_mb,
         "frozen_input": {"tier": plan["tier"], "args_hash": plan["args_hash"]},
         "initial_code": initial_code,
         "current_code": current_code,

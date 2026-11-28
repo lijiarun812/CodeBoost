@@ -7,7 +7,9 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from eval import rss_baseline
 from optimize.feedback import build_feedback
 from optimize.ours_runner import run_offline_ours
 from optimize.test_ours_pipeline import FakeHarness, _task
@@ -16,17 +18,19 @@ from optimize.test_ours_pipeline import FakeHarness, _task
 class OfflineRunnerTests(unittest.TestCase):
     def setUp(self):
         self.task, self.frozen = _task()
-        self.rss_record = {"environment_id": "offline-env", "peak_rss_mb": 95.0,
-                           "how": "injected local idle-process measurement"}
+        self.rss_info = {"status": "ok", "value": 95.0, "reason": "measured_now",
+                         "meta": {"host": "mock-host", "python": "3.11",
+                                  "protocol_version": "proto-2026.11",
+                                  "measured_at": "2026-11-28T10:00:00"}}
 
     def run_case(self, cases, *, mode="joint", feedback_method="f1", **kwargs):
         harness = FakeHarness(cases)
+        kwargs.setdefault("ensure_rss_baseline_fn", lambda: dict(self.rss_info))
         output = run_offline_ours(
             self.task, self.frozen, mode=mode, feedback_method=feedback_method,
             generate_candidate=lambda prompt, code, index: "candidate-v1",
             model="mock-model", model_version="offline-v1",
             prompt_version="feedback-v1", environment_id="offline-env",
-            rss_baseline_record=self.rss_record,
             measure_task_fn=harness, **kwargs,
         )
         return output, harness
@@ -46,23 +50,98 @@ class OfflineRunnerTests(unittest.TestCase):
         self.assertEqual(row["feedback"]["method"], "f1")
         self.assertEqual((row["model"], row["prompt_version"]),
                          ("mock-model", "feedback-v1"))
-        self.assertEqual(output["rss_baseline_record"], self.rss_record)
+        record = output["rss_baseline_record"]
+        self.assertEqual((record["status"], record["reason"], record["value"]),
+                         ("ok", "measured_now", 95.0))
+        self.assertEqual(record["meta"], self.rss_info["meta"])
+        self.assertEqual(record["environment"]["environment_id"], "offline-env")
+        self.assertEqual(output["rss_gate_status"], "eligible")
+        self.assertIsNone(output["mu_deducted_baseline_mb"])
         self.assertEqual(output["rss_baseline_mb"], 95.0)
         self.assertTrue(all(call["tier_plan"] == [self.frozen] for call in harness.calls))
         self.assertTrue(all(call["kwargs"]["model"] == "mock-model" for call in harness.calls))
         self.assertFalse(output["formal_result_written"])
 
-    def test_joint_requires_current_environment_rss_record(self):
-        harness = FakeHarness({"base": {}})
-        common = dict(task=self.task, frozen_input=self.frozen, mode="joint",
-                      feedback_method="f1", generate_candidate=lambda *args: "candidate-v1",
-                      model="mock", model_version="v1", prompt_version="p1",
-                      environment_id="offline-env", measure_task_fn=harness)
-        for record in (None, {"environment_id": "other", "peak_rss_mb": 95.0},
-                       {"environment_id": "offline-env", "peak_rss_mb": None}):
-            with self.subTest(record=record), self.assertRaises(ValueError):
-                run_offline_ours(**common, rss_baseline_record=record)
-        self.assertEqual(harness.calls, [])
+    def test_valid_baseline_is_checked_once_before_measurement(self):
+        order = []
+        harness = FakeHarness({"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}})
+
+        def ensure_once():
+            order.append("ensure")
+            return dict(self.rss_info)
+
+        def measured(*args, **kwargs):
+            order.append("measure")
+            return harness(*args, **kwargs)
+
+        run_offline_ours(
+            self.task, self.frozen, mode="joint", feedback_method="f1",
+            generate_candidate=lambda *args: "candidate-v1",
+            model="mock", model_version="v1", prompt_version="p1",
+            environment_id="offline-env", measure_task_fn=measured,
+            ensure_rss_baseline_fn=ensure_once,
+        )
+        self.assertEqual(order, ["ensure", "measure", "measure"])
+
+    def test_old_format_cache_is_invalid_and_failed_probe_does_not_stop(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cache = Path(directory) / "rss_baseline.json"
+            cache.write_text(json.dumps({"peak_rss_mb": 95.0}), encoding="utf-8")
+            with patch.object(rss_baseline, "CACHE", cache), \
+                    patch.object(rss_baseline, "measure", return_value=None):
+                output, harness = self.run_case(
+                    {"base": {}, "candidate-v1": {
+                        "time_ms": 80, "heap_mb": 8, "rss_mb": 130}},
+                    ensure_rss_baseline_fn=rss_baseline.ensure,
+                )
+        self.assertEqual(output["rss_baseline_record"]["status"], "missing")
+        self.assertIn("cache_missing_meta", output["rss_baseline_record"]["reason"])
+        self.assertIsNone(output["rss_baseline_record"]["value"])
+        self.assertIsNone(output["rss_baseline_mb"])
+        self.assertEqual(output["mu_deducted_baseline_mb"], "n/a")
+        self.assertEqual(output["rss_gate_status"], "skipped")
+        self.assertEqual(output["rounds"][0]["decision_detail"]["rss_status"],
+                         "unavailable")
+        self.assertEqual(output["rounds"][0]["decision"], "accept")
+        self.assertEqual(len(harness.calls), 2)
+
+    def test_stale_baseline_value_is_never_used(self):
+        stale = {"status": "stale", "value": 95.0, "reason": "stale(8天>7天)",
+                 "meta": {"host": "old-host", "python": "3.10"}}
+        output, _ = self.run_case(
+            {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8,
+                                           "rss_mb": 130}},
+            ensure_rss_baseline_fn=lambda: stale,
+        )
+        self.assertEqual(output["rss_baseline_record"]["reason"], stale["reason"])
+        self.assertEqual(output["rss_baseline_record"]["meta"], stale["meta"])
+        self.assertIsNone(output["rss_baseline_record"]["value"])
+        self.assertIsNone(output["rss_baseline_mb"])
+        self.assertEqual(output["mu_deducted_baseline_mb"], "n/a")
+        self.assertEqual(output["rounds"][0]["decision_detail"]["rss_status"],
+                         "unavailable")
+        self.assertEqual(output["rounds"][0]["decision"], "accept")
+
+    def test_missing_baseline_and_ensure_exception_continue(self):
+        cases = {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8,
+                                               "rss_mb": 130}}
+        for ensure_fn in (
+            lambda: {"status": "missing", "value": None,
+                     "reason": "measure_failed", "meta": {"host": "mock-host"}},
+            lambda: (_ for _ in ()).throw(OSError("probe failed")),
+        ):
+            with self.subTest(ensure_fn=ensure_fn):
+                output, harness = self.run_case(cases, ensure_rss_baseline_fn=ensure_fn)
+                self.assertEqual(output["rounds"][0]["decision"], "accept")
+                self.assertEqual(output["rounds"][0]["decision_detail"]["rss_status"],
+                                 "unavailable")
+                self.assertEqual(output["rss_gate_status"], "skipped")
+                self.assertEqual(output["mu_deducted_baseline_mb"], "n/a")
+                self.assertIsNone(output["rss_baseline_mb"])
+                self.assertTrue(output["rss_baseline_record"]["reason"])
+                self.assertEqual(output["rss_baseline_record"]["environment"]["environment_id"],
+                                 "offline-env")
+                self.assertEqual(len(harness.calls), 2)
 
     def test_joint_passes_recorded_rss_baseline_into_a_gate(self):
         output, _ = self.run_case(
@@ -74,6 +153,39 @@ class OfflineRunnerTests(unittest.TestCase):
         self.assertTrue(row["decision_detail"]["gate_failed"])
         self.assertEqual(row["decision_detail"]["rss_status"], "gated")
         self.assertEqual(output["current_code"], self.task["code"])
+
+    def test_missing_baseline_reaches_f4_feedback_as_none(self):
+        diagnostic = {"status": "ok", "slowest": {
+            "idx": 0, "ms": 0.3, "src": "assert candidate(1) == 1"}}
+        seen = []
+
+        def c_feedback(method, task, code, *, total_ms=None,
+                       space_result=None, rss_baseline_mb=None):
+            seen.append((space_result, rss_baseline_mb))
+            return build_feedback(
+                method, task, code, total_ms=total_ms, diagnostic=diagnostic,
+                hot={"ok": True, "items": [{"line": 1, "hits": 4}]},
+                space_result=space_result, rss_baseline_mb=rss_baseline_mb,
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            formal_path = Path(directory) / "result.json"
+            output, _ = self.run_case(
+                {"base": {}, "candidate-v1": {"time_ms": 80, "heap_mb": 8}},
+                feedback_method="f4", feedback_builder=c_feedback,
+                ensure_rss_baseline_fn=lambda: {"status": "missing", "value": None,
+                                                "reason": "measure_failed", "meta": {}},
+                allow_formal_results=True,
+                write_result=lambda record: formal_path.write_text(json.dumps(record)),
+            )
+            self.assertFalse(formal_path.exists())
+        self.assertEqual(len(seen), 1)
+        self.assertIs(seen[0][0], output["rounds"][0]["baseline_measurement"])
+        self.assertIsNone(seen[0][1])
+        self.assertEqual(output["rounds"][0]["feedback"]["diagnostics"]["space"]["rss_status"],
+                         "unavailable")
+        self.assertEqual(output["mu_deducted_baseline_mb"], "n/a")
+        self.assertFalse(output["formal_result_written"])
 
     def test_full_f4_writes_diagnostic_only_even_with_result_writer(self):
         diagnostic = {"status": "ok", "slowest": {
@@ -116,7 +228,7 @@ class OfflineRunnerTests(unittest.TestCase):
                     self.assertEqual(feedback["effective_method"], variant)
                     self.assertFalse(feedback["can_write_result"])
                     self.assertEqual(feedback["diagnostics"]["space"]["rss_baseline_mb"],
-                                     self.rss_record["peak_rss_mb"])
+                                     self.rss_info["value"])
                     self.assertEqual(json.loads(diagnostic_path.read_text())["kind"],
                                      "diagnostic_demo")
 

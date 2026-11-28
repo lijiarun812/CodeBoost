@@ -119,7 +119,7 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["space"]["peak_tm_status"], "below_floor")
         self.assertEqual(result["diagnostics"]["space"]["rss_status"], "indistinguishable")
         self.assertIn("低于 0.05 MB 分辨下限", result["feedback"])
-        self.assertIn("20.700 MB（indistinguishable：与空载基线差异不足或基线缺失，门禁跳过）",
+        self.assertIn("20.700 MB（indistinguishable：与有效空载基线差异不足，门禁跳过）",
                       result["feedback"])
         self.assertFalse(result["can_write_result"])
 
@@ -130,8 +130,19 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["space"]["peak_tm_status"], "unmeasured")
         self.assertEqual(result["diagnostics"]["space"]["rss_status"], "unavailable")
         self.assertIn("本次独立内存测量未取得峰值", result["feedback"])
-        self.assertIn("RSS 门禁不可判", result["feedback"])
+        self.assertIn("RSS 门禁跳过；扣基线 MU 为 n/a", result["feedback"])
         self.assertNotIn("堆峰值改善", result["feedback"])
+        self.assertFalse(result["can_write_result"])
+
+    def test_program_space_without_valid_rss_baseline_marks_mu_unavailable(self):
+        task, measurement = _schema_space_pair(self.task, rss=100.0)
+        result = build_feedback("f4", task, self.code, diagnostic=self.diag,
+                                line_timing=self.timing, space_result=measurement,
+                                rss_baseline_mb=None)
+        self.assertEqual(result["diagnostics"]["space"]["rss_status"], "unavailable")
+        self.assertIsNone(result["diagnostics"]["space"]["rss_baseline_mb"])
+        self.assertIn("100.000 MB（unavailable：缺少有效空载基线", result["feedback"])
+        self.assertIn("扣基线 MU 为 n/a", result["feedback"])
         self.assertFalse(result["can_write_result"])
 
     def test_invalid_rss_baseline_is_not_silently_used(self):

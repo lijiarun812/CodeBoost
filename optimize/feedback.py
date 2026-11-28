@@ -143,11 +143,12 @@ def _program_space_feedback(task: dict, result: dict,
     else:
         tm_text = f"{tm:.4f} MB（可测）"
     if rss is None:
-        rss_text = "缺值（未取得进程驻留峰值，RSS 门禁不可判）"
+        rss_text = "缺值（未取得进程驻留峰值，RSS 门禁跳过；扣基线 MU 为 n/a）"
     else:
         rss_meaning = {
             "gated": "可分辨，资源门禁可用",
-            "indistinguishable": "与空载基线差异不足或基线缺失，门禁跳过",
+            "indistinguishable": "与有效空载基线差异不足，门禁跳过",
+            "unavailable": "缺少有效空载基线，RSS 门禁跳过；扣基线 MU 为 n/a",
         }[states["rss_status"]]
         rss_text = f"{rss:.3f} MB（{states['rss_status']}：{rss_meaning}）"
     lines = [
