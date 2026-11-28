@@ -69,19 +69,15 @@ def _pearson(xs, ys):
 
 
 def measure_rss_baseline() -> float | None:
-    """用同一把尺子量一次「空载」RSS：跑一个几乎不分配内存的程序，取 peak_rss。"""
-    try:
-        from eval import harness
-    except Exception:
-        return None
-    code = "class Solution:\n    def f(self, x):\n        return x\n"
-    test = "assert solution.f(1) == 1\n"
-    try:
-        m = harness.measure_code(code, test, kind="test_block", entry="solution",
-                                 e_reps=2, target_batch_s=0.02, max_reps=50)
-    except Exception:
-        return None
-    return (m.get("mem") or {}).get("peak_rss_mb")
+    """兼容旧调用点；实现已移到 eval/rss_baseline.py（带 host/python/协议 有效性判定）。"""
+    from eval.rss_baseline import measure
+    return measure()
+
+
+def rss_baseline_info(max_age_days: int = 7) -> dict:
+    """拿「可用于正式报告」的基线；不可用时 value=None 并给出原因（见 docs/RSS基线规则_v1.md）。"""
+    from eval.rss_baseline import ensure
+    return ensure(max_age_days=max_age_days)
 
 
 def _mu_rows(ok: list, baseline: float | None) -> list[dict]:
@@ -227,8 +223,12 @@ def md(reports: list) -> str:
     for r in reports:
         base = ("—" if r["rss_baseline"] is None else "%.1f MB" % r["rss_baseline"])
         # 一题都不可分辨时，均值是噪声放大器，宁可不给数
-        delta_cell = (fmt(r["mu_delta_mean"]) if r["mu_resolved"]
-                      else "n/a（无 ≥%.0f MB 的题）" % MU_RESOLUTION_MB)
+        if r["rss_baseline"] is None:
+            delta_cell = "n/a（基线不可用）"
+        elif r["mu_resolved"]:
+            delta_cell = fmt(r["mu_delta_mean"])
+        else:
+            delta_cell = "n/a（无 ≥%.0f MB 的题）" % MU_RESOLUTION_MB
         w("| %s | %d | %s / %s | %s | %s | %d/%d |" % (
             label(r), r["mu_n"],
             fmt(r["mu_red_mean"]), fmt(r["mu_red_median"]),
@@ -307,22 +307,13 @@ def main():
 
     baseline = a.rss_baseline
     if baseline is None:
-        cache = REPO_ROOT / "results" / "rss_baseline.json"
-        if cache.exists():
-            try:
-                baseline = json.loads(cache.read_text(encoding="utf-8")).get("peak_rss_mb")
-            except Exception:
-                baseline = None
-        if baseline is None:
-            baseline = measure_rss_baseline()
-            if baseline is not None:
-                cache.parent.mkdir(parents=True, exist_ok=True)
-                cache.write_text(json.dumps(
-                    {"peak_rss_mb": baseline,
-                     "how": "harness.measure_code(class Solution: f(x)->x, kind=test_block, e_reps=2)"},
-                    ensure_ascii=False, indent=2), encoding="utf-8")
-        if baseline is not None:
-            print("空载 RSS 基线 = %.2f MB" % baseline)
+        info = rss_baseline_info()
+        baseline = info["value"]
+        if info["status"] == "ok":
+            print("空载 RSS 基线 = %.2f MB（%s）" % (baseline, info["reason"]))
+        else:
+            print("空载 RSS 基线不可用：%s → MU 扣基线列判 n/a，RSS 门禁跳过（不停止整批）"
+                  % info["reason"])
 
     files = []
     for pat in a.inputs:

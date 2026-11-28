@@ -112,7 +112,9 @@ def space_status(mem: dict | None, rss_baseline_mb: float | None = None) -> dict
     if rss is None:
         rss_status, rss_reason = "unavailable", "peak_rss_mb is None"
     elif rss_baseline_mb is None:
-        rss_status, rss_reason = "indistinguishable", "no rss baseline"
+        # 没有可核对的当次基线：不是「RSS 分辨不出」，而是「我们压根没有对照」。
+        # 见 docs/RSS基线规则_v1.md：门禁跳过、MU 列判 n/a，但**不停止整批**。
+        rss_status, rss_reason = "unavailable", "rss_baseline_unavailable"
     elif rss - rss_baseline_mb < RSS_DELTA_MIN_MB:
         rss_status, rss_reason = "indistinguishable", (
             "%.1f − %.1f < %.1f MB" % (rss, rss_baseline_mb, RSS_DELTA_MIN_MB))
@@ -343,6 +345,11 @@ def _selftest():
     print("  ok:", d["reasons"])
     d = pareto_accept(noisy_b, _R(t=0.50, tm=0.0013, rss=20.7), rss_baseline_mb=20.52)  # 快 21%
     assert d["decision"] == "accept", d
+    print("  ok:", d["reasons"])
+
+    print("== 13) 没有空载基线 -> rss_status=unavailable，门禁跳过但仍可判定 ==")
+    d = pareto_accept(base, _R(t=8.0, tm=1.0, rss=60.0), rss_baseline_mb=None)
+    assert d["decision"] == "accept" and d["rss_status"] == "unavailable", d
     print("  ok:", d["reasons"])
 
     print("== 11) 扁平旧结构仍可读（向后兼容，非正式路径） ==")

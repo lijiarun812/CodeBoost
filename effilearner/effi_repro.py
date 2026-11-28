@@ -809,6 +809,8 @@ def run(args):
             "new_baseline": new_base,
             "new_final": new_final,
             "final_code": current_code,
+            # 初始代码一并落盘，否则 new_baseline 无法离线重算（见 README 局限 4）
+            "baseline_code": base_code,
             "history": history,
         }
         rm = (base_m["mem_mbs"] - current_m["mem_mbs"]) / base_m["mem_mbs"] * 100 if base_m["mem_mbs"] else 0.0

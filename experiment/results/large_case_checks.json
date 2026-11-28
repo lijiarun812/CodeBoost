@@ -1,0 +1,86 @@
+{
+  "809": {
+    "problem_idx": 809,
+    "test_description": "large deterministic input",
+    "methods": {
+      "base": {
+        "correct": true,
+        "ms": [
+          2.893,
+          3.191,
+          2.983
+        ],
+        "error": null
+      },
+      "vanilla": {
+        "correct": true,
+        "ms": [
+          2.616,
+          2.641,
+          2.659
+        ],
+        "error": null
+      },
+      "perfcodegen": {
+        "correct": true,
+        "ms": [
+          42.202,
+          41.369,
+          42.427
+        ],
+        "error": null
+      },
+      "ours": {
+        "correct": true,
+        "ms": [
+          1.981,
+          2.042,
+          1.873
+        ],
+        "error": null
+      }
+    }
+  },
+  "1467": {
+    "problem_idx": 1467,
+    "test_description": "large deterministic input",
+    "methods": {
+      "base": {
+        "correct": true,
+        "ms": [
+          1.011,
+          1.072,
+          1.028
+        ],
+        "error": null
+      },
+      "vanilla": {
+        "correct": true,
+        "ms": [
+          0.057,
+          0.058,
+          0.059
+        ],
+        "error": null
+      },
+      "perfcodegen": {
+        "correct": true,
+        "ms": [
+          0.911,
+          0.935,
+          0.852
+        ],
+        "error": null
+      },
+      "ours": {
+        "correct": true,
+        "ms": [
+          0.667,
+          0.678,
+          0.657
+        ],
+        "error": null
+      }
+    }
+  }
+}

@@ -1,13 +1,13 @@
 # CodeBoost
 
-> 探究大模型生成代码的运行效率提升：**复现 EffiLearner**，并借鉴 **PerfCodeGen** 做进一步优化。
+> 探究大模型生成代码的运行效率提升：以 **PerfCodeGen** 为主线，借鉴 **EffiLearner** 的细粒度开销反馈。
 
 ## 项目简介
 
 在保持功能正确的前提下，降低大模型生成代码的运行时间与内存占用。
-项目以 **EffiLearner** 为主线完成简化复现（把时间/内存剖析结果反馈给模型做自迭代优化），
-并引入 **PerfCodeGen** 的执行反馈思路（用失败单测修正正确性、用最耗时单测改进性能）与
-**EffiBench** 的效率指标来补强评测。
+项目以 **PerfCodeGen** 为研究主线：先用失败测试修正正确性，再用最耗时测试的执行反馈改进性能。
+**EffiLearner** 的时间/内存剖析反馈作为增强反馈与消融路线；主实验题目优先从具备有效测试的
+EffiBench 题目中筛选。筛题和评测规则见 [`experiment/PROTOCOL.md`](experiment/PROTOCOL.md)。
 
 ## 参考论文
 
@@ -17,7 +17,10 @@
 
 ## 当前进展
 
-已完成 EffiLearner 的简化复现，在 4 个模型上跑通「100 题 × 3 轮自我优化」：
+G0～G3 递进反馈实验已完成：G0 无反馈、G1 程序总耗时、G2 追加最慢测试、G3 再追加热点源码与执行次数。17 题、每组两次生成的结果见 [`experiment/results/g_report.md`](experiment/results/g_report.md)；各阶段预期和实测见同目录的 `g_stage1_feedback.md` 至 `g_stage4_findings.md`。当前结果未显示反馈越细效果越好，研究问题改为分析不同反馈颗粒度的收益与成本。复现入口与结果索引见 [`experiment/SETUP.md`](experiment/SETUP.md)。本轮只测执行时间，未得到可靠的内存比较。
+
+
+已有 EffiLearner 简化复现，在 4 个模型上跑通「100 题 × 3 轮自我优化」。另有 12 题 HumanEval 反馈粒度预实验；其中不少题目过于简单，不能据此判断增强反馈的效果。
 
 | 模型 | 成功执行 | 时间下降 | 内存下降（可测口径） |
 |---|---|---|---|
@@ -196,9 +199,14 @@ py eval\paper_tables.py   # → docs/论文对照与差异分析.md（论文三�
 
 1. `MU`（论文 Table 1 的峰值内存列）在**原始规模**下无信号（所有题 `peak_rss` 贴着 20–21 MB 解释器基线）；升档到 2×10⁵ 后 6/10 题可分辨，见上表，但不是全数据集结论；
 2. `TMU`（本实现的 `mem_mbs = ∫RSS dt`）与时间高度共线（r = 0.94–0.97）——按 A.5 定义 `TMU = 平均内存 × ET`，**共线由定义决定**，因此它**不能作为独立的「空间收益」证据**，只作内部对照；
-3. 20 题里有 4 题的标准解本身跑不通（测试块与 `canonical_solution` 不匹配），任何模型都必然失败，因此 `%Correct` 需同时给两个口径；其中 `254`/`306` 是确定性缺陷（多批全挂），`267`/`312`/`314` 是偶发（换一批就过），故 `%Correct` 的分母会随批次抖动，跨批比较不能直接当模型能力差；另有两题属**数据集缺陷、重算也补不出**：`250`（测试块把 `TreeNode` 类当实例传）、`285`（测试块里写进了对象 repr，`SyntaxError`），统一标 `excluded: dataset_defect`；
-4. 早期版本曾出现「0% 采纳」，根因是逐行剖析不对称（基线不剖析、候选剖析，虚高 2.8×），已修复，证据见 `eval/timing_check.py`；
-5. **无上一代 coder 模型对照臂**：账号权限限制下阿里云未开通 `qwen2.5-coder` 系列，本地亦无 Ollama；改用「轻量档（`deepseek-flash`）vs 三家主力」+ F0–F4 方法消融替代，用于区分「提升来自模型世代」还是「来自反馈方法」。这是已知局限，若需补齐，开通按量计费成本很低。
+3. 部分题的 `canonical_solution` 过不了 `small_test_cases`，任何模型都必然失败，因此 `%Correct` 同时给两个口径。三态分类（由 `eval/recompute.py` 判定）：
+   - **`recomputed`（可补算，2 题）**：`250`、`285`——此前显示 `n/a` 不是数据集坏，而是 `new_metrics()` 直接调 harness 时没注入 `build_tree*` 前导；补前导后可正常测量；
+   - **`excluded: dataset_defect`（5 题）**：`254`、`267`、`306`、`314`、`270`——canonical 加前导后仍 `AssertionError`；
+   - **`retryable: final_code_missing`（2 题）**：`312`、`269`——canonical 能过，但记录里没存 `final_code`，需换模型/seed 重跑。
+   另：`267`/`312`/`314` 在不同批次间时好时坏，故 `%Correct` 分母会随批次抖动，跨批比较不能直接当模型能力差；
+4. `new_baseline` **无法重算**：模型生成的初始代码未落盘（旧记录只有 `final_code`）。已在新版 `effi_repro.py` 的每条记录中补存 `baseline_code`，但历史数据只能标 `not_recomputable`；
+5. 早期版本曾出现「0% 采纳」，根因是逐行剖析不对称（基线不剖析、候选剖析，虚高 2.8×），已修复，证据见 `eval/timing_check.py`；
+6. **无上一代 coder 模型对照臂**：账号权限限制下阿里云未开通 `qwen2.5-coder` 系列，本地亦无 Ollama；改用「轻量档（`deepseek-flash`）vs 三家主力」+ F0–F4 方法消融替代，用于区分「提升来自模型世代」还是「来自反馈方法」。这是已知局限，若需补齐，开通按量计费成本很低。
 
 完整对照表与差异归因见 [`docs/论文对照与差异分析.md`](docs/论文对照与差异分析.md)。
 
