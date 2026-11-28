@@ -1,0 +1,4 @@
+# B's frozen JSON and archived exploratory reports must retain original bytes.
+results/bank/frozen_tasks.json -text
+results/bank/frozen_manifest.json -text
+results/exploratory/**/*.json -text
