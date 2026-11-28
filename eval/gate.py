@@ -50,6 +50,7 @@ def check(diagnostics: dict, feedback: str, *,
           harness_status: str | None = None,
           prompt_hash_f3: str | None = None,
           prompt_hash_f4: str | None = None,
+          formal_task: bool = True,
           method: str | None = None) -> dict:
     """返回 {passed, failures:[{code, detail}], suggested_method}。"""
     diag = diagnostics if isinstance(diagnostics, dict) else {}
@@ -116,7 +117,15 @@ def check(diagnostics: dict, feedback: str, *,
         if diag.get("profiler_overhead_ratio") is None:
             passed = False
             fails.append({"code": "G1", "detail": "不适用通道只允许写 f3，不能写 ours"})
-    suggested = method if passed else ("f3" if diag.get("hotspot_mode") != "none" else "f2")
+    # G6：闸门只判「反馈完整性」，不判「这是不是正式题目」。
+    # 构造的诊断用例即使完整性全过，也不得写 method=ours（否则消融表会混进假样本）。
+    if method == "ours" and not formal_task:
+        passed = False
+        fails.append({"code": "G6", "detail": "非正式题目（formal_task=False）不得写 method=ours"})
+    if not formal_task:
+        suggested = "diagnostic"
+    else:
+        suggested = method if passed else ("f3" if diag.get("hotspot_mode") != "none" else "f2")
     return {"passed": passed, "failures": fails, "suggested_method": suggested}
 
 
@@ -203,6 +212,16 @@ def _selftest() -> int:
 
     T("14) numbers_in 缺失",
       _good_diag(line_timing={}), GOOD_FB, False)
+
+    T("15) 构造诊断用例想写 ours -> 拦（G6）",
+      _good_diag(), GOOD_FB, False,
+      result_status="ok", harness_status="ok", prompt_hash_f3="a", prompt_hash_f4="b",
+      formal_task=False, method="ours")
+
+    rep = T("16) 构造诊断用例 + 不写 method -> 完整性通过，建议 diagnostic",
+            _good_diag(), GOOD_FB, True, result_status="ok", harness_status="ok",
+            prompt_hash_f3="a", prompt_hash_f4="b", formal_task=False, method=None)
+    assert rep["suggested_method"] == "diagnostic", rep
 
     print("\nALL GATE SELFTESTS PASSED")
     return 0
