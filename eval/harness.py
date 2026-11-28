@@ -471,6 +471,13 @@ def run_child(program, stale_s=STALE_S, budget_s=60.0, workdir=None):
         proc.kill()
     reader.join(timeout=2)
     err_thread.join(timeout=2)
+    # 关闭管道，避免 Popen.__del__ 报 ResourceWarning（只清理句柄，不改变计时）
+    for _stream in (proc.stdout, proc.stderr):
+        try:
+            if _stream is not None:
+                _stream.close()
+        except Exception:  # noqa: BLE001
+            pass
     stderr = "".join(stderr_buf)
     try:
         path.unlink()
