@@ -1,0 +1,590 @@
+{
+  "protocol_version": "proto-2026.11",
+  "frozen_at": "2026-11-28T14:16:47",
+  "counts": {
+    "candidates_total": 1000,
+    "admitted_to_bank": 993,
+    "scan_ok": 876,
+    "scan_failed": 105,
+    "pass_h1": 144,
+    "pass_h2_mu_record_only": 86,
+    "pass_h3_time": 227,
+    "frozen_selected": 91
+  },
+  "selection_criteria": {
+    "H1_space": "peak_tracemalloc_mb >= 0.05",
+    "H2_mu_record_only": "peak_rss_mb - baseline(20.523MB) >= 5.0（只记录，不作硬门槛）",
+    "H3_time": "baseline_ms >= 1.0 且 cv <= 0.10",
+    "final": "H1 AND H3_time（H2 仅记录）",
+    "excluded": "status != ok（incorrect/timeout）一律淘汰；缺失 class Solution 入库前剔除"
+  },
+  "exclusions": {
+    "missing_solution": [
+      {
+        "problem_idx": "295",
+        "reason": "no_canonical_solution"
+      },
+      {
+        "problem_idx": "362",
+        "reason": "no_canonical_solution"
+      },
+      {
+        "problem_idx": "981",
+        "reason": "no_canonical_solution"
+      },
+      {
+        "problem_idx": "1157",
+        "reason": "no_canonical_solution"
+      },
+      {
+        "problem_idx": "1286",
+        "reason": "no_canonical_solution"
+      },
+      {
+        "problem_idx": "1483",
+        "reason": "no_canonical_solution"
+      },
+      {
+        "problem_idx": "2080",
+        "reason": "no_canonical_solution"
+      }
+    ],
+    "scan_failed": [
+      {
+        "problem_idx": 31,
+        "status": "incorrect",
+        "error": "NameError: name 'nums' is not defined"
+      },
+      {
+        "problem_idx": 75,
+        "status": "incorrect",
+        "error": "NameError: name 'nums' is not defined"
+      },
+      {
+        "problem_idx": 82,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 100,
+        "status": "incorrect",
+        "error": "NameError: name 'p' is not defined"
+      },
+      {
+        "problem_idx": 101,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 103,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 104,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 107,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 111,
+        "status": "incorrect",
+        "error": "NameError: name 'create_tree' is not defined"
+      },
+      {
+        "problem_idx": 116,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 124,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 126,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 62)"
+      },
+      {
+        "problem_idx": 129,
+        "status": "incorrect",
+        "error": "NameError: name 'decode_tree' is not defined"
+      },
+      {
+        "problem_idx": 141,
+        "status": "incorrect",
+        "error": "NameError: name 'head' is not defined"
+      },
+      {
+        "problem_idx": 189,
+        "status": "incorrect",
+        "error": "NameError: name 'nums' is not defined"
+      },
+      {
+        "problem_idx": 226,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 235,
+        "status": "incorrect",
+        "error": "NameError: name 'root' is not defined"
+      },
+      {
+        "problem_idx": 250,
+        "status": "incorrect",
+        "error": "AttributeError: type object 'TreeNode' has no attribute 'left'"
+      },
+      {
+        "problem_idx": 285,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 301,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 314,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 333,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 344,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 388,
+        "status": "incorrect",
+        "error": "SyntaxError: unterminated string literal (detected at line 2) (<test>, line 2)"
+      },
+      {
+        "problem_idx": 424,
+        "status": "incorrect",
+        "error": "NameError: name 'KOFVYEPQOBG' is not defined"
+      },
+      {
+        "problem_idx": 437,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 501,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 515,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 3)"
+      },
+      {
+        "problem_idx": 530,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 543,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 549,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 553,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 572,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 639,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 29)"
+      },
+      {
+        "problem_idx": 647,
+        "status": "incorrect",
+        "error": "NameError: name 'shvnkowray' is not defined"
+      },
+      {
+        "problem_idx": 662,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 663,
+        "status": "incorrect",
+        "error": "NameError: name 'root' is not defined"
+      },
+      {
+        "problem_idx": 669,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 3)"
+      },
+      {
+        "problem_idx": 671,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 687,
+        "status": "incorrect",
+        "error": "NameError: name 'root' is not defined"
+      },
+      {
+        "problem_idx": 698,
+        "status": "incorrect",
+        "error": "TypeError: Solution.canPartitionKSubsets() missing 1 required positional argument: 'k'"
+      },
+      {
+        "problem_idx": 720,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 821,
+        "status": "incorrect",
+        "error": "NameError: name 'afmscaghryymkrqljohubwfdexloikmxrdonwaxgqupw' is not defined"
+      },
+      {
+        "problem_idx": 832,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 838,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 3)"
+      },
+      {
+        "problem_idx": 842,
+        "status": "incorrect",
+        "error": "SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers (<test>, l"
+      },
+      {
+        "problem_idx": 872,
+        "status": "incorrect",
+        "error": "NameError: name 'root1' is not defined"
+      },
+      {
+        "problem_idx": 875,
+        "status": "incorrect",
+        "error": "NameError: name 'self' is not defined"
+      },
+      {
+        "problem_idx": 876,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 904,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 917,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid decimal literal (<test>, line 5)"
+      },
+      {
+        "problem_idx": 958,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 965,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 968,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 971,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 979,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 984,
+        "status": "incorrect",
+        "error": "NameError: name 'aababababababababababababababababababababababababababababababababababababababababababababababababababab"
+      },
+      {
+        "problem_idx": 987,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1022,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1030,
+        "status": "incorrect",
+        "error": "TypeError: Solution.allCellsDistOrder() missing 3 required positional arguments: 'cols', 'rCenter', and 'cCenter'"
+      },
+      {
+        "problem_idx": 1034,
+        "status": "incorrect",
+        "error": "TypeError: list indices must be integers or slices, not list"
+      },
+      {
+        "problem_idx": 1038,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1053,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 1058,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 1120,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1123,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1156,
+        "status": "incorrect",
+        "error": "NameError: name 'aq' is not defined"
+      },
+      {
+        "problem_idx": 1220,
+        "status": "incorrect",
+        "error": "AttributeError: `np.mat` was removed in the NumPy 2.0 release. Use `np.asmatrix` instead."
+      },
+      {
+        "problem_idx": 1256,
+        "status": "incorrect",
+        "error": "SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers (<test>, l"
+      },
+      {
+        "problem_idx": 1257,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax. Perhaps you forgot a comma? (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1305,
+        "status": "incorrect",
+        "error": "AttributeError: 'list' object has no attribute 'left'"
+      },
+      {
+        "problem_idx": 1315,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1325,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1332,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax. Perhaps you forgot a comma? (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1406,
+        "status": "incorrect",
+        "error": "NameError: name 'Alice' is not defined"
+      },
+      {
+        "problem_idx": 1430,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1457,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1469,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1489,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 1530,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1541,
+        "status": "incorrect",
+        "error": "SyntaxError: unmatched ')' (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1612,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 3)"
+      },
+      {
+        "problem_idx": 1644,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1650,
+        "status": "incorrect",
+        "error": "AttributeError: 'Solution' object has no attribute 'twoSum'"
+      },
+      {
+        "problem_idx": 1663,
+        "status": "incorrect",
+        "error": "NameError: name 'b' is not defined"
+      },
+      {
+        "problem_idx": 1676,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1721,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 1792,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 1842,
+        "status": "incorrect",
+        "error": "TypeError: 'int' object is not iterable"
+      },
+      {
+        "problem_idx": 1849,
+        "status": "incorrect",
+        "error": "SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers (<test>, l"
+      },
+      {
+        "problem_idx": 1871,
+        "status": "incorrect",
+        "error": "SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers (<test>, l"
+      },
+      {
+        "problem_idx": 1888,
+        "status": "incorrect",
+        "error": "SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers (<test>, l"
+      },
+      {
+        "problem_idx": 1900,
+        "status": "incorrect",
+        "error": "NameError: name 'functools' is not defined"
+      },
+      {
+        "problem_idx": 1963,
+        "status": "timeout",
+        "error": "heartbeat stale 30.0s"
+      },
+      {
+        "problem_idx": 1985,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 2096,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 2108,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 3)"
+      },
+      {
+        "problem_idx": 2331,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      },
+      {
+        "problem_idx": 2375,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 2397,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='? (<test>, line 2)"
+      },
+      {
+        "problem_idx": 2606,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax. Perhaps you forgot a comma? (<test>, line 2)"
+      },
+      {
+        "problem_idx": 2663,
+        "status": "incorrect",
+        "error": "NameError: name 'de' is not defined"
+      },
+      {
+        "problem_idx": 2707,
+        "status": "incorrect",
+        "error": "NameError: name 'queptoy' is not defined"
+      },
+      {
+        "problem_idx": 2847,
+        "status": "incorrect",
+        "error": "AssertionError: "
+      },
+      {
+        "problem_idx": 2936,
+        "status": "incorrect",
+        "error": "SyntaxError: invalid syntax (<test>, line 2)"
+      }
+    ]
+  },
+  "freeze_notes": [
+    "frozen_tasks.json 中每题的 test 与 inputs(tier/n/gen/args_hash/test) 已固定，C/D/G 组必须使用同一版本。",
+    "difficulty 为报告分层信息，不影响入选；10 道校准失败题保留在冻结清单，扫描基线见 scan 字段。",
+    "配对比较条件：task_id + tier + args_hash 三者一致；禁用旧口径 mem_mbs。",
+    "数据集本体(dataset.json)体积大不入库；题库快照 frozen_tasks.json 已含 code/test/inputs，可直接运行。"
+  ],
+  "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.18"
+  }
+}
